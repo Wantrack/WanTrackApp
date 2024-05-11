@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 // nodejs library to set properties for components
 import { PropTypes } from "prop-types";
@@ -11,18 +11,30 @@ import PerfectScrollbar from "perfect-scrollbar";
 import { Nav, NavLink as ReactstrapNavLink } from "reactstrap";
 import {
   BackgroundColorContext,
-  backgroundColors,
 } from "contexts/BackgroundColorContext";
+
+import constants from 'util/constans';
+import { decode } from "util/base64";
 
 var ps;
 
 function Sidebar(props) {
+  const [modules, setModules] = useState([]); 
+
   const location = useLocation();
   const sidebarRef = React.useRef(null);
   // verifies if routeName is the one active (in browser input)
   const activeRoute = (routeName) => {
     return location.pathname === routeName ? "active" : "";
   };
+
+  useEffect(() => { 
+    const _userinfo = JSON.parse(decode(localStorage.getItem(constants.userinfo)));
+    const _modules = _userinfo.modules.replaceAll(' ', '').split(',');
+    console.log(_modules)
+    setModules(_modules);
+   }, []);
+
   React.useEffect(() => {
     if (navigator.platform.indexOf("Win") > -1) {
       ps = new PerfectScrollbar(sidebarRef.current, {
@@ -30,6 +42,7 @@ function Sidebar(props) {
         suppressScrollY: false,
       });
     }
+    
     // Specify how to clean up after this effect:
     return function cleanup() {
       if (navigator.platform.indexOf("Win") > -1) {
@@ -37,10 +50,8 @@ function Sidebar(props) {
       }
     };
   });
-  const linkOnClick = () => {
-    document.documentElement.classList.remove("nav-open");
-  };
-  const { routes, rtlActive, logo } = props;
+
+  let { routes, rtlActive, logo } = props;
   let logoImg = null;
   let logoText = null;
   if (logo !== undefined) {
@@ -104,6 +115,8 @@ function Sidebar(props) {
             <Nav>
               {routes.map((prop, key) => {
                 if (prop.redirect) return null;
+                if (prop.invisible) return null;
+                if (!modules.includes(prop.idText)) return null;
                 return (
                   <li
                     className={
@@ -122,12 +135,6 @@ function Sidebar(props) {
                   </li>
                 );
               })}
-              {/* <li className="active-pro">
-                <ReactstrapNavLink href="https://www.creative-tim.com/product/black-dashboard-pro-react?ref=bdr-user-archive-sidebar-upgrade-pro">
-                  <i className="tim-icons icon-spaceship" />
-                  <p>Upgrade to PRO</p>
-                </ReactstrapNavLink>
-              </li> */}
             </Nav>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 // nodejs library that concatenates classes
 import classNames from "classnames";
 
@@ -23,6 +24,8 @@ import {
 } from "reactstrap";
 
 function AdminNavbar(props) {
+  const navigate = useNavigate ();
+
   const [collapseOpen, setcollapseOpen] = React.useState(false);
   const [modalSearch, setmodalSearch] = React.useState(false);
   const [color, setcolor] = React.useState("navbar-transparent");
@@ -34,6 +37,11 @@ function AdminNavbar(props) {
     };
   });
   // function that adds color white/transparent to the navbar on resize (this is for the collapse)
+  const logout = () => {
+    localStorage.clear();
+    navigate('/login');
+  }
+
   const updateColor = () => {
     if (window.innerWidth < 993 && collapseOpen) {
       setcolor("bg-white");
@@ -137,7 +145,7 @@ function AdminNavbar(props) {
                     <img alt="..." src={require("assets/img/anime3.png")} />
                   </div>
                   <b className="caret d-none d-lg-block d-xl-block" />
-                  <p className="d-lg-none">Log out</p>
+                  <p className="d-lg-none">Cerrar sesion</p>
                 </DropdownToggle>
                 <DropdownMenu className="dropdown-navbar" right tag="ul">
                   <NavLink tag="li">
@@ -148,7 +156,7 @@ function AdminNavbar(props) {
                   </NavLink>
                   <DropdownItem divider tag="li" />
                   <NavLink tag="li">
-                    <DropdownItem className="nav-item">Log out</DropdownItem>
+                    <DropdownItem className="nav-item" onClick={logout}>Cerrar sesion</DropdownItem>
                   </NavLink>
                 </DropdownMenu>
               </UncontrolledDropdown>

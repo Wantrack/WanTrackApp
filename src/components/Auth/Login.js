@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { axios } from '../../config/https';
+import { encode } from '../../util/base64';
 import constants from '../../util/constans';
 import {
   useNavigate  
@@ -9,7 +10,6 @@ let _user = {};
 
 function Login(props) {
   const navigate = useNavigate ();
-  const [user, setUser] = useState([]);
   const [formData, setFormData] = useState({})
 
   const onHandleChange = (e) => {
@@ -19,20 +19,21 @@ function Login(props) {
         [name]: value 
         
     }
-    setFormData(_user)
-    setUser(_user);
+    setFormData(_user);
   }
 
 const disabledLoginButton = !formData['email'] || !formData['password']
 
   const login = useCallback(() => {  
-    axios.post(`${constants.apiurl}/api/login`, _user ).then(async (result) => {
+    axios.post(`${constants.apiurl}/api/login`,_user).then(async (result) => {
       if(result && result.data) {
-        localStorage.setItem('userLogged', JSON.stringify(result.data));
+        localStorage.setItem(constants.token, result.data);
+        const userinfo = await axios.get(`${constants.apiurl}/api/users/getByEmail/${_user.email}`);
+        localStorage.setItem(constants.userinfo, encode(JSON.stringify(userinfo.data)));
         navigate('/admin');
       }
     }).catch(error => {
-
+        //TODO message error here
     });
     setFormData({
       email: '',
