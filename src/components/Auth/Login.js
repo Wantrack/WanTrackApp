@@ -50,12 +50,12 @@ const disabledLoginButton = !formData['email'] || !formData['password']
             <div className="col-6" style={{backgroundColor:"#fff", padding: 70, borderRadius: '30px'}}>
                 <div className="form-outline mb-4">
                 <label className="form-label">Email</label>
-                  <input type="email" name="email" value={formData['email'] || ''} onChange={onHandleChange} className="form-control form-control-lg" placeholder="Ingresa un email valido" style={{paddingLeft: '5px'}} />            
+                  <input type="email" name="email" value={formData['email'] || ''} onChange={onHandleChange} className="form-control form-control-lg color_black" placeholder="Ingresa un email valido" style={{paddingLeft: '5px'}} />            
                 </div>
 
                 <div className="form-outline mb-3">
                 <label className="form-label">Contraseña</label>
-                  <input type="password" name="password" value={formData['password'] || ''} onChange={onHandleChange} className="form-control form-control-lg" placeholder="Ingresa una contraseña" style={{paddingLeft: '5px'}} />           
+                  <input type="password" name="password" value={formData['password'] || ''} onChange={onHandleChange} className="form-control form-control-lg color_black" placeholder="Ingresa una contraseña" style={{paddingLeft: '5px'}} />           
                 </div>
 
                 <div className="d-flex justify-content-between align-items-center">

@@ -150,3 +150,11 @@
 .offline-doc .page-header:before {
   background-color: rgba(0, 0, 0, 0.8);
 }
+
+.color_black {
+  color: #000;
+}
+
+.color_black:focus {
+  color: #000;
+}

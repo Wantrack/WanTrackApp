@@ -31,7 +31,7 @@ function Sidebar(props) {
   useEffect(() => { 
     const _userinfoEncoded = localStorage.getItem(constants.userinfo);
     if(_userinfoEncoded) {
-      const _userinfo = JSON.parse(decode(_userinfoEncoded));
+    const _userinfo = JSON.parse(decode(_userinfoEncoded));
       const _modules = _userinfo.modules.replaceAll(' ', '').split(',');
       setModules(_modules);
     }
