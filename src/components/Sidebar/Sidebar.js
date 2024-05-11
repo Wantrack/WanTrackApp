@@ -29,10 +29,13 @@ function Sidebar(props) {
   };
 
   useEffect(() => { 
-    const _userinfo = JSON.parse(decode(localStorage.getItem(constants.userinfo)));
-    const _modules = _userinfo.modules.replaceAll(' ', '').split(',');
-    console.log(_modules)
-    setModules(_modules);
+    const _userinfoEncoded = localStorage.getItem(constants.userinfo);
+    if(_userinfoEncoded) {
+      const _userinfo = JSON.parse(decode(_userinfoEncoded));
+      const _modules = _userinfo.modules.replaceAll(' ', '').split(',');
+      setModules(_modules);
+    }
+    
    }, []);
 
   React.useEffect(() => {
