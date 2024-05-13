@@ -1,10 +1,13 @@
 import Dashboard from "views/Dashboard.js";
-import Notifications from "views/Notifications.js";
 import TableList from "views/TableList.js";
 import UserProfile from "views/UserProfile.js";
 import Users from "views/Users";
 import Companies from "views/Companies";
 import Company from "views/Company";
+import Conversations from "views/Conversations";
+import Conversation from "views/Conversation";
+import Templates from "views/Templates";
+import Template from "views/Template";
 
 var routes = [
   {
@@ -16,12 +19,20 @@ var routes = [
     idText: '1'
   },
   {
-    path: "/notifications",
+    path: "/conversations",
     name: "Conversaciones",
     icon: "tim-icons icon-chat-33",
-    component: <Notifications />,
+    component: <Conversations />,
     layout: "/admin",
     idText: '7'
+  },
+  {
+    path: "/steps",
+    name: "Pasos",
+    icon: "tim-icons icon-molecule-40",
+    component: <Templates />,
+    layout: "/admin",
+    idText: '10'
   },
   {
     path: "/tables",
@@ -69,5 +80,19 @@ var routes = [
     layout: "/admin",
     invisible: true
   },
+  {
+    path: "/conversation",
+    name: "Conversation",
+    component: <Conversation />,
+    layout: "/admin",
+    invisible: true
+  },
+  {
+    path: "/step",
+    name: "Paso",
+    component: <Template />,
+    layout: "/admin",
+    invisible: true
+  }
 ];
 export default routes;

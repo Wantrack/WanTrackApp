@@ -158,3 +158,11 @@
 .color_black:focus {
   color: #000;
 }
+
+.hide {
+  display: none;
+}
+
+.show {
+  display: block;
+}
