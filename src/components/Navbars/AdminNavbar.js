@@ -79,7 +79,7 @@ function AdminNavbar(props) {
               </NavbarToggler>
             </div>
             <NavbarBrand href="#pablo" onClick={(e) => e.preventDefault()}>
-              WanTrack
+              <img style={{height: '5rem'}} alt="WANTRACK" src={require("assets/img/logo3.png")} />
             </NavbarBrand>
           </div>
           <NavbarToggler onClick={toggleCollapse}>
@@ -95,7 +95,7 @@ function AdminNavbar(props) {
                   <span className="d-lg-none d-md-block">Search</span>
                 </Button>
               </InputGroup>
-              <UncontrolledDropdown nav>
+              {/* <UncontrolledDropdown nav>
                 <DropdownToggle
                   caret
                   color="default"
@@ -133,7 +133,7 @@ function AdminNavbar(props) {
                     </DropdownItem>
                   </NavLink>
                 </DropdownMenu>
-              </UncontrolledDropdown>
+              </UncontrolledDropdown> */}
               <UncontrolledDropdown nav>
                 <DropdownToggle
                   caret
@@ -149,10 +149,10 @@ function AdminNavbar(props) {
                 </DropdownToggle>
                 <DropdownMenu className="dropdown-navbar" right tag="ul">
                   <NavLink tag="li">
-                    <DropdownItem className="nav-item">Profile</DropdownItem>
+                    <DropdownItem className="nav-item">Perfil</DropdownItem>
                   </NavLink>
                   <NavLink tag="li">
-                    <DropdownItem className="nav-item">Settings</DropdownItem>
+                    <DropdownItem className="nav-item">Configuraciones</DropdownItem>
                   </NavLink>
                   <DropdownItem divider tag="li" />
                   <NavLink tag="li">
@@ -171,7 +171,7 @@ function AdminNavbar(props) {
         toggle={toggleModalSearch}
       >
         <ModalHeader>
-          <Input placeholder="SEARCH" type="text" />
+          <Input placeholder="Buscar" type="text" />
           <button
             aria-label="Close"
             className="close"

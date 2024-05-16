@@ -1,24 +1,3 @@
-/*!
-
-=========================================================
-* Black Dashboard React v1.2.2
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/black-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/black-dashboard-react/blob/master/LICENSE.md)
-
-* Coded by Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-// ##############################
-// // // Chart variables
-// #############################
-
 // chartExample1 and chartExample2 options
 let chart1_2_options = {
   maintainAspectRatio: false,
@@ -222,10 +201,10 @@ let chartExample2 = {
     gradientStroke.addColorStop(0, "rgba(29,140,248,0)"); //blue colors
 
     return {
-      labels: ["JUL", "AUG", "SEP", "OCT", "NOV", "DEC"],
+      labels: ["NOV", "DIC", "ENE", "FEB", "ABRIL", "MAYO"],
       datasets: [
         {
-          label: "Data",
+          label: "Mensajes enviados",
           fill: true,
           backgroundColor: gradientStroke,
           borderColor: "#1f8ef1",
@@ -239,7 +218,7 @@ let chartExample2 = {
           pointHoverRadius: 4,
           pointHoverBorderWidth: 15,
           pointRadius: 4,
-          data: [80, 100, 70, 80, 120, 80],
+          data: [80, 100, 70, 80, 120, 100],
         },
       ],
     };
@@ -261,10 +240,10 @@ let chartExample3 = {
     gradientStroke.addColorStop(0, "rgba(119,52,169,0)"); //purple colors
 
     return {
-      labels: ["USA", "GER", "AUS", "UK", "RO", "BR"],
+      labels: ["NOV", "DIC", "ENE", "FEB", "ABRIL", "MAYO"],
       datasets: [
         {
-          label: "Countries",
+          label: "Mensajes recibidos",
           fill: true,
           backgroundColor: gradientStroke,
           hoverBackgroundColor: gradientStroke,
@@ -272,7 +251,7 @@ let chartExample3 = {
           borderWidth: 2,
           borderDash: [],
           borderDashOffset: 0.0,
-          data: [53, 20, 10, 80, 100, 45],
+          data: [10, 20, 10, 40, 50, 45],
         },
       ],
     };
