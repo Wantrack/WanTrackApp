@@ -8,6 +8,10 @@ import Conversations from "views/Conversations";
 import Conversation from "views/Conversation";
 import Templates from "views/Templates";
 import Template from "views/Template";
+import WsTemplates from "views/WsTemplates";
+import WsTemplate from "views/WsTemplate";
+import ScatterLists from "views/ScatterLists";
+import ScatterList from "views/ScatterList";
 
 var routes = [
   {
@@ -43,12 +47,20 @@ var routes = [
     idText: '8'
   },
   {
-    path: "/list",
+    path: "/lists",
     name: "Listas de dispersión",
     icon: "tim-icons icon-notes",
-    component: <UserProfile />,
+    component: <ScatterLists />,
     layout: "/admin",
     idText: '9'
+  },
+  {
+    path: "/wstemplates",
+    name: "Plantillas de Whatsapp",
+    icon: "tim-icons icon-bullet-list-67",
+    component: <WsTemplates />,
+    layout: "/admin",
+    idText: '5'
   },
   {
     path: "/users",
@@ -91,6 +103,20 @@ var routes = [
     path: "/step",
     name: "Paso",
     component: <Template />,
+    layout: "/admin",
+    invisible: true
+  },
+  {
+    path: "/wstemplate",
+    name: "Plantilla Whastapp",
+    component: <WsTemplate />,
+    layout: "/admin",
+    invisible: true
+  },
+  {
+    path: "/list",
+    name: "Lista de dispersion",
+    component: <ScatterList />,
     layout: "/admin",
     invisible: true
   }
