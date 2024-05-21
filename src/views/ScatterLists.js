@@ -21,7 +21,7 @@ function ScatterLists (props) {
         axios.get(`${constants.apiurl}/api/scatterlists`).then(result => {
             setLoaderActive(false)
             setScatterLists(result.data);
-        });       
+        });
     }, []);
     
     const filteredScatterList = Array.isArray(scatterLists) ? scatterLists.filter(wsTemplate => String(wsTemplate.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
@@ -57,7 +57,7 @@ function ScatterLists (props) {
                                             <td> <Link to="/admin/list" onClick={() => goToScatterLists(scatterList.idwstemplate)}>{index + 1}</Link></td>
                                             <td> <Link to="/admin/list" onClick={() => goToScatterLists(scatterList.idwstemplate)}>{scatterList.name}</Link></td>
                                         </tr>
-                                    )}                   
+                                    )}
                                 </tbody>          
                             </table>
                         </div> 
