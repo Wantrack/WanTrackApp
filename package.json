@@ -8,6 +8,7 @@
     "bootstrap": "4.6.2",
     "chart.js": "3.9.1",
     "classnames": "2.3.2",
+    "moment": "",
     "perfect-scrollbar": "1.5.5",
     "prop-types": "15.8.1",
     "react": ">=16.8.0",
