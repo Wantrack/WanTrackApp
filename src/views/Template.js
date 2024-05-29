@@ -100,6 +100,14 @@ function Template (props) {
         }else {
             document.querySelector('#locationPanel').classList.add('hide'); 
         }
+
+        if(e.target.selectedIndex === 6) {
+            document.querySelector('#metaFlowPanel').classList.remove('hide');    
+        }else {
+            document.querySelector('#metaFlowPanel').classList.add('hide'); 
+        }
+
+        
     }
 
     const cmbGroups = async (e) => { 
@@ -291,6 +299,12 @@ function Template (props) {
                 }else {
                     document.querySelector('#locationPanel').classList.add('hide'); 
                 }
+
+                if(result.data.typeId === 7) {
+                    document.querySelector('#metaFlowPanel').classList.remove('hide');    
+                }else {
+                    document.querySelector('#metaFlowPanel').classList.add('hide'); 
+                }
                 
                 if(result.data.idAnswerTemplateType === 4) {
                     document.querySelector('#templateParametersPanel').classList.remove('hide');
@@ -438,6 +452,21 @@ function Template (props) {
                 <div className="col-4">
                     <label>Direccion</label>
                     <input className="form-control" placeholder="Escribir direccion" defaultValue={template.address} name='address' onChange={onHandleChange}></input>
+                </div>
+              </div>
+
+              <div className='row hide' id="metaFlowPanel">
+                <div className="col-4">
+                    <label>Flow Id</label>
+                    <input className="form-control" placeholder="Escribir Flow Id" defaultValue={template.flowid} name='flowid' onChange={onHandleChange}></input>
+                </div>
+                <div className="col-4">
+                    <label>CTA</label>
+                    <input className="form-control" placeholder="Escribir Cta" defaultValue={template.flowcta} name='flowcta' onChange={onHandleChange}></input>
+                </div>
+                <div className="col-4">
+                    <label>Screen Principal</label>
+                    <input className="form-control" placeholder="Escribir Screen Principal" defaultValue={template.mainScreen} name='mainScreen' onChange={onHandleChange}></input>
                 </div>
               </div>
 
