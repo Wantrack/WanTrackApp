@@ -12,6 +12,7 @@ import WsTemplate from "views/WsTemplate";
 import ScatterLists from "views/ScatterLists";
 import ScatterList from "views/ScatterList";
 import Notifications from "views/Notifications";
+import Feelings from "views/Feelings";
 
 var routes = [
   {
@@ -77,6 +78,14 @@ var routes = [
     component: <Companies />,
     layout: "/admin",
     idText: '2'
+  },
+  {
+    path: "/feelings",
+    name: "AI Sentiminetos",
+    icon: "tim-icons icon-components",
+    component: < Feelings/>,
+    layout: "/admin", 
+    idText: '11'
   },
   {
     path: "/user",
