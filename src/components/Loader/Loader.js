@@ -1,10 +1,13 @@
 import ClipLoader from "react-spinners/ClipLoader";
 
-const Loader = (active) => {
+const Loader = (props) => {
   return (
-    active.active && (
-      <div className="absolute h-full w-full backdrop-blur z-20 grid place-items-center top-0 bottom-0 left-0 right-0">
-        <ClipLoader color="#cb0c9f" />
+    props.active && (
+      <div className="loaderclass">
+        <div className="loaderclassChild">          
+          <ClipLoader size={100} color="#cb0c9f" />
+          <strong>{props.text}</strong>
+        </div>        
       </div>
     )
   );

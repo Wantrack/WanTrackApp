@@ -18,15 +18,19 @@ import {
   Input,
   Button
 } from "reactstrap";
+import Loader from 'components/Loader/Loader';
 
 
 function Feelings(props) {
   const [url, setUrl] = useState('');
   const [sentences, setSentences] = useState([]);
-  const [dataChart, setDataChart] = useState([1, 1]);
+  const [dataChart, setDataChart] = useState([50, 50]);
+  const [loaderVisible, setLoaderVisible] = useState(false);
+  const [loaderText, setLoaderText] = useState('Cargando');
   const data = {
+    labels: ['😡', '😁'],
     datasets: [
-      {
+      {        
         data: dataChart,
         backgroundColor: [
           "#ff6961",
@@ -42,10 +46,18 @@ function Feelings(props) {
   const options = {
     plugins: {
       legend: {
-        display: false
+        display: true,
+        labels: {
+            font: {
+                size: 24
+            }
+        }
       },
       tooltip: {
-        enabled: false
+        enabled: true,
+        callbacks: {
+            label: (yDatapoint) => {return yDatapoint.raw.toFixed(2)  + ' %'},
+          }
       }
     },
     responsive: true
@@ -60,29 +72,59 @@ function Feelings(props) {
    
   }, []);
 
+  function categorizeFeeling(score) {
+    if (score >= 2) {
+      return 'muy feliz';
+    } else if (score > 0 && score < 2) {
+      return 'feliz';
+    } else if (score == 0) {
+      return 'neutral';
+    } else if (score < 0 && score > -2) {
+      return 'triste';
+    } else if (score <= -2) {
+      return 'Molesto';
+    }
+  }
+
   function start() {
-    setSentences([])
+    setLoaderVisible(true)
+    setSentences([]);
+    setLoaderText('Transcribiendo audio');
     axios.post(`${constants.apiurl}/api/feelings`, {url}).then(result => {
-        setSentences(result.data);
-        let negative = result.data.filter(f => f.sentiment < 0).map(m => parseFloat( m.sentiment));
-        let positve = result.data.filter(f => f.sentiment >= 0).map(m => parseFloat( m.sentiment))
+        setLoaderText('Audio transcrito');
+        const negative = result.data.filter(f => f.sentiment < 0).map(m => parseFloat( m.sentiment));
+        const positve = result.data.filter(f => f.sentiment >= 0).map(m => parseFloat( m.sentiment))
         const avgnegative = negative.reduce((a, b) => a + b, 0) / negative.length;
         const avgpositive = positve.reduce((a, b) => a + b, 0) / positve.length;
-        setDataChart([avgnegative* -1,avgpositive]);
-        axios.post(`${constants.apiurl}/api/getSpecificFeeling`, {json: result.data}).then(result2 => {
+
+        const totalavg = (avgnegative* -1) + avgpositive;
+
+        const valuen = (avgnegative* -1) *100 / totalavg;
+        const valuep = avgpositive * 100/ totalavg;
+        setDataChart([valuen,valuep]);
+        setLoaderText('Identificando emociones');
+        axios.post(`${constants.apiurl}/api/getSpecificFeeling`, {json: JSON.stringify(result.data)}).then(result2 => {
             const jsonresult = JSON.parse(result2.data)
             const firstArray = result.data
             for (const item of firstArray) {
-                item.emotion = jsonresult.find(f => f.startTime == item.startTime).emotion
+                const obj = jsonresult.find(f => f.startTime == item.startTime);
+                if(obj) {
+                    item.emotion = obj.emotion
+                }else {
+                    item.emotion = categorizeFeeling(parseFloat(item.sentiment));
+                }
             }
             setSentences(firstArray);
-        })
-    });
+            setLoaderVisible(false)
+        }).catch(e => setLoaderVisible(false))
+    }).catch(e => setLoaderVisible(false));
   }
 
   return (
     <>
       <div className="content">
+      
+      <Loader active={loaderVisible} text={loaderText}/>
         <Row>
           <Col lg="6">
             <Card className="card-chart">
@@ -114,16 +156,17 @@ function Feelings(props) {
                   Iniciar
                 </Button>
            </div>
-           <div>
+           <div style={{paddingTop: '10px'}}>
            {
             sentences?.map((sentence, index) =>
                 <div key={index}>
-                    <label>{sentence.startTime}</label>
+                    <label>{sentence.startTime} - {sentence.endTime}</label>
                     <div>
                         <strong>{sentence.speaker}</strong>: {sentence.text}
                         <br></br>
-                        <strong>{sentence.emotion}</strong>
+                        <strong>Emocion generada: </strong>{sentence.emotion}
                     </div>
+                    <hr></hr>
                 </div>
             )}            
            </div>
