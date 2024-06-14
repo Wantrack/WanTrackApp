@@ -187,3 +187,41 @@
   align-items: center;
   flex-direction: column;
 }
+
+.float-2 {
+	position:fixed;
+	width:60px;
+	height:60px;
+	bottom:120px;
+	right:40px;
+	background-color:#e14eca;
+	color:#FFF;
+	border-radius:50px;
+	text-align:center;
+	box-shadow: 2px 2px 3px #999;
+}
+
+.float {
+	position:fixed;
+	width:60px;
+	height:60px;
+	bottom:40px;
+	right:40px;
+	background-color:#e14eca;
+	color:#FFF;
+	border-radius:50px;
+	text-align:center;
+	box-shadow: 2px 2px 3px #999;
+}
+
+.float-2:hover {
+	color:#F5F5F5;
+}
+
+.float:hover {
+  color:#F5F5F5;
+}
+
+.my-float{
+	margin-top:22px;
+}

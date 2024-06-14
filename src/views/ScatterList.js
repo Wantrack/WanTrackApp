@@ -304,6 +304,15 @@ function ScatterList() {
                   </Row>
 
                   <Row>
+                    <Col style={{display: 'flex', justifyContent: 'space-between'}} md="12">
+                      <Button title="Agregar contacto" onClick={toggleModal} className="btn btn-primary">
+                        <i className="fa fa-user-plus" />
+                      </Button>
+
+                      <Button title="Agregar parametros" onClick={toggleParameterModal} className="btn btn-primary">
+                        Agregar parametos
+                      </Button>
+                    </Col>
                     <Col md="12">
                         <div className="table-responsive">
                             <table className="table table-hover">
@@ -326,31 +335,27 @@ function ScatterList() {
                             </table>
                         </div> 
                     </Col>
-
-                    <Col md="12">
-                      <Button  onClick={toggleModal} className="btn btn-primary">
-                        Agregar contacto
-                      </Button>
-
-                      <Button  onClick={toggleParameterModal} className="btn btn-primary">
-                        Agregar parametos
-                      </Button>
-                    </Col>
                   </Row>
                 </Form>
               </CardBody>
-              <CardFooter>
-                <Button className="btn-fill" color="primary" type="submit" onClick={saveChanges}>
-                  Guardar
-                </Button>
+              <CardFooter  style={{display: 'flex', justifyContent: 'space-between'}} >
+                {/* <Button title="Guardar y cerrar" className="btn-fill" color="primary" type="submit">
+                  
+                </Button> */}
 
-                <Button className="btn-fill" color="primary" type="submit" onClick={sendMessage}>
-                  Enviar mensaje
-                </Button>
+                {/* <Button title="Enviar mensaje" className="btn-fill" color="primary" type="submit" onClick={sendMessage}>
+                  Enviar mensaje 
+                </Button> */}
               </CardFooter>
             </Card>
           </Col>
-        </Row>        
+        </Row>
+        <Link to="javascript:void(0)" title="Enviar mensaje" href="#" class="float-2" onClick={sendMessage}>
+          <i className="fa-solid fa-paper-plane my-float"></i>
+        </Link>
+        <Link to="javascript:void(0)" title="Guardar y cerrar" href="#" class="float" onClick={saveChanges}>
+          <i className="fa-solid fa-floppy-disk my-float"></i>
+        </Link>
       </div>
     </>
   );
