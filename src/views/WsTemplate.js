@@ -77,7 +77,7 @@ function WsTemplate() {
                         <Col md="6">
                             <FormGroup>
                                 <label>Empresa</label>
-                                <select className="form-control" name="idCompany" value={wstemplate.idCompany} onChange={cmbCompanyOnChange}>
+                                <select className="form-control" name="idcompany" value={wstemplate.idcompany} onChange={cmbCompanyOnChange}>
                                 {
                                     companies?.map((company, index) => 
                                     <option key={index} value={company.idcompany}>{company.name}</option>

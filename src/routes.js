@@ -49,7 +49,7 @@ var routes = [
   },
   {
     path: "/lists",
-    name: "Listas de dispersión",
+    name: "Listas de difusión",
     icon: "tim-icons icon-notes",
     component: <ScatterLists />,
     layout: "/admin",
@@ -58,10 +58,34 @@ var routes = [
   {
     path: "/wstemplates",
     name: "Plantillas de Whatsapp",
-    icon: "tim-icons icon-bullet-list-67",
+    icon: "tim-icons icon-puzzle-10",
     component: <WsTemplates />,
     layout: "/admin",
     idText: '5'
+  },
+  {
+    path: "/wstemplates",
+    name: "Plantillas de Email",
+    icon: "tim-icons icon-email-85",
+    component: <WsTemplates />,
+    layout: "/admin",
+    idText: '12'
+  }, 
+  {
+    path: "/wstemplates",
+    name: "Plantillas de SMS",
+    icon: "tim-icons icon-mobile",
+    component: <WsTemplates />,
+    layout: "/admin",
+    idText: '13'
+  },
+  {
+    path: "/feelings",
+    name: "AI Sentimientos",
+    icon: "tim-icons icon-satisfied",
+    component: < Feelings/>,
+    layout: "/admin", 
+    idText: '11'
   },
   {
     path: "/users",
@@ -78,15 +102,7 @@ var routes = [
     component: <Companies />,
     layout: "/admin",
     idText: '2'
-  },
-  {
-    path: "/feelings",
-    name: "AI Sentiminetos",
-    icon: "tim-icons icon-components",
-    component: < Feelings/>,
-    layout: "/admin", 
-    idText: '11'
-  },
+  },  
   {
     path: "/user",
     name: "User",
