@@ -49,10 +49,11 @@ function WsTemplate() {
     load();
   }, []);
 
-  function saveChanges() {
-    console.log(wstemplate)
+  function saveChanges(close = true) {
     axios.post(`${constants.apiurl}/api/wstemplate`, wstemplate).then(async (result) => {
-        navigate('/admin/wstemplates');
+        if(close) {
+          navigate('/admin/wstemplates');
+        }        
     });
   }
 

@@ -19,7 +19,7 @@ import {
 
 import { axios } from '../config/https';
 import constants from '../util/constans';
-import { element } from 'prop-types';
+import { element, func } from 'prop-types';
 
 function ScatterList() {
   const navigate = useNavigate ();
@@ -93,29 +93,39 @@ function ScatterList() {
     load();
   }, []);
 
-  function saveChanges() {
+  async function saveChanges(close = true) {
     scatterList.json = pObjectToJson();
-    axios.post(`${constants.apiurl}/api/scatterList`, scatterList).then(async (result) => {
-        navigate('/admin/lists');
-    });
+    await axios.post(`${constants.apiurl}/api/scatterList`, scatterList);
+    if(close) {
+      navigate('/admin/lists');
+    }   
+  }
+
+  function validateContact(contactInfo) {
+    const regexPhone = /^([+]\d{2})?\d{10}/;
+    return (contactInfo.phone && regexPhone.test(contactInfo.phone) && contactInfo.name);
   }
 
   async function addContact() {
-    const currentScatterListID = localStorage.getItem('currentScatterListID');
-    await axios.post(`${constants.apiurl}/api/scatterlistdetail`, { ...contact, idscatterlist: currentScatterListID });
-    const _scatterListDetails =  await axios.get(`${constants.apiurl}/api/scatterlistdetailbyScatterlist/${currentScatterListID}`);
-    if(_scatterListDetails.data) {
-      setScatterListDetails(_scatterListDetails.data);
-    } 
-    setContact({});
-    toggleModal();
+    if(validateContact(contact)) {
+      const currentScatterListID = localStorage.getItem('currentScatterListID');
+      await axios.post(`${constants.apiurl}/api/scatterlistdetail`, { ...contact, idscatterlist: currentScatterListID });
+      const _scatterListDetails =  await axios.get(`${constants.apiurl}/api/scatterlistdetailbyScatterlist/${currentScatterListID}`);
+      if(_scatterListDetails.data) {
+        setScatterListDetails(_scatterListDetails.data);
+      }  
+      setContact({});
+      toggleModal();
+    }else {
+      sendNotification('Ocurrio un error guardarndo el contacto verifica que el telefono y el numero sean correctos', 'danger')
+    }    
   }
 
   async function addParameterBody() {
     setBodyParameters(oldArray => [...oldArray, {text: ''}]);
   }
 
-  function sendNotification(message) {   
+  async function sendNotification(message, type = 'success') {    
     var options = {};
     options = {
       place: 'tr',
@@ -126,15 +136,16 @@ function ScatterList() {
           </div>
         </div>
       ),
-      type: 'success',
+      type: type,
       icon: "tim-icons icon-bell-55",
       autoDismiss: 7,
     };
     notificationAlertRef.current.notificationAlert(options);
   }
 
-  function sendMessage() {
+  async function sendMessage() {
     if (window.confirm('¿Estas seguro que deseas enviar la dispersión con esta lista?')) {
+        await saveChanges(false);
         axios.post(`${constants.apiurl}/api/sendscatterlist`, {id: scatterList.idscatterlist}).then(async (result) => {
             sendNotification('Lista enviada');
         });

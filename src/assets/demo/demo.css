@@ -214,6 +214,15 @@
 	box-shadow: 2px 2px 3px #999;
 }
 
+.float-2:focus {
+	color:#F5F5F5;
+}
+
+.float:focus {
+  color:#F5F5F5;
+}
+
+
 .float-2:hover {
 	color:#F5F5F5;
 }
