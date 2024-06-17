@@ -156,6 +156,11 @@ function ScatterList() {
     setModalVisible(!modalVisible);
   };
 
+  const OpenContactforUpdate= (contact) => {
+    toggleModal();
+    setContact(contact);
+  }
+
   const toggleParameterModal = () => {
     const isVisible = !modalParameterVisible;
 
@@ -237,6 +242,15 @@ function ScatterList() {
             <FormGroup>
                 <label>Nombre completo</label>
                 <Input placeholder="Escriba el nombre completo" className="form-control form-control-lg color_black" type="text" name='name' defaultValue={contact.name} onChange={onHandleChangeContact}/>
+            </FormGroup>
+            <FormGroup>
+                <label>Extra 1</label>
+                <Input placeholder="Escriba el parametro extra aqui" className="form-control form-control-lg color_black" type="text" name='extra1' defaultValue={contact.extra1} onChange={onHandleChangeContact}/>
+            </FormGroup>
+
+            <FormGroup>
+                <label>Extra 2</label>
+                <Input placeholder="Escriba el parametro extra aqui" className="form-control form-control-lg color_black" type="text" name='extra2' defaultValue={contact.extra2} onChange={onHandleChangeContact}/>
             </FormGroup>
             
             <Button onClick={addContact} style={{marginTop: '20px'}} className="btn btn-primary">
@@ -332,14 +346,18 @@ function ScatterList() {
                                         <th>#</th>                           
                                         <th>Nombre</th>
                                         <th>Telefono</th>
+                                        <th>Extra 1</th>
+                                        <th>Extra 2</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {scatterListDetails?.map((scatterListDetail, index) => 
                                         <tr key={index}>
-                                            <td> <Link to="javascript:void(0)">{index + 1}</Link></td>
-                                            <td> <Link to="javascript:void(0)">{scatterListDetail.name}</Link></td>
-                                            <td> <Link to="javascript:void(0)">{scatterListDetail.phone}</Link></td>
+                                            <td> <Link to="javascript:void(0)" onClick={()=>{OpenContactforUpdate(scatterListDetail)}} >{index + 1}</Link></td>
+                                            <td> <Link to="javascript:void(0)" onClick={()=>{OpenContactforUpdate(scatterListDetail)}}>{scatterListDetail.name}</Link></td>
+                                            <td> <Link to="javascript:void(0)" onClick={()=>{OpenContactforUpdate(scatterListDetail)}}>{scatterListDetail.phone}</Link></td>
+                                            <td> <Link to="javascript:void(0)" onClick={()=>{OpenContactforUpdate(scatterListDetail)}}>{scatterListDetail.extra1}</Link></td>
+                                            <td> <Link to="javascript:void(0)" onClick={()=>{OpenContactforUpdate(scatterListDetail)}}>{scatterListDetail.extra2}</Link></td>
                                         </tr>
                                     )}                   
                                 </tbody>          
