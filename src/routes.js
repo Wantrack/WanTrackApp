@@ -13,6 +13,7 @@ import ScatterLists from "views/ScatterLists";
 import ScatterList from "views/ScatterList";
 import Notifications from "views/Notifications";
 import Feelings from "views/Feelings";
+import FacebookSignUp from "views/FacebookSignUp";
 
 var routes = [
   {
@@ -84,6 +85,14 @@ var routes = [
     name: "AI Sentimientos",
     icon: "tim-icons icon-satisfied",
     component: < Feelings/>,
+    layout: "/admin", 
+    idText: '11'
+  },
+  {
+    path: "/fbsignup",
+    name: "Registrar cliente",
+    icon: "tim-icons icon-badge",
+    component: < FacebookSignUp/>,
     layout: "/admin", 
     idText: '11'
   },
