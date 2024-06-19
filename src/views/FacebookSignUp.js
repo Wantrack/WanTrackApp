@@ -12,17 +12,12 @@ import {
   } from "reactstrap";
 
 function FbScript() {
+    const handleClick = () => {
+        window.launchWhatsAppSignup();
+    };
+
     return (<div>        
-        <script>
-             window.fbAsyncInit = function () {
-                FB.init({
-                    appId:    '444020324848448', 
-                    cookie:   true, 
-                    xfbml:    true, 
-                    version:  'v20.0' 
-                })
-            }
-        </script>        
+        <button onClick={handleClick} className='btn btn-primary'>Login with Facebook</button>
     </div>       
     );
 }
