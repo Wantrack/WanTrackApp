@@ -14,7 +14,8 @@ import {
   Col,
   Modal,
   ModalBody,
-  ModalHeader
+  ModalHeader,
+  ModalFooter
 } from "reactstrap";
 
 import { axios } from '../config/https';
@@ -26,6 +27,7 @@ function ScatterList() {
   const [scatterList, setScatterList] = useState({});
   const [contact, setContact] = useState({});
   const [bodyparameters, setBodyParameters] = useState([]);
+  const [buttonsparameters, setButtonsParameters] = useState([]);
   const [headerp, setHeaderP] = useState({});
   const [scatterListDetails, setScatterListDetails] = useState([]);
   const [companies, setCompanies] = useState([]); 
@@ -63,6 +65,12 @@ function ScatterList() {
     let newArray = [...bodyparameters];
     newArray[index] = { text: e.target.value }
     setBodyParameters(newArray)
+  }
+
+  const onHandleChangeBodyB = index => e => {
+    let newArray = [...buttonsparameters];
+    newArray[index] = { sub_type: e.target.value }
+    setButtonsParameters(newArray)
   }
 
   const cmbCompanyOnChange = async (e) => { 
@@ -123,6 +131,10 @@ function ScatterList() {
 
   async function addParameterBody() {
     setBodyParameters(oldArray => [...oldArray, {text: ''}]);
+  }
+
+  async function addParameterButton() {
+    setButtonsParameters(oldArray => [...oldArray, {sub_type: ''}]);
   }
 
   async function sendNotification(message, type = 'success') {    
@@ -187,6 +199,16 @@ function ScatterList() {
         }
         setBodyParameters(_bodyparameters);
       }
+
+      const buttons = json.filter(element => element.type == 'button');
+      if(buttons && Array.isArray(buttons) && buttons.length > 0) {
+        const _buttonsparameters = [];
+        for (const button of buttons) {
+          _buttonsparameters.push(button);
+        }
+        setButtonsParameters(_buttonsparameters);
+        
+      }
     }
   }
 
@@ -196,13 +218,8 @@ function ScatterList() {
       let headerelement = { type : 'header', parameters: []};
       let headerelementp = {};
 
-      if(headerp.type) {
-        headerelementp.type = headerp.type
-      }
-
-      if(headerp.link) {
-        headerelementp.link = headerp.link
-      }
+      headerelementp.type = headerp.type || 'image';
+      headerelementp.link = headerp.link;
 
       if(headerp.text) {
         headerelementp.text = headerp.text
@@ -219,6 +236,21 @@ function ScatterList() {
         bodyelement.parameters.push(bodyparameter);
       }
       json.push(bodyelement);
+    }
+
+    if(buttonsparameters && buttonsparameters.length > 0) {
+      let buttonelement = { type : 'button', parameters: []};
+      let cont = 0;
+      for (const buttonparameter of buttonsparameters) {
+        buttonelement.sub_type = buttonparameter.sub_type;
+        buttonelement.index = cont;
+        buttonelement.parameters.push({
+            type: 'action',
+            action: {}
+        });
+        cont++;
+      }
+      json.push(buttonelement);
     }
 
     return JSON.stringify(json)
@@ -266,27 +298,48 @@ function ScatterList() {
           <ModalBody>
             <FormGroup>
                 <label>Header</label>
-                <select className="form-control color_black" name='typeId' value={headerp.type} onChange={onHandleChangeHeader}>
+                <select className="form-control color_black" name='type' value={headerp.type} onChange={onHandleChangeHeader}>
                   <option selected value='image'>Imagen</option>
                   <option value='document'>Documento</option>
                 </select>
-                <Input placeholder="Link" className="form-control form-control-lg color_black" style={{marginTop: '10px'}}  type="text" name='phone' defaultValue={headerp.link} onChange={onHandleChangeHeader}/>
-                <Input placeholder="Texto" className="form-control form-control-lg color_black" style={{marginTop: '10px'}} type="text" name='phone' defaultValue={headerp.text} onChange={onHandleChangeHeader}/>
+                <Input placeholder="Link" className="form-control form-control-lg color_black" style={{marginTop: '10px'}}  type="text" name='link' defaultValue={headerp.link} onChange={onHandleChangeHeader}/>
+                <Input placeholder="Texto" className="form-control form-control-lg color_black" style={{marginTop: '10px'}} type="text" name='text' defaultValue={headerp.text} onChange={onHandleChangeHeader}/>
             </FormGroup>
+            <hr></hr>       
             <FormGroup>
-                <label>Body</label>
+                <div style={{display:'flex', justifyContent: 'space-between'}}> 
+                  <span>Body</span> 
+                  <Button onClick={addParameterBody} className="btn btn-primary">
+                    Agregar parametro
+                  </Button>
+                </div>                
+                <hr></hr>                
                 {
                   bodyparameters?.map((parameter, index) => 
                     <Input key={index} className="form-control form-control-lg color_black" placeholder="Texto" style={{marginTop: '10px'}} type="text" name={`body${index}`} defaultValue={parameter.text} onChange={onHandleChangeBodyP(index)}/>
-                  )}  
+                )}                  
             </FormGroup>
-            
-            <Button onClick={toggleParameterModal} style={{marginTop: '20px'}} className="btn btn-primary">
-              Guardar
-            </Button> 
-            <Button onClick={addParameterBody} style={{marginTop: '20px'}} className="btn btn-primary">
-                  Agregar parametro body
-                </Button>
+            <hr></hr>       
+            <FormGroup>
+                <div style={{display:'flex', justifyContent: 'space-between'}}> 
+                  <span>Botons</span> 
+                  <Button onClick={addParameterButton} className="btn btn-primary">
+                  Agregar boton
+                  </Button>
+                </div>  
+                <hr></hr>       
+                {
+                  buttonsparameters?.map((parameter, index) => 
+                    <Input key={index} className="form-control form-control-lg color_black" placeholder="Escribe el subtipo" style={{marginTop: '10px'}} type="text" name={`button${index}`} defaultValue={parameter.sub_type} onChange={onHandleChangeBodyB(index)}/>
+                )}
+                <hr></hr>
+            </FormGroup>
+
+            <ModalFooter>
+              <Button onClick={toggleParameterModal} style={{marginTop: '20px'}} className="btn btn-primary">
+                Guardar
+              </Button>
+            </ModalFooter>   
           </ModalBody>
         </Modal>
         <Row>
