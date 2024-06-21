@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
-
+import { decode } from "../util/base64";
 import { axios } from '../config/https';
 import constants from '../util/constans';
 import {
@@ -16,8 +16,17 @@ function ScatterLists (props) {
     const [searchValue, setSearchValue] = useState('');
     
     useEffect(() => { 
+        let idCompany = undefined;
+        const _userinfoEncoded = localStorage.getItem(constants.userinfo);
+        if(_userinfoEncoded) {
+            const _userinfo = JSON.parse(decode(_userinfoEncoded));
+            if(_userinfo.idCompany) {
+                idCompany =_userinfo.idCompany
+            }
+        }
+
         setLoaderActive(true)
-        axios.get(`${constants.apiurl}/api/scatterlists`).then(result => {
+        axios.get(`${constants.apiurl}/api/scatterlists${idCompany ? `?idcompany=${idCompany}` : ''}`).then(result => {
             setLoaderActive(false)
             setScatterLists(result.data);
         });
