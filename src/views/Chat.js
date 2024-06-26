@@ -34,10 +34,9 @@ function Chat (props) {
             <div id='chatcontainer' className="chat-container">
                 {
                     chats.map((chat, index) => 
-                        <div key={index}>
-                            <div className={`${chat.type == 0 ? 'message-left' : 'message-right'}`}>
-                                <p>{chat.message}</p>
-                                
+                        <div key={index}  className={`${chat.type == 0 ? 'message-left' : 'message-right'}`}>
+                            <div>
+                                <p>{chat.message}</p>                                
                             </div>
                             <p className='type-message'>Tipo: {chat.typeMessage}</p>
                         </div>
