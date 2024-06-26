@@ -9,6 +9,7 @@ import {
   FormGroup,
   Form,
   Input,
+  Label,
   Row,
   Col,
 } from "reactstrap";
@@ -164,6 +165,19 @@ function Company() {
                     </Col>
                   </Row>
                   <Row>
+                    <Col md="4">
+                      <FormGroup check>
+                        <Label check>
+                          <Input type="checkbox" name='ableinstagram' defaultChecked={company.ableinstagram == 1 ? true : false}  onChange={onHandleChange}/>
+                          <span className="form-check-sign">
+                            <span className="check" />
+                          </span>
+                          Habilitar Instagram
+                        </Label>
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  <Row style={{marginTop: '10px'}}>
                     <Col md="12">
                       <FormGroup>
                         <label>WS Token</label>
