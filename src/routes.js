@@ -14,6 +14,8 @@ import ScatterList from "views/ScatterList";
 import Notifications from "views/Notifications";
 import Feelings from "views/Feelings";
 import FacebookSignUp from "views/FacebookSignUp";
+import Chats from "views/Chats";
+import Chat from "views/Chat";
 
 var routes = [
   {
@@ -27,7 +29,7 @@ var routes = [
   {
     path: "/conversations",
     name: "Conversaciones",
-    icon: "tim-icons icon-chat-33",
+    icon: "tim-icons icon-vector",
     component: <Conversations />,
     layout: "/admin",
     idText: '7'
@@ -94,7 +96,15 @@ var routes = [
     icon: "tim-icons icon-badge",
     component: < FacebookSignUp/>,
     layout: "/admin", 
-    idText: '11'
+    idText: '14'
+  },
+  {
+    path: "/chatsws",
+    name: "Chat",
+    icon: "tim-icons icon-chat-33",
+    component: < Chats/>,
+    layout: "/admin", 
+    idText: '15'
   },
   {
     path: "/users",
@@ -152,6 +162,13 @@ var routes = [
     name: "Lista de dispersion",
     component: <ScatterList />,
     layout: "/admin",
+    invisible: true
+  },
+  {
+    path: "/chat",
+    name: "Chat",
+    component: < Chat/>,
+    layout: "/admin", 
     invisible: true
   }
 ];

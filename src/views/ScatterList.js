@@ -15,7 +15,8 @@ import {
   Modal,
   ModalBody,
   ModalHeader,
-  ModalFooter
+  ModalFooter,
+  Label
 } from "reactstrap";
 
 import { axios } from '../config/https';
@@ -43,6 +44,17 @@ function ScatterList() {
       ...pre,
       [name]: value 
     }));
+  }
+
+  const onHandleChangeCheckbox = index => e => {
+    const { name, value } = e.target;
+    let newArray = [...scatterListDetails];
+    const item = newArray[index];
+    newArray[index] = { ...item, selected: item.selected == 1 ? 0 : 1 }
+    item.selected = item.selected == 1 ? 0 : 1 
+    setScatterListDetails(newArray);
+
+    axios.patch(`${constants.apiurl}/api/scatterlistdetailSelected`, item);
   }
 
   const onHandleChangeContact = (e) => {
@@ -406,7 +418,16 @@ function ScatterList() {
                                 <tbody>
                                     {scatterListDetails?.map((scatterListDetail, index) => 
                                         <tr key={index}>
-                                            <td> <Link to="javascript:void(0)" onClick={()=>{OpenContactforUpdate(scatterListDetail)}} >{index + 1}</Link></td>
+                                            <td> 
+                                              <FormGroup check>
+                                                <Label check>
+                                                  <Input type="checkbox" name={`inputSelected_${index}`} defaultChecked={scatterListDetail.selected == 1 ? true : false}  onChange={onHandleChangeCheckbox(index)}/>
+                                                  <span className="form-check-sign">
+                                                    <span className="check" />
+                                                  </span>
+                                                </Label>
+                                              </FormGroup>
+                                            </td>
                                             <td> <Link to="javascript:void(0)" onClick={()=>{OpenContactforUpdate(scatterListDetail)}}>{scatterListDetail.name}</Link></td>
                                             <td> <Link to="javascript:void(0)" onClick={()=>{OpenContactforUpdate(scatterListDetail)}}>{scatterListDetail.phone}</Link></td>
                                             <td> <Link to="javascript:void(0)" onClick={()=>{OpenContactforUpdate(scatterListDetail)}}>{scatterListDetail.extra1}</Link></td>

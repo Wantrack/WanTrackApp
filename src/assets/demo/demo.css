@@ -234,3 +234,45 @@
 .my-float{
 	margin-top:22px;
 }
+
+.chat-container {
+  width: 100%;
+  max-width: 100%;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  overflow-y: auto;
+}
+
+.message-left, .message-right {
+  padding: 10px 15px 0px 15px;
+  border-radius: 15px 15px 0px 0px;
+  margin: 10px 10px 0px 10px;
+  max-width: 300px;
+  word-wrap: break-word;
+}
+
+.message-left {
+  background-color: #202c33;
+  color: #fff;
+  align-self: flex-start;
+}
+
+.message-right {
+  background-color: #005c4b;
+  color: #fff;
+  align-self: flex-end;
+  text-align: right;
+}
+
+.message-left p, .message-right p {
+  margin: 0;
+}
+
+.type-message {
+  background-color: #4b4646;
+  padding: 0px 5px;
+  max-width: 300px;
+  margin-left: 10px;
+}

@@ -160,7 +160,8 @@ function Dashboard(props) {
                     <tr>
                       <th>#</th>
                       <th>Telefono</th>
-                      <th>Plantilla</th>                      
+                      <th>Plantilla</th>
+                      <th>Tipo</th>
                       <th className="text-center">Fecha</th>
                     </tr>
                   </thead>
@@ -169,7 +170,8 @@ function Dashboard(props) {
                       <tr key={index}>
                         <td>{index + 1}</td>
                         <td>{messageSent.phone}</td>
-                        <td>{messageSent.name}</td>                      
+                        <td>{messageSent.name}</td>
+                        <td>{messageSent.type == 1 ? 'Lista de difusion' : 'WebHook'}</td>
                         <td className="text-center">{moment(messageSent.creationdate).format('DD-MM-YYYY hh:mm:ss')}</td>
                       </tr>
                     )}                   
