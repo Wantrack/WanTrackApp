@@ -19,7 +19,6 @@ import {
 
 function HistoryTrans (props) {
     const [messagesSent, setMessagesSent] = useState([]);
-    const [amountMessagesSent, setAmountMessagesSent] = useState(0);
     const [maxMessagesSent, setMaxMessagesSent] = useState(0);
     const [startMessagesSent, setStartMessagesSent] = useState(0);
     const [amountMessagesSentArray, setAmountMessagesSentArray] = useState([]);
@@ -36,15 +35,16 @@ function HistoryTrans (props) {
             setLoaderActive(false);
         });
 
+        setLoaderActive(true);
         axios.get(`${constants.apiurl}/api/messagesentCount`).then(result => {
             const amount = result.data.count;
             const max = Math.ceil(amount/25);
-            setAmountMessagesSent(amount);
             setLoaderActive(false);
             var rows = [], i = 0, len = max
             while (++i <= len) rows.push(i);
             setAmountMessagesSentArray(rows);
             setMaxMessagesSent(max);
+            setLoaderActive(false);
         });
     }
     
@@ -54,29 +54,7 @@ function HistoryTrans (props) {
     
     return <div className="content">
             <Loader active={loaderActive} />
-            <Row>
-                <Col lg="12">
-                   <Row>
-                        <Col lg="4">
-                            <Card className='cardData'>
-                                <h4><i className="fa-solid fa-paper-plane"></i> Mensajes enviados: </h4>
-                                <h1>{amountMessagesSent}</h1>
-                            </Card>
-                        </Col>
-                        <Col lg="4">
-                            <Card className='cardData'>
-                                <h4><i class="fa-solid fa-coins"></i>Saldo actual: </h4>
-                                <h1>$ {(amountMessagesSent * 50).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</h1>
-                            </Card>
-                        </Col>
-                        <Col lg="4">
-                            <Card className='cardData'>
-                                <h4><i class="fa-solid fa-coins"></i>Facturación minima: </h4>
-                                <h1>$ 400,000</h1>
-                            </Card>
-                        </Col>
-                   </Row>
-                </Col>
+            <Row>                
                 <Col lg="12">
                     <Card>
                         <Row>
