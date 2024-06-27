@@ -5,6 +5,7 @@ import { decode } from "../util/base64";
 // react plugin used to create charts
 import { Line, Bar } from "react-chartjs-2";
 import moment from 'moment';
+import HistoryTrans from './HistoryTrans';
 
 // reactstrap components
 import {
@@ -24,7 +25,6 @@ import {
 } from "variables/charts.js";
 
 function Dashboard(props) {
-  const [messagesSent, setMessagesSent] = useState([]);
   const [dataChartSent, setDataChartSent] = useState(chartExample2.data);
   const [messageSent, setMessageSent] = useState(0);
   const [dataChartReceive, setDataChartReceive] = useState(chartExample3.data);
@@ -39,10 +39,6 @@ function Dashboard(props) {
         idCompany =_userinfo.idCompany
       }
     }
-
-    axios.get(`${constants.apiurl}/api/messagesent${idCompany ? `?idcompany=${idCompany}` : ''}`).then(result => {
-        setMessagesSent(result.data);
-    });
 
     axios.get(`${constants.apiurl}/api/MessageSendChart${idCompany ? `?idcompany=${idCompany}` : ''}`).then(result => {  
       if(result.data && result.data.data && result.data.data.length > 0) {
@@ -150,35 +146,7 @@ function Dashboard(props) {
         </Row>
         <Row>
           <Col lg="12" md="12">
-            <Card>
-              <CardHeader>
-                <CardTitle tag="h4">Historico de transacciones</CardTitle>
-              </CardHeader>
-              <CardBody>
-                <Table className="tablesorter" responsive>
-                  <thead className="text-primary">
-                    <tr>
-                      <th>#</th>
-                      <th>Telefono</th>
-                      <th>Plantilla</th>
-                      <th>Tipo</th>
-                      <th className="text-center">Fecha</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {messagesSent.map((messageSent, index) => 
-                      <tr key={index}>
-                        <td>{index + 1}</td>
-                        <td>{messageSent.phone}</td>
-                        <td>{messageSent.name}</td>
-                        <td>{messageSent.type == 1 ? 'Lista de difusion' : 'WebHook'}</td>
-                        <td className="text-center">{moment(messageSent.creationdate).format('DD-MM-YYYY hh:mm:ss')}</td>
-                      </tr>
-                    )}                   
-                  </tbody>
-                </Table>
-              </CardBody>
-            </Card>
+            <HistoryTrans></HistoryTrans>
           </Col>
         </Row>
       </div>

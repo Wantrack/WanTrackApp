@@ -16,6 +16,7 @@ import Feelings from "views/Feelings";
 import FacebookSignUp from "views/FacebookSignUp";
 import Chats from "views/Chats";
 import Chat from "views/Chat";
+import Summary from "views/Summary";
 
 var routes = [
   {
@@ -121,6 +122,14 @@ var routes = [
     component: <Companies />,
     layout: "/admin",
     idText: '2'
+  },  
+  {
+    path: "/summary",
+    name: "Consumos",
+    icon: "tim-icons icon-money-coins",
+    component: <Summary />,
+    layout: "/admin",
+    idText: '16'
   },  
   {
     path: "/user",
