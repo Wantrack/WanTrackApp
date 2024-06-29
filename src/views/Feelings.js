@@ -201,8 +201,6 @@ function Feelings(props) {
                         <strong>{sentence.speaker}</strong>: {sentence.text}
                         <br></br>
                         <strong>Emocion generada: </strong>{sentence.emotion}
-                        <br></br>
-                        <strong>Score: </strong>{sentence.sentiment}
                     </div>
                     <hr></hr>
                 </div>
