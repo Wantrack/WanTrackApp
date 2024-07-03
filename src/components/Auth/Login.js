@@ -47,7 +47,11 @@ const disabledLoginButton = !formData['email'] || !formData['password']
       <section className="vh-100 center-div" style={{display:"flex"}}>
         <div className="container-fluid h-custom">
           <div className="row d-flex justify-content-center align-items-center h-100">
-            <div className="col-xs-12 col-md-6" style={{backgroundColor:"#fff", padding: 70, borderRadius: '30px'}}>
+            <div className="col-xs-12 col-md-6" style={{backgroundColor:"#fff", padding: 70, borderRadius: '0px 0px 30px 30px'}}>
+                <div style={{textAlign: 'center'}}>
+                  <img style={{height: '7rem'}} alt="WANTRACK" src={require("assets/img/Logo.png")} />
+                </div>
+            
                 <div className="form-outline mb-4">
                 <label className="form-label">Email</label>
                   <input type="email" name="email" value={formData['email'] || ''} onChange={onHandleChange} className="form-control form-control-lg color_black" placeholder="Ingresa un email valido" style={{paddingLeft: '5px'}} />            
