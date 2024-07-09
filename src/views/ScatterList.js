@@ -366,7 +366,7 @@ function ScatterList() {
                         <Col className="pr-md-1" md="4">
                             <FormGroup>
                                 <label>Nombre</label>
-                                <Input placeholder="Nombre de la plantiall aqui" type="text" name='name' defaultValue={scatterList.name} onChange={onHandleChange}/>
+                                <Input placeholder="Nombre de la plantilla aqui" type="text" name='name' defaultValue={scatterList.name} onChange={onHandleChange}/>
                             </FormGroup>
                         </Col>
                         <Col md="4">

@@ -17,6 +17,8 @@ import FacebookSignUp from "views/FacebookSignUp";
 import Chats from "views/Chats";
 import Chat from "views/Chat";
 import Summary from "views/Summary";
+import WebHooks from "views/WebHooks";
+import WebHookMessage from "views/WebHookMessage";
 
 var routes = [
   {
@@ -44,10 +46,10 @@ var routes = [
     idText: '10'
   },
   {
-    path: "/tables",
+    path: "/webhooks",
     name: "WebHooks",
     icon: "tim-icons icon-cloud-upload-94",
-    component: <Notifications />,
+    component: <WebHooks />,
     layout: "/admin",
     idText: '8'
   },
@@ -177,6 +179,13 @@ var routes = [
     path: "/chat",
     name: "Chat",
     component: < Chat/>,
+    layout: "/admin", 
+    invisible: true
+  },
+  {
+    path: "/webhook",
+    name: "Webhook",
+    component: < WebHookMessage/>,
     layout: "/admin", 
     invisible: true
   }

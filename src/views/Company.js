@@ -168,7 +168,7 @@ function Company() {
                     <Col md="4">
                       <FormGroup check>
                         <Label check>
-                          <Input type="checkbox" name='ableinstagram' defaultChecked={company.ableinstagram == 1 ? true : false}  onChange={onHandleChange}/>
+                          <Input type="checkbox" name='ableinstagram' onChange={onHandleChange}/>
                           <span className="form-check-sign">
                             <span className="check" />
                           </span>
