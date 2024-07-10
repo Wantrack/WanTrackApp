@@ -26,9 +26,7 @@ function HistoryTrans (props) {
 
     function getMessageSent(from, to) {
         setLoaderActive(true);
-        console.log(from)
-        const start = (25 * (from > 0 ? from  - 1: from))
-        console.log(start)
+        const start = (25 * (from > 0 ? from  - 1: from));
         setStartMessagesSent(start);
         axios.get(`${constants.apiurl}/api/messagesent?start=${start}&end=${to}`).then(result => {
             setMessagesSent(result.data);
@@ -98,13 +96,13 @@ function HistoryTrans (props) {
                                             </PaginationItem>
                                             {
                                                 amountMessagesSentArray.map((item, index) => 
-                                                    <PaginationItem>
-                                                    <PaginationLink 
-                                                    href="javascript:void(0)"
-                                                    onClick={() => {getMessageSent(index + 1, 25)}}
-                                                    >
-                                                    {index + 1}
-                                                    </PaginationLink>
+                                                    <PaginationItem  key={index}>
+                                                        <PaginationLink 
+                                                        href="javascript:void(0)"
+                                                        onClick={() => {getMessageSent(index + 1, 25)}}
+                                                        >
+                                                        {index + 1}
+                                                        </PaginationLink>
                                                 </PaginationItem> 
                                                 )
                                             }                    

@@ -29,6 +29,10 @@ var routes = [
     layout: "/admin",
     idText: '1'
   },
+  {  
+    type: 'separator',
+    idText: '1'
+  },
   {
     path: "/conversations",
     name: "Conversaciones",
@@ -46,6 +50,18 @@ var routes = [
     idText: '10'
   },
   {
+    path: "/chatsws",
+    name: "Chat",
+    icon: "tim-icons icon-chat-33",
+    component: < Chats/>,
+    layout: "/admin", 
+    idText: '15'
+  },
+  {  
+    type: 'separator',
+    idText: '1'
+  },
+  {
     path: "/webhooks",
     name: "WebHooks",
     icon: "tim-icons icon-cloud-upload-94",
@@ -60,6 +76,10 @@ var routes = [
     component: <ScatterLists />,
     layout: "/admin",
     idText: '9'
+  },
+  {  
+    type: 'separator',
+    idText: '1'
   },
   {
     path: "/wstemplates",
@@ -85,29 +105,61 @@ var routes = [
     layout: "/admin",
     idText: '13'
   },
+  {  
+    type: 'separator',
+    idText: '1'
+  },
+  {
+    path: "/fbsignup",
+    name: "Registrar cliente Meta",
+    icon: "tim-icons icon-badge",
+    component: < FacebookSignUp/>,
+    layout: "/admin", 
+    idText: '14'
+  },
+  {  
+    type: 'separator',
+    idText: '1'
+  },
+  {
+    path: "/summary",
+    name: "Consumos",
+    icon: "tim-icons icon-money-coins",
+    component: <Summary />,
+    layout: "/admin",
+    idText: '16'
+  },
+  {  
+    type: 'separator',
+    idText: '1'
+  },
   {
     path: "/feelings",
-    name: "AI Sentimientos",
+    name: "AI Sentimientos Banco de pruebas",
     icon: "tim-icons icon-satisfied",
     component: < Feelings/>,
     layout: "/admin", 
     idText: '11'
   },
   {
-    path: "/fbsignup",
-    name: "Registrar cliente",
-    icon: "tim-icons icon-badge",
-    component: < FacebookSignUp/>,
+    path: "/feelings",
+    name: "Llamadas",
+    icon: "tim-icons icon-mobile",
+    component: < Feelings/>,
     layout: "/admin", 
-    idText: '14'
+    idText: '11'
   },
   {
-    path: "/chatsws",
-    name: "Chat",
-    icon: "tim-icons icon-chat-33",
-    component: < Chats/>,
+    path: "/feelings",
+    name: "Asesores",
+    icon: "tim-icons icon-headphones",
+    component: < Feelings/>,
     layout: "/admin", 
-    idText: '15'
+    idText: '11'
+  },
+  {  
+    type: 'separator',
+    idText: '11'
   },
   {
     path: "/users",
@@ -124,15 +176,7 @@ var routes = [
     component: <Companies />,
     layout: "/admin",
     idText: '2'
-  },  
-  {
-    path: "/summary",
-    name: "Consumos",
-    icon: "tim-icons icon-money-coins",
-    component: <Summary />,
-    layout: "/admin",
-    idText: '16'
-  },  
+  },   
   {
     path: "/user",
     name: "User",

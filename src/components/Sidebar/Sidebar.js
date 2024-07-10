@@ -120,7 +120,7 @@ function Sidebar(props) {
                 if (prop.redirect) return null;
                 if (prop.invisible) return null;
                 if (!modules.includes(prop.idText)) return null;
-                return (
+                return prop.type == 'separator' ? (<li><hr></hr></li>) :  (
                   <li
                     className={
                       activeRoute(prop.path) + (prop.pro ? " active-pro" : "")
@@ -133,7 +133,7 @@ function Sidebar(props) {
                       onClick={props.toggleSidebar}
                     >
                       <i className={prop.icon} />
-                      <p>{rtlActive ? prop.rtlName : prop.name}</p>
+                      <p title={prop.name} style={{textOverflow:'ellipsis', overflow:'hidden'}}>{prop.name}</p>
                     </NavLink>
                   </li>
                 );

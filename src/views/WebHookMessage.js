@@ -31,6 +31,7 @@ function WebHookMessage (props) {
     const [wsTemplates, setWsTemplates] = useState([]);
     const [loaderActive, setLoaderActive] = useState(false);
     const [payload, setPayload] = useState('');
+    const [selectedRuleIndex, setSelectedRuleIndex] = useState(0);
     const [modalVisible, setModalVisible] = React.useState(false);
     const [isaValidJSON, setIsaValidJSON] = React.useState(false);
 
@@ -47,9 +48,18 @@ function WebHookMessage (props) {
             setWsTemplates([{idwstemplate: -1, name: 'Sin Plantilla'}, ..._wstemplates.data]);
             
             const currentScatterListID = localStorage.getItem('currentWebHookID');
-            const _webhook =  await axios.get(`${constants.apiurl}/api/webhook/webhook/${currentScatterListID}`);
+            const _webhook =  await axios.get(`${constants.apiurl}/api/webhook/webhook/${currentScatterListID}`);           
+            
             if(_webhook.data) {
                 setWebHook(_webhook.data);
+                const isValidJsonVar = isValidJson(false, true, _webhook.data);
+                setIsaValidJSON(isValidJsonVar);
+                if(_webhook.data.userules == 1) {
+                  const _rules = await axios.get(`${constants.apiurl}/api/webhook/webhookrule/${currentScatterListID}`);
+                  if(_rules.data) {
+                    setRules(_rules.data);
+                  }
+                }
             }
 
             setLoaderActive(false);
@@ -77,13 +87,26 @@ function WebHookMessage (props) {
     
     const onHandleChange = (e) => {
         const { name, value } = e.target;
-        console.log(name)
         console.log(value)
         setWebHook(pre => ({
         ...pre,
         [name]: value 
         }));
     }
+
+    const onHandleChangePayload = (e) => {
+      const { value } = e.target;
+      setPayload(value);
+    }
+
+    const onHandleChangeRule = index => e => {
+      const { name, value } = e.target;
+      let newArray = [...rules];
+      const item = newArray[index];
+      item[name] = value;
+      newArray[index] = { ...item }      
+      setRules(newArray);
+    }  
 
     const rulesCheckonHandleChange = (e) => {
       let isrule = !webHook.userules;
@@ -95,17 +118,14 @@ function WebHookMessage (props) {
         }
       }
 
-      console.log(isrule)
-
       setWebHook(pre => ({
         ...pre,
         userules: isrule
       }));
     }
 
-
     const jsonOnChange = async (e) => {
-      const isValidJsonVar = isValidJson();
+      const isValidJsonVar = isValidJson(false, true, {...webHook, jsonschema: e.target.value});
       setIsaValidJSON(isValidJsonVar);
       onHandleChange(e);
     }
@@ -114,10 +134,14 @@ function WebHookMessage (props) {
         onHandleChange(e);        
     }
 
-    async function saveChanges(close = true) {       
+    async function saveChanges(close = true) {
+        await axios.post(`${constants.apiurl}/api/webhook/webhook`, webHook);
+        for (const rule of rules) {
+          await axios.post(`${constants.apiurl}/api/webhook/webhookrule`, rule);
+        }
         if(close) {
           navigate('/admin/webhooks');
-        }   
+        }
     }
 
     async function addRule() {
@@ -129,7 +153,15 @@ function WebHookMessage (props) {
     }
 
     async function savePayload() {
-
+      onHandleChangeRule(selectedRuleIndex)(
+        {
+          target:  {
+            name: 'jsonschema', 
+            value: payload
+          }
+        }
+       );
+       toggleModal(0)
     }
 
     const jsonOnBlur = async (e) => {
@@ -142,26 +174,32 @@ function WebHookMessage (props) {
       } catch (error) {} 
     }
 
-    function isValidJson(showNotification = false) {
+    function isValidJson(showNotification = false, overridewebHook = false, webHookData = null) {
+      const _webhook = overridewebHook ? webHookData : webHook;
+
       try {
-        if(webHook.jsonschema) {
-          JSON.parse(webHook.jsonschema);   
+        if(_webhook.jsonschema) {
+          JSON.parse(_webhook.jsonschema);           
         }else {
           if(showNotification) {
             sendNotification('El JSON esta vacio', 'danger');
           }
+          console.error('here')
           return false;
-        }            
+        }
         return true;
       } catch (e) {
+        console.error(e)
         if(showNotification) {
           sendNotification('El JSON es Invalido', 'danger');
         }
+        console.error('here')
         return false;
       }
     }
 
-    const toggleModal = () => {
+    const toggleModal = (index) => {
+      setSelectedRuleIndex(index);
       setModalVisible(!modalVisible);
     };
     
@@ -177,7 +215,7 @@ function WebHookMessage (props) {
                 <ModalBody>
                   <FormGroup>
                       <label>Payload</label>
-                      <textarea className="form-control" placeholder="{ ... }" cols="30" rows="10" defaultValue={payload} name='payload' onChange={onHandleChange}></textarea>
+                      <textarea style={{color: '#000'}} className="form-control" placeholder="{ ... }" cols="30" rows="10" defaultValue={payload} name='payload' onChange={onHandleChangePayload}></textarea>
                   </FormGroup>
                   <Button onClick={savePayload} style={{marginTop: '20px'}} className="btn btn-primary">
                     Guardar
@@ -228,10 +266,10 @@ function WebHookMessage (props) {
                             </FormGroup>
                         </Col>
                         <Col md="4">
-                        <label>Habilitar uso de reglas {webHook.userules}</label>
+                        <label>Habilitar uso de reglas</label>
                           <FormGroup check>
                             <Label check>
-                              <Input type="checkbox" name='userules' defaultValue={webHook.userules} onChange={rulesCheckonHandleChange}/>
+                              <Input type="checkbox" name='userules'checked={webHook.userules == 1} defaultValue={webHook.userules} onChange={rulesCheckonHandleChange}/>
                               <span className="form-check-sign">
                                 <span className="check" />
                               </span>
@@ -263,7 +301,7 @@ function WebHookMessage (props) {
                               <Col md="2">
                                 <FormGroup>
                                     <label>Propiedad</label>
-                                    <Input placeholder="Nombre de la propiedad" type="text" name='property' defaultValue={webHook.property} onChange={onHandleChange}/>                                    
+                                    <Input placeholder="Nombre de la propiedad" type="text" name='property' defaultValue={rule.property} onChange={onHandleChangeRule(index)}/>                                    
                                 </FormGroup>
                               </Col>
                               <Col md="1" style={{display:'flex', justifyContent: 'center', alignItems: 'end'}}>
@@ -272,7 +310,7 @@ function WebHookMessage (props) {
                               <Col md="2" style={{display:'flex', justifyContent: 'center', alignItems: 'end'}}>
                                   <FormGroup>
                                       <label>Valor</label>
-                                      <Input placeholder="Nombre del webhook aqui" type="text" name='name' defaultValue={webHook.name} onChange={onHandleChange}/>
+                                      <Input placeholder="Nombre del webhook aqui" type="text" name='value' defaultValue={rule.value} onChange={onHandleChangeRule(index)}/>
                                   </FormGroup>
                               </Col>
                               <Col md="1" style={{display:'flex', justifyContent: 'center', alignItems: 'center'}}>
@@ -281,7 +319,7 @@ function WebHookMessage (props) {
                               <Col md="2">
                                 <FormGroup>
                                     <label>Plantilla</label>
-                                    <select className="form-control" name="wstemplate" value={webHook.wstemplate} onChange={cmbCompanyOnChange}>
+                                    <select className="form-control" name="wstemplate" value={rule.wstemplate} onChange={onHandleChangeRule(index)}>
                                     {
                                         wsTemplates?.map((template, index) => 
                                         <option key={index} value={template.idwstemplate}>{template.name}</option>
@@ -290,7 +328,7 @@ function WebHookMessage (props) {
                                 </FormGroup>
                               </Col>
                               <Col md="1" style={{display:'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                <Link to="javascript:void(0)" title="Agregar payload" onClick={toggleModal}>
+                                <Link to="javascript:void(0)" title="Agregar payload" onClick={()=>toggleModal(index)}>
                                   <i className="fa-solid fa-file"></i>
                                 </Link>                           
                               </Col>
