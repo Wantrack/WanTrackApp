@@ -294,3 +294,11 @@
   margin-right: 10px;
 }
 
+.m_title {
+  text-transform: lowercase
+}
+
+.m_title::first-letter {
+  text-transform: uppercase
+}
+

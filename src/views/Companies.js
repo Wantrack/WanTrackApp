@@ -36,7 +36,7 @@ function Companies (props) {
                         <div className="margin-bottom-2vh flex-left">
                             <div className="input-group flex-nowrap w-full">
                                 <span className="input-group-text z-0" id="addon-wrapping"><i className="fa fa-search"></i></span>
-                                <input type="text" className="form-control px-2" placeholder="Escriba el nombre del usuario"
+                                <input type="text" className="form-control px-2" placeholder="Escriba el nombre de la empresa"
                                 onChange={(e) => setSearchValue(e.target.value)}
                                 />
                             </div>

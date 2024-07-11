@@ -19,6 +19,9 @@ import Chat from "views/Chat";
 import Summary from "views/Summary";
 import WebHooks from "views/WebHooks";
 import WebHookMessage from "views/WebHookMessage";
+import Advisors from "views/Advisors";
+import Advisor from "views/Advisor";
+import Calls from "views/Calls";
 
 var routes = [
   {
@@ -142,18 +145,18 @@ var routes = [
     idText: '11'
   },
   {
-    path: "/feelings",
+    path: "/calls",
     name: "Llamadas",
     icon: "tim-icons icon-mobile",
-    component: < Feelings/>,
+    component: < Calls/>,
     layout: "/admin", 
     idText: '11'
   },
   {
-    path: "/feelings",
+    path: "/advisors",
     name: "Asesores",
     icon: "tim-icons icon-headphones",
-    component: < Feelings/>,
+    component: < Advisors/>,
     layout: "/admin", 
     idText: '11'
   },
@@ -230,6 +233,13 @@ var routes = [
     path: "/webhook",
     name: "Webhook",
     component: < WebHookMessage/>,
+    layout: "/admin", 
+    invisible: true
+  },
+  {
+    path: "/advisor",
+    name: "Advisor",
+    component: < Advisor/>,
     layout: "/admin", 
     invisible: true
   }
