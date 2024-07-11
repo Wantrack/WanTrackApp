@@ -149,6 +149,8 @@ function Calls (props) {
                                         <th>Sentimiento predominante</th>
                                         <th style={{textAlign:'center'}}>Transcripcion</th>
                                         <th style={{textAlign:'center'}}>Resumen</th>
+                                        <th>Audio</th>
+                                        <th>Fecha</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -158,8 +160,18 @@ function Calls (props) {
                                             <td> {call.satisfaction}</td>
                                             <td className='m_title'> {call.mainEmotion || '-'} </td>
                                             <td className='m_title'> {call.feeling || '-'} </td>
-                                            <td style={{textAlign:'center'}}> <Link title='Ver transcripcion' to="javascript:void(0)" onClick={() => toggleModal(call.transcription)}> <i style={{fontSize: '20px'}} className="fa-solid fa-headset"></i></Link></td>
+                                            <td style={{textAlign:'center'}}> 
+                                                <Link title='Ver transcripcion' to="javascript:void(0)" onClick={() => toggleModal(call.transcription)}> 
+                                                    <i style={{fontSize: '20px'}} className="fa-solid fa-headset"></i>
+                                                </Link>
+                                            </td>
                                             <td style={{textAlign:'center'}}> <Link title='Ver transcripcion' to="javascript:void(0)" onClick={() => toggleModal(call.summary)}> <i style={{fontSize: '20px'}} className="fa-solid fa-clipboard-list"></i></Link></td>
+                                            <td> 
+                                                <Link title='Escuchar audio' to={call.audiourl} target='_blank'> 
+                                                    <i style={{fontSize: '20px'}} className="fa-solid fa-circle-play"></i>
+                                                </Link>
+                                            </td>
+                                            <td> {call.creationdate}</td>
                                         </tr>
                                     )}                   
                                 </tbody>          
