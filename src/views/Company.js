@@ -181,7 +181,7 @@ function Company() {
                     <Col md="12">
                       <FormGroup>
                         <label>WS Token</label>
-                        <Input placeholder="000000000000" autocomplete="off" type="password" name='wstoken' defaultValue={company.wstoken} onChange={onHandleChange} />
+                        <Input placeholder="000000000000" type="text" name='wstoken' defaultValue={company.wstoken} onChange={onHandleChange} />
                       </FormGroup>
                     </Col>
                   </Row>
