@@ -21,7 +21,6 @@ import {
 
 import { axios } from '../config/https';
 import constants from '../util/constans';
-import { element, func } from 'prop-types';
 
 function ScatterList() {
   const navigate = useNavigate ();

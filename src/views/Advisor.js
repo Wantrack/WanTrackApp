@@ -57,7 +57,7 @@ function Advisor() {
           <Col md="12">
             <Card>
               <CardHeader>
-                <h5 className="title">Perfil de asesor</h5>
+                <h5 className="title">Perfil de agente</h5>
               </CardHeader>
               <CardBody>
                 <Form>

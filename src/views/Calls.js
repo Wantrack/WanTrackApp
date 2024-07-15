@@ -111,11 +111,10 @@ function Calls (props) {
                         <div className="margin-bottom-2vh flex-left">
                             <div className="input-group flex-nowrap w-full">
                                 <span className="input-group-text z-0" id="addon-wrapping"><i className="fa fa-search"></i></span>
-                                <input type="text" className="form-control px-2" placeholder="Escriba el nombre del asesor"
+                                <input type="text" className="form-control px-2" placeholder="Escriba el nombre del agente"
                                 onChange={(e) => setSearchValue(e.target.value)}
                                 />
                             </div>
-                            {/* <Link className="btn btn-primary" to="/admin/advisor" onClick={() => goToAdvisorOnClick(0)}> Crear Asesor</Link> */}
                         </div>
 
                         <div>
@@ -143,7 +142,7 @@ function Calls (props) {
                             <table className="table table-hover">
                                 <thead>
                                     <tr>                            
-                                        <th>Asesor</th>
+                                        <th>Agente</th>
                                         <th>Porcentaje de satisfaccion</th>     
                                         <th>Emocion principal</th>
                                         <th>Sentimiento predominante</th>

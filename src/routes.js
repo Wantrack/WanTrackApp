@@ -154,8 +154,26 @@ var routes = [
   },
   {
     path: "/advisors",
-    name: "Asesores",
+    name: "Agentes",
     icon: "tim-icons icon-headphones",
+    component: < Advisors/>,
+    layout: "/admin", 
+    idText: '11'
+  },
+  {  
+    type: 'separator',
+    idText: '11'
+  },{
+    path: "/advisors",
+    name: "Lead Automatization",
+    icon: "tim-icons icon-spaceship",
+    component: < Advisors/>,
+    layout: "/admin", 
+    idText: '11'
+  },{
+    path: "/advisors",
+    name: "Asesores Lead",
+    icon: "tim-icons icon-badge",
     component: < Advisors/>,
     layout: "/admin", 
     idText: '11'

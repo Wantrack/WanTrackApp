@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
+import NotificationAlert from "react-notification-alert";
 import { axios } from '../../config/https';
 import { encode } from '../../util/base64';
 import constants from '../../util/constans';
@@ -9,6 +10,7 @@ import {
 let _user = {};
 
 function Login(props) {
+  const notificationAlertRef = useRef(null);
   const navigate = useNavigate ();
   const [formData, setFormData] = useState({})
 
@@ -33,7 +35,7 @@ const disabledLoginButton = !formData['email'] || !formData['password']
         navigate('/admin');
       }
     }).catch(error => {
-        //TODO message error here
+      sendNotification('No se pudo autenticar al usuario, Usuario o Contraseña Incorrectos', 'danger')
     });
     setFormData({
       email: '',
@@ -41,9 +43,25 @@ const disabledLoginButton = !formData['email'] || !formData['password']
     });
   }, [navigate]);
 
- 
- 
+  async function sendNotification(message, type = 'success') {    
+    var options = {};
+    options = {
+      place: 'tr',
+      message: (
+        <div>
+          <div>
+            {message}
+          </div>
+        </div>
+      ),
+      type: type,
+      icon: "tim-icons icon-bell-55",
+      autoDismiss: 7,
+    };
+    notificationAlertRef.current.notificationAlert(options);
+  } 
     return  <div className="container">
+      <NotificationAlert ref={notificationAlertRef} />
       <section className="vh-100 center-div" style={{display:"flex"}}>
         <div className="container-fluid h-custom">
           <div className="row d-flex justify-content-center align-items-center h-100">
