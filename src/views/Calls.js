@@ -25,11 +25,7 @@ function Calls (props) {
     const [advisors, setAdvisors] = useState([]);
     const [loaderActive, setLoaderActive] = useState(false);
     const [searchValue, setSearchValue] = useState("");
-    const [url, setUrl] = useState('');
     const [file, setFile] = useState({});
-    const [sentences, setSentences] = useState([]);
-    const [dataChart, setDataChart] = useState([50, 50]);
-    const [loaderText, setLoaderText] = useState('Cargando');
     const [textModal, settextModal] = useState('');
     const [modalVisible, setModalVisible] = React.useState(false);
     
@@ -83,7 +79,7 @@ function Calls (props) {
             settextModal(text);
         }        
         setModalVisible(!modalVisible);
-      };
+    };
     
     const cafilteredCalls = Array.isArray(calls) ? calls.filter(call => String(call.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : [];
     
