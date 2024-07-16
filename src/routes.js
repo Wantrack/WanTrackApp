@@ -62,7 +62,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '1'
+    idText: '15'
   },
   {
     path: "/webhooks",
@@ -82,7 +82,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '1'
+    idText: '9'
   },
   {
     path: "/wstemplates",
@@ -110,7 +110,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '1'
+    idText: '13'
   },
   {
     path: "/fbsignup",
@@ -122,7 +122,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '1'
+    idText: '14'
   },
   {
     path: "/summary",
@@ -134,7 +134,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '1'
+    idText: '16'
   },
   {
     path: "/feelings",
@@ -169,18 +169,18 @@ var routes = [
     icon: "tim-icons icon-spaceship",
     component: < Advisors/>,
     layout: "/admin", 
-    idText: '11'
+    idText: '17'
   },{
     path: "/advisors",
     name: "Asesores Lead",
     icon: "tim-icons icon-badge",
     component: < Advisors/>,
     layout: "/admin", 
-    idText: '11'
+    idText: '18'
   },
   {  
     type: 'separator',
-    idText: '11'
+    idText: '18'
   },
   {
     path: "/users",
