@@ -32,6 +32,7 @@ function ScatterList() {
   const [scatterListDetails, setScatterListDetails] = useState([]);
   const [companies, setCompanies] = useState([]); 
   const [wsTemplates, setWsTemplates] = useState([]); 
+  const [wsaccounts, setWsAccounts] = useState([]); 
   const [modalVisible, setModalVisible] = React.useState(false);
   const [modalParameterVisible, setModalParameterVisible] = React.useState(false);
 
@@ -85,24 +86,39 @@ function ScatterList() {
   }
 
   const cmbCompanyOnChange = async (e) => { 
+    onHandleChange(e);   
+    const { name, value } = e.target;
+
+    const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccounts/${value}`);
+    setWsAccounts([{idwhatsapp_accounts: -1, displayname: 'Sin Cuenta'}, ..._wsaccounts.data]);
+
+    const _wstemplates = await axios.get(`${constants.apiurl}/api/wstemplatebyCompany/${value}`);
+    setWsTemplates([{idwstemplate: -1, name: 'Sin Plantilla'}, ..._wstemplates.data]);
+        
+  }
+
+  const cmbOnChange = async (e) => { 
     onHandleChange(e);        
   }
 
   useEffect(() => { 
     async function load() {
+        const currentScatterListID = localStorage.getItem('currentScatterListID');
+        const _scatterList =  await axios.get(`${constants.apiurl}/api/scatterlist/${currentScatterListID}`);
+        if(_scatterList && _scatterList.data) {
+            setScatterList(_scatterList.data);
+            jsonToPObject(_scatterList.data);
+        }
+
         const _companies = await axios.get(`${constants.apiurl}/api/companies`);
         setCompanies([{idcompany: -1, name: 'Sin Empresa'}, ..._companies.data]);
 
-        const _wstemplates = await axios.get(`${constants.apiurl}/api/wstemplates`);
+        const _wstemplates = await axios.get(`${constants.apiurl}/api/wstemplatebyCompany/${_scatterList.data.idcompnay || _companies.data[0].idcompany}`);
         setWsTemplates([{idwstemplate: -1, name: 'Sin Plantilla'}, ..._wstemplates.data]);
-
-        const currentScatterListID = localStorage.getItem('currentScatterListID');
-        const _scatterList =  await axios.get(`${constants.apiurl}/api/scatterlist/${currentScatterListID}`);
-        if(_scatterList.data) {
-            setScatterList(_scatterList.data);
-            jsonToPObject(_scatterList.data)
-        } 
-
+ 
+        const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccounts/${_scatterList.data.idcompnay || _companies.data[0].idcompany}`);
+        setWsAccounts([{idwhatsapp_accounts: -1, displayname: 'Sin Cuenta'}, ..._wsaccounts.data]);
+       
         const _scatterListDetails =  await axios.get(`${constants.apiurl}/api/scatterlistdetailbyScatterlist/${currentScatterListID}`);
         if(_scatterListDetails.data) {
             setScatterListDetails(_scatterListDetails.data);
@@ -362,13 +378,13 @@ function ScatterList() {
               <CardBody>
                 <Form>
                    <Row>
-                        <Col className="pr-md-1" md="4">
+                        <Col className="pr-md-1" md="6">
                             <FormGroup>
                                 <label>Nombre</label>
-                                <Input placeholder="Nombre de la plantilla aqui" type="text" name='name' defaultValue={scatterList.name} onChange={onHandleChange}/>
+                                <Input placeholder="Nombre de la lista aqui" type="text" name='name' defaultValue={scatterList.name} onChange={onHandleChange}/>
                             </FormGroup>
                         </Col>
-                        <Col md="4">
+                        <Col md="6">
                             <FormGroup>
                                 <label>Empresa</label>
                                 <select className="form-control" name="idcompnay" value={scatterList.idcompnay} onChange={cmbCompanyOnChange}>
@@ -379,13 +395,24 @@ function ScatterList() {
                                 </select>
                             </FormGroup>
                         </Col>
-                        <Col md="4">
+                        <Col md="6">
                             <FormGroup>
                                 <label>Plantilla</label>
-                                <select className="form-control" name="idwstemplate" value={scatterList.idwstemplate} onChange={cmbCompanyOnChange}>
+                                <select className="form-control" name="idwstemplate" value={scatterList.idwstemplate} onChange={cmbOnChange}>
                                 {
                                     wsTemplates?.map((wstemplate, index) => 
                                     <option key={index} value={wstemplate.idwstemplate}>{wstemplate.name}</option>
+                                )} 
+                                </select>
+                            </FormGroup>
+                        </Col>
+                        <Col md="6">
+                            <FormGroup>
+                                <label>WhatsApp Account</label>
+                                <select className="form-control" name="idwhatsapp_accounts" value={scatterList.idwhatsapp_accounts} onChange={cmbOnChange}>
+                                {
+                                    wsaccounts?.map((wsaccount, index) => 
+                                    <option key={index} value={wsaccount.idwhatsapp_accounts}>{wsaccount.displayname}</option>
                                 )} 
                                 </select>
                             </FormGroup>

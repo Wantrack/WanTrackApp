@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Button,
   Card,
@@ -21,8 +21,7 @@ function Company() {
   const navigate = useNavigate ();
   const [company, setCompany] = useState({});
   const [countries, setCountries] = useState([]);
-//   const [states, setStates] = useState([]);
-//   const [cities, setCities] = useState([]);
+  const [wsaccounts, setWsAccounts] = useState([]); 
 
   const onHandleChange = (e) => {
     const { name, value } = e.target;
@@ -36,22 +35,19 @@ function Company() {
     onHandleChange(e);        
   }
 
-//   const cmbStateonChange = async (e) => { 
-//     onHandleChange(e);
-//     const cities = await axios.get(`${constants.apiurl}/api/places/cities/${e.target.value}`);
-//     setCities(cities.data);
-//   }
-
   useEffect(() => { 
     async function load() {
-        const currentCompanyID = localStorage.getItem('currentCompanyID');   
+        const currentCompanyID = localStorage.getItem('currentCompanyID');
+
         const _countries = await axios.get(`${constants.apiurl}/api/places/countries`);
-        setCountries(_countries.data);
-        // const states = await axios.get(`${constants.apiurl}/api/places/states/1`);
-        // setStates(states.data);    
+        setCountries(_countries.data); 
+
         const _company =  await axios.get(`${constants.apiurl}/api/company/${currentCompanyID}`);
         if(_company.data) {
             setCompany(_company.data);
+
+            const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccounts/${currentCompanyID}`);
+            setWsAccounts(_wsaccounts.data);
         } 
     }
 
@@ -133,36 +129,6 @@ function Company() {
                         </select>
                       </FormGroup>
                     </Col>
-                    {/* <Col md="4">
-                      <FormGroup>
-                        <label>Departamento</label>
-                        <select className="form-control" name="idCompany" value={company.idCompany} onChange={cmbStateonChange}>
-                        {
-                            states?.map((state, index) => 
-                            <option key={index} value={state.idstate}>{state.name}</option>
-                        )} 
-                        </select>
-                      </FormGroup>
-                    </Col>
-                    <Col md="4">
-                      <FormGroup>
-                        <label>Ciudad</label>
-                        <select className="form-control" name="idCompany" value={company.idCompany} onChange={cmbCompanyOnChange}>
-                        {
-                            cities?.map((city, index) => 
-                            <option key={index} value={city.idcities}>{city.name}</option>
-                        )} 
-                        </select>
-                      </FormGroup>
-                    </Col> */}
-                  </Row>
-                  <Row>
-                    <Col md="4">
-                      <FormGroup>
-                        <label>Phone Number ID</label>
-                        <Input placeholder="000000000000" type="text" name='phoneNumberId' defaultValue={company.phoneNumberId} onChange={onHandleChange} />
-                      </FormGroup>
-                    </Col>
                   </Row>
                   <Row>
                     <Col md="4">
@@ -176,31 +142,7 @@ function Company() {
                         </Label>
                       </FormGroup>
                     </Col>
-                  </Row>
-                  <Row style={{marginTop: '10px'}}>
-                    <Col md="12">
-                      <FormGroup>
-                        <label>WS Token</label>
-                        <Input placeholder="000000000000" type="text" name='wstoken' defaultValue={company.wstoken} onChange={onHandleChange} />
-                      </FormGroup>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col md="12">
-                      <FormGroup>
-                        <label>Datos de entrenamiento</label>
-                        <textarea className="form-control" placeholder="Datos de entrenamiento" cols="30" rows="10" defaultValue={company.traindata} name='traindata' onChange={onHandleChange}></textarea>
-                      </FormGroup>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col md="12">
-                      <FormGroup>
-                        <label>Instrucciones GPT</label>
-                        <textarea className="form-control" placeholder="Datos de entrenamiento" cols="30" rows="10" defaultValue={company.gptInstructions} name='gptInstructions' onChange={onHandleChange}></textarea>
-                      </FormGroup>
-                    </Col>
-                  </Row>
+                  </Row>              
                 </Form>
               </CardBody>
               <CardFooter>
@@ -208,6 +150,36 @@ function Company() {
                   Guardar
                 </Button>
               </CardFooter>
+            </Card>
+          </Col>
+        </Row>
+        <Row>
+          <Col md="12">
+            <Card>
+              <CardBody>
+                <div className="table-responsive">
+                    <table className="table table-hover">
+                        <thead>
+                            <tr>       
+                                <th>#</th>                           
+                                <th>Nombre</th>
+                                <th>Telefono</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {wsaccounts?.map((wsaccount, index) => 
+                                <tr key={index}>
+                                    <td>    
+                                      <Link to="javascript:void(0)">{index + 1}</Link>                     
+                                    </td>
+                                    <td> <Link to="javascript:void(0)">{wsaccount.displayname}</Link></td>
+                                    <td> <Link to="javascript:void(0)">{wsaccount.phone}</Link></td>
+                                </tr>
+                            )}                   
+                        </tbody>          
+                    </table>
+                </div> 
+              </CardBody>
             </Card>
           </Col>
         </Row>

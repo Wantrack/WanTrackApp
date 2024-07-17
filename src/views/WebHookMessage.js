@@ -29,6 +29,7 @@ function WebHookMessage (props) {
     const [rules, setRules] = useState([]);
     const [companies, setCompanies] = useState([]);
     const [wsTemplates, setWsTemplates] = useState([]);
+    const [wsaccounts, setWsAccounts] = useState([]); 
     const [loaderActive, setLoaderActive] = useState(false);
     const [payload, setPayload] = useState('');
     const [selectedRuleIndex, setSelectedRuleIndex] = useState(0);
@@ -41,14 +42,17 @@ function WebHookMessage (props) {
         async function load() {
             setLoaderActive(true);
 
+            const currentScatterListID = localStorage.getItem('currentWebHookID');
+            const _webhook =  await axios.get(`${constants.apiurl}/api/webhook/webhook/${currentScatterListID}`);
+
             const _companies = await axios.get(`${constants.apiurl}/api/companies`);
             setCompanies([{idcompany: -1, name: 'Sin Empresa'}, ..._companies.data]);
 
-            const _wstemplates = await axios.get(`${constants.apiurl}/api/wstemplates`);
+            const _wstemplates = await axios.get(`${constants.apiurl}/api/wstemplatebyCompany/${_webhook.data.idcompany || _companies.data[0].idcompany}`);
             setWsTemplates([{idwstemplate: -1, name: 'Sin Plantilla'}, ..._wstemplates.data]);
-            
-            const currentScatterListID = localStorage.getItem('currentWebHookID');
-            const _webhook =  await axios.get(`${constants.apiurl}/api/webhook/webhook/${currentScatterListID}`);           
+    
+            const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccounts/${_webhook.data.idcompany || _companies.data[0].idcompany}`);
+            setWsAccounts([{idwhatsapp_accounts: -1, displayname: 'Sin Cuenta'}, ..._wsaccounts.data]);
             
             if(_webhook.data) {
                 setWebHook(_webhook.data);
@@ -130,9 +134,21 @@ function WebHookMessage (props) {
       onHandleChange(e);
     }
 
-    const cmbCompanyOnChange = async (e) => { 
-        onHandleChange(e);        
+    const cmbCompanyOnChange = async (e) => {       
+        onHandleChange(e);
+
+        const { name, value } = e.target;
+
+        const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccounts/${value}`);
+        setWsAccounts([{idwhatsapp_accounts: -1, displayname: 'Sin Cuenta'}, ..._wsaccounts.data]);
+
+        const _wstemplates = await axios.get(`${constants.apiurl}/api/wstemplatebyCompany/${value}`);
+        setWsTemplates([{idwstemplate: -1, name: 'Sin Plantilla'}, ..._wstemplates.data]);
     }
+
+    const cmbOnChange = async (e) => { 
+      onHandleChange(e);        
+  }
 
     async function saveChanges(close = true) {
         await axios.post(`${constants.apiurl}/api/webhook/webhook`, webHook);
@@ -251,7 +267,7 @@ function WebHookMessage (props) {
                         <Col md="4"  className={webHook.userules == 1 ? 'hide' : 'show'}>
                             <FormGroup>
                                 <label>Plantilla</label>
-                                <select className="form-control" name="wstemplate" value={webHook.wstemplate} onChange={cmbCompanyOnChange}>
+                                <select className="form-control" name="wstemplate" value={webHook.wstemplate} onChange={cmbOnChange}>
                                 {
                                     wsTemplates?.map((template, index) => 
                                     <option key={index} value={template.idwstemplate}>{template.name}</option>
@@ -259,7 +275,18 @@ function WebHookMessage (props) {
                                 </select>
                             </FormGroup>
                         </Col>
-                        <Col className="pr-md-1" md="6">
+                        <Col md="4">
+                            <FormGroup>
+                                <label>WhatsApp Account</label>
+                                <select className="form-control" name="idwhatsapp_accounts" value={webHook.idwhatsapp_accounts} onChange={cmbOnChange}>
+                                {
+                                    wsaccounts?.map((wsaccount, index) => 
+                                    <option key={index} value={wsaccount.idwhatsapp_accounts}>{wsaccount.displayname}</option>
+                                )} 
+                                </select>
+                            </FormGroup>
+                        </Col>
+                        <Col className="pr-md-1" md="4">
                             <FormGroup>
                                 <label>Url</label>
                                 <Input placeholder="Url del webhook aqui" type="text" name='url' defaultValue={webHook.url} onChange={onHandleChange}/>
