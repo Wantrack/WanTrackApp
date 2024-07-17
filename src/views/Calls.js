@@ -25,7 +25,7 @@ function Calls (props) {
     const [advisors, setAdvisors] = useState([]);
     const [loaderActive, setLoaderActive] = useState(false);
     const [searchValue, setSearchValue] = useState("");
-    const [file, setFile] = useState({});
+    const [files, setFiles] = useState([]);
     const [textModal, settextModal] = useState('');
     const [modalVisible, setModalVisible] = React.useState(false);
     
@@ -55,23 +55,25 @@ function Calls (props) {
     }
 
     const onHandleChangeFile = (e) => {
-        setFile(e.target.files[0]);
+        setFiles(e.target.files);
     }
 
-    function start() {
-        setLoaderActive(true);
-        let formData = new FormData();
-        formData.append("file", file);
-        axios.post(`${constants.apiurl}/api/aws/uploadauidoemotion/audioemotions/1`, formData, { headers: {"Content-Type": "multipart/form-data"}}).then(r => {  
-            const jsonresult = r.data;
-            axios.post(`${constants.apiurl}/api/feelingsSummary`, { url : jsonresult.url, idadviser: call.idAdviser }).then(result => {
-                loadCalls();
+    function start() {        
+        for (const file of files) {
+            setLoaderActive(true);
+            let formData = new FormData();
+            formData.append("file", file);
+            axios.post(`${constants.apiurl}/api/aws/uploadauidoemotion/audioemotions/1`, formData, { headers: {"Content-Type": "multipart/form-data"}}).then(r => {  
+                const jsonresult = r.data;
+                axios.post(`${constants.apiurl}/api/feelingsSummary`, { url : jsonresult.url, idadviser: call.idAdviser }).then(result => {
+                    loadCalls();
+                });
+                
+            }).catch(e => {
+                console.error(e)
+                setLoaderActive(false)
             });
-            
-        }).catch(e => {
-            console.error(e)
-            setLoaderActive(false)
-        });
+        }        
     }
 
     const toggleModal = (text) => {
@@ -124,7 +126,7 @@ function Calls (props) {
                                     </select>
                                 </Col>
                                 <Col md="2">
-                                    <Input placeholder="Sube tu audio" type="file" name='file' onChange={onHandleChangeFile}/>
+                                    <Input placeholder="Sube tu audio" type="file" name='file' multiple onChange={onHandleChangeFile}/>
                                 </Col>
                                 <Col md="4">
                                     <Link style={{padding: '10px', borderRadius: '5px', backgroundColor: '#fff', maxWidth: '50px', display: 'flex', justifyContent:'center'}} to="javascript:void(0)" title="Iniciar" href="#" onClick={start}>
