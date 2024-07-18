@@ -28,13 +28,13 @@ function HistoryTrans (props) {
         setLoaderActive(true);
         const start = (25 * (from > 0 ? from  - 1: from));
         setStartMessagesSent(start);
-        axios.get(`${constants.apiurl}/api/messagesent?start=${start}&end=${to}&year=${props.year}&month=${props.month}`).then(result => {
+        axios.get(`${constants.apiurl}/api/messagesent?start=${start}&end=${to}${props.year ? `&year=${props.year}`: ''} ${props.month ? `&month=${props.month}` : ''}`).then(result => {
             setMessagesSent(result.data);
             setLoaderActive(false);
         });
 
         setLoaderActive(true);
-        axios.get(`${constants.apiurl}/api/messagesentCount?year=${props.year}&month=${props.month}`).then(result => {
+        axios.get(`${constants.apiurl}/api/messagesentCount${props.year ? `?year=${props.year}`: ''} ${props.month ? `&month=${props.month}` : ''}`).then(result => {
             const amount = result.data.count;
             const max = Math.ceil(amount/25);
             setLoaderActive(false);
