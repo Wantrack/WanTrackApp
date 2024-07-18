@@ -479,10 +479,10 @@ function ScatterList() {
             </Card>
           </Col>
         </Row>
-        <Link to="javascript:void(0)" title="Enviar mensaje" href="#" class="float-2" onClick={sendMessage}>
+        <Link to="javascript:void(0)" title="Enviar mensaje" href="#" className="float-2" onClick={sendMessage}>
           <i className="fa-solid fa-paper-plane my-float"></i>
         </Link>
-        <Link to="javascript:void(0)" title="Guardar y cerrar" href="#" class="float" onClick={saveChanges}>
+        <Link to="javascript:void(0)" title="Guardar y cerrar" href="#" className="float" onClick={saveChanges}>
           <i className="fa-solid fa-floppy-disk my-float"></i>
         </Link>
       </div>

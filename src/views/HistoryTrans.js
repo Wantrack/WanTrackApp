@@ -17,24 +17,24 @@ import {
     PaginationLink
   } from "reactstrap";
 
-function HistoryTrans (props) {
+function HistoryTrans (props) {   
     const [messagesSent, setMessagesSent] = useState([]);
     const [maxMessagesSent, setMaxMessagesSent] = useState(0);
     const [startMessagesSent, setStartMessagesSent] = useState(0);
     const [amountMessagesSentArray, setAmountMessagesSentArray] = useState([]);
-    const [loaderActive, setLoaderActive] = useState(false);
+    const [loaderActive, setLoaderActive] = useState(false);     
 
     function getMessageSent(from, to) {
         setLoaderActive(true);
         const start = (25 * (from > 0 ? from  - 1: from));
         setStartMessagesSent(start);
-        axios.get(`${constants.apiurl}/api/messagesent?start=${start}&end=${to}`).then(result => {
+        axios.get(`${constants.apiurl}/api/messagesent?start=${start}&end=${to}&year=${props.year}&month=${props.month}`).then(result => {
             setMessagesSent(result.data);
             setLoaderActive(false);
         });
 
         setLoaderActive(true);
-        axios.get(`${constants.apiurl}/api/messagesentCount`).then(result => {
+        axios.get(`${constants.apiurl}/api/messagesentCount?year=${props.year}&month=${props.month}`).then(result => {
             const amount = result.data.count;
             const max = Math.ceil(amount/25);
             setLoaderActive(false);
@@ -49,6 +49,11 @@ function HistoryTrans (props) {
     useEffect(() => {
         getMessageSent(0 , 25);
     }, []);
+
+    useEffect(()=>{
+        getMessageSent(0 , 25);
+    },[props.month]);
+    
     
     return <div className="content">
             <Loader active={loaderActive} />

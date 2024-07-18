@@ -302,3 +302,19 @@
   text-transform: uppercase
 }
 
+.month_summary {
+  margin: 2rem 0rem;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.month_summary_arrow {
+  font-size: 1.5rem;
+}
+
+.year_month_summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
