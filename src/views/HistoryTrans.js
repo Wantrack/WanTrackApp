@@ -91,7 +91,7 @@ function HistoryTrans (props) {
                                         </Table>
                                     </CardBody>
                                     <CardFooter style={{display:'flex', justifyContent:'center'}}>
-                                        <Pagination>
+                                        <Pagination style={{maxWidth:'90%', overflowX:'auto'}}>
                                             <PaginationItem>
                                                 <PaginationLink
                                                 onClick={() => {getMessageSent(0, 25)}}
