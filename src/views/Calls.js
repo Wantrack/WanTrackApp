@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import NotificationAlert from "react-notification-alert";
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
 
@@ -28,6 +29,9 @@ function Calls (props) {
     const [files, setFiles] = useState([]);
     const [textModal, settextModal] = useState('');
     const [modalVisible, setModalVisible] = React.useState(false);
+
+    const notificationAlertRef = useRef(null);
+    const inputFileref = useRef();
     
     useEffect(() => { 
         setLoaderActive(true)
@@ -58,22 +62,40 @@ function Calls (props) {
         setFiles(e.target.files);
     }
 
-    function start() {        
-        for (const file of files) {
-            setLoaderActive(true);
-            let formData = new FormData();
-            formData.append("file", file);
-            axios.post(`${constants.apiurl}/api/aws/uploadauidoemotion/audioemotions/1`, formData, { headers: {"Content-Type": "multipart/form-data"}}).then(r => {  
-                const jsonresult = r.data;
-                axios.post(`${constants.apiurl}/api/feelingsSummary`, { url : jsonresult.url, idadviser: call.idAdviser }).then(result => {
-                    loadCalls();
-                });
-                
-            }).catch(e => {
-                console.error(e)
-                setLoaderActive(false)
-            });
-        }        
+    async function sendNotification(message, type = 'success') {    
+        var options = {};
+        options = {
+          place: 'tr',
+          message: (
+            <div>
+              <div>
+                {message}
+              </div>
+            </div>
+          ),
+          type: type,
+          icon: "tim-icons icon-bell-55",
+          autoDismiss: 7,
+        };
+        notificationAlertRef.current.notificationAlert(options);
+      }
+
+    async function start() {        
+        if(files && files.length > 0) {
+            for (const file of files) {
+                setLoaderActive(true);
+                let formData = new FormData();
+                formData.append("file", file);
+                const audiofile = await axios.post(`${constants.apiurl}/api/aws/uploadauidoemotion/audioemotions/1`, formData, { headers: {"Content-Type": "multipart/form-data"}});
+                const feelingsSummary = await axios.post(`${constants.apiurl}/api/feelingsSummary`, { url : audiofile.data.url, idadviser: call.idAdviser });
+                loadCalls();
+                setLoaderActive(false);
+            }
+            setFiles([]);
+            inputFileref.current.value = "";
+        } else {
+            sendNotification('Debes escoger un archivo para iniciar', 'danger');
+        }               
     }
 
     const toggleModal = (text) => {
@@ -86,6 +108,9 @@ function Calls (props) {
     const cafilteredCalls = Array.isArray(calls) ? calls.filter(call => String(call.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : [];
     
     return <div className="content">
+                <div className="react-notification-alert-container">
+                    <NotificationAlert ref={notificationAlertRef} />
+                </div>
                 <Loader active={loaderActive} />
                 <Modal isOpen={modalVisible} toggle={toggleModal}>
                     <ModalHeader>
@@ -117,21 +142,24 @@ function Calls (props) {
 
                         <div>
                             <Row>
-                                <Col md="4">
-                                    <select className="form-control" name="idAdviser" value={call.idAdviser} onChange={onHandleChange}>
+                                <Col md="4" sm="12" style={{marginTop: '5px'}}>
+                                    <select title="Escoge un agente"  className="form-control" name="idAdviser" value={call.idAdviser} onChange={onHandleChange}>
                                         {
                                             advisors?.map((advisor, index) => 
                                             <option key={index} value={advisor.idadviser}>{advisor.name} {advisor.lastName}</option>
                                         )} 
                                     </select>
                                 </Col>
-                                <Col md="2">
-                                    <Input placeholder="Sube tu audio" type="file" name='file' multiple onChange={onHandleChangeFile}/>
+                                <Col md="4" sm="12" style={{marginTop: '5px'}}>
+                                    <Input ref={inputFileref} accept=".wav,.mp3" title="Escoge uno o mas archivos de audio" placeholder="Sube tu audio" type="file" name='file' multiple onChange={onHandleChangeFile}/>
                                 </Col>
-                                <Col md="4">
-                                    <Link style={{padding: '10px', borderRadius: '5px', backgroundColor: '#fff', maxWidth: '50px', display: 'flex', justifyContent:'center'}} to="javascript:void(0)" title="Iniciar" href="#" onClick={start}>
+                                <Col md="1" sm="12" style={{marginTop: '5px'}}>
+                                    <Link style={{padding: '10px', borderRadius: '5px', backgroundColor: '#fff', width: '100%', display: 'flex', justifyContent:'center'}} to="javascript:void(0)" title="Iniciar analisis" href="#" onClick={start}>
                                         <i style={{fontSize: '20px'}} className="fa-solid fa-play"></i>
                                     </Link>
+                                </Col>
+                                <Col md="12">
+                                    <hr></hr>
                                 </Col>
                             </Row>
                         </div>

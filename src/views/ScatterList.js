@@ -152,7 +152,7 @@ function ScatterList() {
       setContact({});
       toggleModal();
     }else {
-      sendNotification('Ocurrio un error guardarndo el contacto verifica que el telefono y el numero sean correctos', 'danger')
+      sendNotification('Ocurrio un error guardarndo el contacto verifica que el telefono y el numero sean correctos', 'danger');
     }    
   }
 
