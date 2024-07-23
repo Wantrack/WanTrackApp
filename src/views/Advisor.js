@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import { Doughnut, Pie } from "react-chartjs-2";
 import {
   Button,
   Card,
@@ -21,6 +22,8 @@ import moment from 'moment';
 
 import { axios } from '../config/https';
 import constants from '../util/constans';
+import { func } from 'prop-types';
+import { obtenerColor } from 'util/colors';
 
 function Advisor() {
   const navigate = useNavigate ();
@@ -29,6 +32,95 @@ function Advisor() {
   const [calls, setCalls] = useState([]);
   const [textModal, settextModal] = useState('');
   const [modalVisible, setModalVisible] = React.useState(false);
+  const [dataChart, setDataChart] = useState([50,50]);
+  const [dataChart2, setDataChart2] = useState([]);
+  const [dataChart2Labels, setDataChart2Labels] = useState([]);
+  const [dataChart2Colorss, setDataChart2Colors] = useState([]);
+  const [dataChart3, setDataChart3] = useState([]);
+  const [dataChart3Labels, setDataChart3Labels] = useState([]);
+  const [dataChart3Colorss, setDataChart3Colors] = useState([]);
+
+  const data = {
+    labels: ['😡', '😁'],
+    datasets: [
+      {        
+        data: dataChart,
+        backgroundColor: [
+          "#ff6961",
+          "#77dd77"
+        ],     
+        circumference: 180,
+        rotation:270,
+        borderColor: "#D1D6DC"
+      }
+    ]
+  };
+
+  const data2 = {
+    labels: dataChart2Labels,
+    datasets: [
+      {        
+        data: dataChart2,
+        backgroundColor: dataChart2Colorss,
+        borderColor: "#D1D6DC"
+      }
+    ]
+  };
+
+  const data3 = {
+    labels: dataChart3Labels,
+    datasets: [
+      {        
+        data: dataChart3,
+        backgroundColor: dataChart3Colorss,
+        borderColor: "#D1D6DC"
+      }
+    ]
+  };
+
+  const options = {
+    maintainAspectRatio: false,
+    aspectRatio: 1,
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+            font: {
+                size: 24
+            }
+        }
+      },
+      tooltip: {
+        enabled: true,
+        callbacks: {
+            label: (yDatapoint) => {return yDatapoint.raw.toFixed(2)  + ' %'},
+          }
+      }
+    },
+    responsive: true
+  }
+
+  const options2 = {
+    maintainAspectRatio: false,
+    aspectRatio: 1,
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+            font: {
+                size: 12
+            }
+        }
+      },
+      tooltip: {
+        enabled: true,
+        callbacks: {
+            label: (yDatapoint) => {return yDatapoint.raw},
+          }
+      }
+    },
+    responsive: true
+  }
 
   const onHandleChange = (e) => {
     const { name, value } = e.target;
@@ -58,7 +150,55 @@ function Advisor() {
   const loadCalls = (currentAdvisorID) => {
     axios.get(`${constants.apiurl}/api/callByAdviser/${currentAdvisorID}`).then(result => {
         setCalls(result.data);
+
+        if(result.data) {
+            //calculate percent
+            const positiveArray = result.data.map(d => parseInt(d.satisfaction.replace('%', '')));
+
+            const positive = positiveArray.reduce((a, b) => a + b, 0) / positiveArray.length;
+            const negative = 100 - positive;
+            setDataChart([negative, positive]);
+
+            //chart main emotion
+            const arrayemotions = result.data.map(d => d.mainEmotion);
+            const _data2 = contarEmociones(arrayemotions);
+            setDataChart2(_data2.map(d => d.conteo));
+            setDataChart2Labels(_data2.map(d => d.emocion));
+            let colors2 = [];
+            for (const item of _data2) {
+              colors2.push(obtenerColor(true))
+            }
+            setDataChart2Colors(colors2)
+
+            //chart feelins
+            const arrayfeelings = result.data.map(d => d.feeling);
+            const _data3 = contarEmociones(arrayfeelings);
+            console.log(_data3)
+            setDataChart3(_data3.map(d => d.conteo));
+            setDataChart3Labels(_data3.map(d => d.emocion));
+            let colors3 = [];
+            for (const item of _data3) {
+              colors3.push(obtenerColor())
+            }
+            setDataChart3Colors(colors3)
+        }
+        
     });   
+  }
+
+  function contarEmociones(emociones) {
+    // Contar cada emoción usando reduce y guardar en un objeto
+    const conteoEmociones = emociones.reduce((conteo, emocion) => {
+      conteo[emocion] = (conteo[emocion] || 0) + 1;
+      return conteo;
+    }, {});
+
+    // Convertir el objeto en un array de objetos
+    const resultadoArray = Object.keys(conteoEmociones).map(emocion => {
+      return { emocion: emocion, conteo: conteoEmociones[emocion] };
+    });
+    
+    return resultadoArray;
   }
 
   function saveChanges() {
@@ -130,6 +270,37 @@ function Advisor() {
                         <label>ID Externo</label>
                         <Input placeholder="010101" type="text" name='externalId' defaultValue={advisor.externalId} onChange={onHandleChange}/>
                       </FormGroup>
+                    </Col>
+                    <Col>
+                        <hr></hr>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col style={{marginTop: '20px'}} md="4" sm= "12" >                      
+                      <Doughnut
+                        width="30%"
+                        data={data}
+                        options={options}
+                      />
+                    </Col>
+
+                    <Col style={{marginTop: '20px'}} md="4" sm= "12">
+                      <Pie
+                        data={data2}
+                        options={options2}
+                      />
+                    </Col>
+                    
+                    <Col style={{marginTop: '20px'}} md="4" sm= "12">
+                      <Pie
+                        data={data3}
+                        options={options2}
+                      />
+                    </Col>
+
+                    <Col>
+                        <hr></hr>
                     </Col>
                   </Row>
 

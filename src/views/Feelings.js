@@ -49,15 +49,12 @@ function Feelings(props) {
         display: true,
         labels: {
             font: {
-                size: 24
+                size: 12
             }
         }
       },
       tooltip: {
-        enabled: true,
-        callbacks: {
-            label: (yDatapoint) => {return yDatapoint.raw.toFixed(2)  + ' %'},
-          }
+        enabled: true
       }
     },
     responsive: true
@@ -116,13 +113,10 @@ function Feelings(props) {
                   }
               }
               setSentences(firstArray);
-
-              // const negative = jsonresult.filter(f => f.sentiment < 0).map(m => parseFloat( m.sentiment));
-              // const positve = jsonresult.filter(f => f.sentiment > 0).map(m => parseFloat( m.sentiment));
+              
               const negative = jsonresult.filter(f => f.feeling == 'Negative');
               const positve = jsonresult.filter(f => f.feeling == 'Positive');
-              // const avgnegative = negative.reduce((a, b) => a + b, 0) / negative.length;
-              // const avgpositive = positve.reduce((a, b) => a + b, 0) / positve.length;
+
               const avgnegative = negative.length;
               const avgpositive = positve.length;
 
