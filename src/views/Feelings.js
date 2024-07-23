@@ -3,7 +3,6 @@ import { axios } from '../config/https';
 import constants from '../util/constans';
 // react plugin used to create charts
 import { Doughnut } from "react-chartjs-2";
-import moment from 'moment';
 
 // reactstrap components
 import {

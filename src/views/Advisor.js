@@ -17,6 +17,8 @@ import {
   ModalBody,
 } from "reactstrap";
 
+import moment from 'moment';
+
 import { axios } from '../config/https';
 import constants from '../util/constans';
 
@@ -163,7 +165,7 @@ function Advisor() {
                                                     <i style={{fontSize: '20px'}} className="fa-solid fa-circle-play"></i>
                                                 </Link>
                                             </td>
-                                            <td> {call.creationdate}</td>
+                                            <td> {moment(call.creationdate).format('DD-MM-YYYY hh:mm:ss')}</td>
                                         </tr>
                                     )}                   
                                 </tbody>          

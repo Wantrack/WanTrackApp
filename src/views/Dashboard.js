@@ -4,7 +4,6 @@ import constants from '../util/constans';
 import { decode } from "../util/base64";
 // react plugin used to create charts
 import { Line, Bar } from "react-chartjs-2";
-import moment from 'moment';
 import HistoryTrans from './HistoryTrans';
 
 // reactstrap components

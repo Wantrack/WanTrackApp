@@ -6,6 +6,8 @@ import Loader from '../components/Loader/Loader';
 import { axios } from '../config/https';
 import constants from '../util/constans';
 
+import moment from 'moment';
+
 import {
     CardHeader,
     CardBody,
@@ -196,7 +198,7 @@ function Calls (props) {
                                                     <i style={{fontSize: '20px'}} className="fa-solid fa-circle-play"></i>
                                                 </Link>
                                             </td>
-                                            <td> {call.creationdate}</td>
+                                            <td> {moment(call.creationdate).format('DD-MM-YYYY hh:mm:ss')}</td>
                                         </tr>
                                     )}                   
                                 </tbody>          
