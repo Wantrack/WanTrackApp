@@ -45,11 +45,10 @@ function Calls (props) {
         loadCalls()
     }, []);
 
-    const loadCalls = () => {
-        axios.get(`${constants.apiurl}/api/call`).then(result => {
-            setLoaderActive(false)
-            setCalls(result.data);
-        });   
+    const loadCalls = async () => {
+        const result = await axios.get(`${constants.apiurl}/api/call`);
+        setLoaderActive(false);
+        setCalls(result.data);
     }
 
     const onHandleChange = (e) => {
@@ -89,9 +88,9 @@ function Calls (props) {
                 let formData = new FormData();
                 formData.append("file", file);
                 const audiofile = await axios.post(`${constants.apiurl}/api/aws/uploadauidoemotion/audioemotions/1`, formData, { headers: {"Content-Type": "multipart/form-data"}});
-                const feelingsSummary = await axios.post(`${constants.apiurl}/api/feelingsSummary`, { url : audiofile.data.url, idadviser: call.idAdviser });
-                loadCalls();
+                await axios.post(`${constants.apiurl}/api/feelingsSummary`, { url : audiofile.data.url, idadviser: call.idAdviser });                
                 setLoaderActive(false);
+                await loadCalls();
             }
             setFiles([]);
             inputFileref.current.value = "";

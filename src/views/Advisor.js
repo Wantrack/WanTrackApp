@@ -22,8 +22,9 @@ import moment from 'moment';
 
 import { axios } from '../config/https';
 import constants from '../util/constans';
-import { func } from 'prop-types';
 import { obtenerColor } from 'util/colors';
+import { sColors } from 'util/sentimentColors';
+import { eColors } from 'util/emotionColors';
 
 function Advisor() {
   const navigate = useNavigate ();
@@ -82,6 +83,15 @@ function Advisor() {
     maintainAspectRatio: false,
     aspectRatio: 1,
     plugins: {
+      title: {
+        display: true,
+        text: "Porcentaje de Satisfaccion",
+        color:'#fff',
+        align: "center",
+        padding: {
+          top: 10,
+        },
+      },
       legend: {
         display: true,
         labels: {
@@ -104,9 +114,57 @@ function Advisor() {
     maintainAspectRatio: false,
     aspectRatio: 1,
     plugins: {
+      title: {
+        display: true,
+        text: "Emocion principal",
+        align: "center",
+        color:'#fff',
+        padding: {
+          top: 10,
+        },
+        font: {                
+          size: 13
+        }
+      },
       legend: {
         display: true,
         labels: {
+            color:'#f5f5f5',
+            font: {                
+                size: 12
+            }
+        }
+      },
+      tooltip: {
+        enabled: true,
+        callbacks: {
+            label: (yDatapoint) => {return yDatapoint.raw},
+          }
+      }
+    },
+    responsive: true
+  }
+
+  const options3 = {
+    maintainAspectRatio: false,
+    aspectRatio: 1,
+    plugins: {
+      title: {
+        display: true,
+        color:'#fff',
+        text: "Sentimiento predominante",
+        align: "center",
+        padding: {
+          top: 10,
+        },
+        font: {                
+          size: 13
+        }
+      },
+      legend: {
+        display: true,
+        labels: {
+            color:'#f5f5f5',
             font: {
                 size: 12
             }
@@ -147,6 +205,10 @@ function Advisor() {
    
   }, []);
 
+  function capitalizeFirstLetter(str) {
+    return str[0].toUpperCase() + str.slice(1);
+  }
+
   const loadCalls = (currentAdvisorID) => {
     axios.get(`${constants.apiurl}/api/callByAdviser/${currentAdvisorID}`).then(result => {
         setCalls(result.data);
@@ -160,25 +222,37 @@ function Advisor() {
             setDataChart([negative, positive]);
 
             //chart main emotion
-            const arrayemotions = result.data.map(d => d.mainEmotion);
+            const arrayemotions = result.data.map(d => capitalizeFirstLetter(d.mainEmotion));
             const _data2 = contarEmociones(arrayemotions);
             setDataChart2(_data2.map(d => d.conteo));
             setDataChart2Labels(_data2.map(d => d.emocion));
             let colors2 = [];
             for (const item of _data2) {
-              colors2.push(obtenerColor(true))
+              const _eColorItem = eColors.find(i => i.emotion == item.emocion);
+              if(_eColorItem) {
+                const _color = _eColorItem.color;
+                colors2.push(_color);
+              }else {
+                colors2.push(obtenerColor())
+              }             
             }
             setDataChart2Colors(colors2)
 
             //chart feelins
-            const arrayfeelings = result.data.map(d => d.feeling);
+            const arrayfeelings = result.data.map(d => capitalizeFirstLetter(d.feeling));
             const _data3 = contarEmociones(arrayfeelings);
-            console.log(_data3)
             setDataChart3(_data3.map(d => d.conteo));
             setDataChart3Labels(_data3.map(d => d.emocion));
             let colors3 = [];
             for (const item of _data3) {
-              colors3.push(obtenerColor())
+              const _sColorItem = sColors.find(i => i.sentiment == item.emocion);
+              if(_sColorItem) {
+                const _color = _sColorItem.color;
+                colors3.push(_color);
+              }else {
+                colors3.push(obtenerColor());
+              }
+              
             }
             setDataChart3Colors(colors3)
         }
@@ -219,11 +293,11 @@ function Advisor() {
       <div className="content">
         <Modal isOpen={modalVisible} toggle={toggleModal}>
             <ModalHeader>
-                <h2 style={{color: '#000', marginBottom: '0px'}}>Payload Accion</h2>
+                <h2 style={{color: '#000', marginBottom: '0px'}}>Resumen de la llamada</h2>
             </ModalHeader>
             <ModalBody>
                 <FormGroup>
-                    <label>Payload</label>
+                    <label>Resumen</label>
                     <textarea style={{color: '#000'}} className="form-control" placeholder="{ ... }" cols="30" rows="10" defaultValue={textModal} name='Trasncripcion'></textarea>
                 </FormGroup>
                 <Button onClick={toggleModal} style={{marginTop: '20px'}} className="btn btn-primary">
@@ -295,7 +369,7 @@ function Advisor() {
                     <Col style={{marginTop: '20px'}} md="4" sm= "12">
                       <Pie
                         data={data3}
-                        options={options2}
+                        options={options3}
                       />
                     </Col>
 
