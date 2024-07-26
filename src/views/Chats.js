@@ -63,10 +63,10 @@ function Chats (props) {
                                 <tbody>
                                     {filteredChats.map((scatterList, index) => 
                                         <tr key={scatterList.idscatterlist}>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(scatterList.phone)}>{index + 1}</Link></td>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(scatterList.phone)}>{scatterList.phone}</Link></td>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(scatterList.phone)}>{scatterList.name}</Link></td>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(scatterList.phone)}>{scatterList.creationdate}</Link></td>
+                                            <td> <Link to="/admin/chat" onClick={() => goToChat(scatterList.phone, scatterList.phoneNumberId)}>{index + 1}</Link></td>
+                                            <td> <Link to="/admin/chat" onClick={() => goToChat(scatterList.phone, scatterList.phoneNumberId)}>{scatterList.phone}</Link></td>
+                                            <td> <Link to="/admin/chat" onClick={() => goToChat(scatterList.phone, scatterList.phoneNumberId)}>{scatterList.name}</Link></td>
+                                            <td> <Link to="/admin/chat" onClick={() => goToChat(scatterList.phone, scatterList.phoneNumberId)}>{scatterList.creationdate}</Link></td>
                                         </tr>
                                     )}
                                 </tbody>          
@@ -77,8 +77,9 @@ function Chats (props) {
     </div>;
 }
 
-function goToChat(idChat) {
+function goToChat(idChat, phoneNumberId) {
     localStorage.setItem('currentChatID', idChat);
+    localStorage.setItem('currentphoneNumberID', phoneNumberId);
 }
 
 export default Chats;

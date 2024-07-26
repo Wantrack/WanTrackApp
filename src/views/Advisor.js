@@ -215,7 +215,7 @@ function Advisor() {
 
         if(result.data) {
             //calculate percent
-            const positiveArray = result.data.map(d => parseInt(d.satisfaction.replace('%', '')));
+            const positiveArray = result.data.map(d => parseInt(d.satisfaction));
 
             const positive = positiveArray.reduce((a, b) => a + b, 0) / positiveArray.length;
             const negative = 100 - positive;
@@ -396,7 +396,7 @@ function Advisor() {
                                 <tbody>
                                     {calls.map((call, index) => 
                                         <tr key={index}>
-                                            <td> {call.satisfaction}</td>
+                                            <td> {call.satisfaction}%</td>
                                             <td className='m_title'> {call.mainEmotion || '-'} </td>
                                             <td className='m_title'> {call.feeling || '-'} </td>
                                             <td style={{textAlign:'center'}}> 

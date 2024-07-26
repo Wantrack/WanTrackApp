@@ -183,7 +183,7 @@ function Calls (props) {
                                     {cafilteredCalls.map((call, index) => 
                                         <tr key={index}>
                                             <td> {call.name} </td>
-                                            <td> {call.satisfaction}</td>
+                                            <td> {call.satisfaction}%</td>
                                             <td className='m_title'> {call.mainEmotion || '-'} </td>
                                             <td className='m_title'> {call.feeling || '-'} </td>
                                             <td style={{textAlign:'center'}}> 
