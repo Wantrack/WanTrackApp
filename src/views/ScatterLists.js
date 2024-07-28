@@ -38,17 +38,17 @@ function ScatterLists (props) {
                 <Loader active={loaderActive} />
                 <Card>
                     <CardHeader>
-                        <h5 className="title">Listas de dispersión</h5>
+                        <h5 className="title">Listas de difusión</h5>
                     </CardHeader>
                     <CardBody>
                         <div className="margin-bottom-2vh flex-left">
                             <div className="input-group flex-nowrap w-full">
                                 <span className="input-group-text z-0" id="addon-wrapping"><i className="fa fa-search"></i></span>
-                                <input type="text" className="form-control px-2" placeholder="Escriba el nombre de la lista de dispersión"
+                                <input type="text" className="form-control px-2" placeholder="Escriba el nombre de la lista de difusión"
                                 onChange={(e) => setSearchValue(e.target.value)}
                                 />
                             </div>
-                            <Link className="btn btn-primary" to="/admin/list" onClick={() => goToScatterLists(0)}> Crear Lista de dispersión</Link>
+                            <Link className="btn btn-primary" to="/admin/list" onClick={() => goToScatterLists(0)}> Crear Lista de difusión</Link>
                         </div>
 
                         <div className="table-responsive">

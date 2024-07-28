@@ -5,6 +5,9 @@ import Loader from '../components/Loader/Loader';
 import { axios } from '../config/https';
 import constants from '../util/constans';
 
+import { clockformat } from 'util/time';
+
+
 import {
     CardHeader,
     CardBody,
@@ -48,14 +51,14 @@ function Advisors (props) {
                                 <thead>
                                     <tr>                            
                                         <th>Nombre Completo</th>
-                                        <th>Minutos</th>                     
+                                        <th>Tiempo en llamada</th>                     
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredUsers.map((advisor, index) => 
                                         <tr key={index}>
                                             <td> <Link to="/admin/advisor" onClick={() => goToAdvisorOnClick(advisor.idadviser)}>{advisor.name} {advisor.lastName}</Link></td>
-                                            <td> <Link to="/admin/advisor" onClick={() => goToAdvisorOnClick(advisor.idadviser)}>00:00</Link></td>
+                                            <td> <Link to="/admin/advisor" onClick={() => goToAdvisorOnClick(advisor.idadviser)}>{ clockformat(advisor.audioDuration || 0)}</Link></td>
                                         </tr>
                                     )}                   
                                 </tbody>          

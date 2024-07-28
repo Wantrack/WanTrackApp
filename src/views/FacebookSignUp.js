@@ -17,7 +17,7 @@ function FbScript() {
     };
 
     return (<div>        
-        <button onClick={handleClick} className='btn btn-primary'>Login with Facebook</button>
+        <button onClick={handleClick} className='btn btn-primary'>Iniciar registro a meta</button>
     </div>       
     );
 }

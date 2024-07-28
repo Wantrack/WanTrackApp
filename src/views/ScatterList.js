@@ -183,7 +183,7 @@ function ScatterList() {
   }
 
   async function sendMessage() {
-    if (window.confirm('¿Estas seguro que deseas enviar la dispersión con esta lista?')) {
+    if (window.confirm('¿Estas seguro que deseas enviar la difusión con esta lista?')) {
         await saveChanges(false);
         axios.post(`${constants.apiurl}/api/sendscatterlist`, {id: scatterList.idscatterlist}).then(async (result) => {
             sendNotification('Lista enviada');
@@ -373,7 +373,7 @@ function ScatterList() {
           <Col md="12">
             <Card>
               <CardHeader>
-                <h5 className="title">Lista de dispersión</h5>
+                <h5 className="title">Lista de difusión</h5>
               </CardHeader>
               <CardBody>
                 <Form>

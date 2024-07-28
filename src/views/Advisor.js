@@ -17,6 +17,8 @@ import {
   ModalHeader,
   ModalBody,
 } from "reactstrap";
+import { clockformat } from 'util/time';
+
 
 import moment from 'moment';
 
@@ -390,6 +392,7 @@ function Advisor() {
                                         <th style={{textAlign:'center'}}>Transcripcion</th>
                                         <th style={{textAlign:'center'}}>Resumen</th>
                                         <th>Audio</th>
+                                        <th>Tiempo</th>
                                         <th>Fecha</th>
                                     </tr>
                                 </thead>
@@ -410,6 +413,7 @@ function Advisor() {
                                                     <i style={{fontSize: '20px'}} className="fa-solid fa-circle-play"></i>
                                                 </Link>
                                             </td>
+                                            <td className='m_title'> { clockformat(call.audioDuration || 0)} </td>
                                             <td> {moment(call.creationdate).format('DD-MM-YYYY hh:mm:ss')}</td>
                                         </tr>
                                     )}                   

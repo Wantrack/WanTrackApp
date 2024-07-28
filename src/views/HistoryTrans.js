@@ -91,34 +91,36 @@ function HistoryTrans (props) {
                                         </Table>
                                     </CardBody>
                                     <CardFooter style={{display:'flex', justifyContent:'center'}}>
-                                        <Pagination style={{maxWidth:'90%', overflowX:'auto'}}>
-                                            <PaginationItem>
-                                                <PaginationLink
-                                                onClick={() => {getMessageSent(0, 25)}}
-                                                first
-                                                href="javascript:void(0)"
-                                                />
-                                            </PaginationItem>
-                                            {
-                                                amountMessagesSentArray.map((item, index) => 
-                                                    <PaginationItem  key={index}>
-                                                        <PaginationLink 
-                                                        href="javascript:void(0)"
-                                                        onClick={() => {getMessageSent(index + 1, 25)}}
-                                                        >
-                                                        {index + 1}
-                                                        </PaginationLink>
-                                                </PaginationItem> 
-                                                )
-                                            }                    
-                                            <PaginationItem>
-                                                <PaginationLink
-                                                onClick={() => {getMessageSent(maxMessagesSent, 25)}}
-                                                href="javascript:void(0)"
-                                                last
-                                                />
-                                            </PaginationItem>
-                                        </Pagination>
+                                        <div style={{width:'90%', overflowX:'auto'}}>
+                                            <Pagination>
+                                                <PaginationItem>
+                                                    <PaginationLink
+                                                    onClick={() => {getMessageSent(0, 25)}}
+                                                    first
+                                                    href="javascript:void(0)"
+                                                    />
+                                                </PaginationItem>
+                                                {
+                                                    amountMessagesSentArray.map((item, index) => 
+                                                        <PaginationItem  key={index}>
+                                                            <PaginationLink 
+                                                            href="javascript:void(0)"
+                                                            onClick={() => {getMessageSent(index + 1, 25)}}
+                                                            >
+                                                            {index + 1}
+                                                            </PaginationLink>
+                                                    </PaginationItem> 
+                                                    )
+                                                }                    
+                                                <PaginationItem>
+                                                    <PaginationLink
+                                                    onClick={() => {getMessageSent(maxMessagesSent, 25)}}
+                                                    href="javascript:void(0)"
+                                                    last
+                                                    />
+                                                </PaginationItem>
+                                            </Pagination>
+                                        </div>                                        
                                     </CardFooter>
                                 </Card>
                             </Col>

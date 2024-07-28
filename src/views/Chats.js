@@ -32,7 +32,7 @@ function Chats (props) {
         });
     }, []);
     
-    const filteredChats = Array.isArray(chats) ? chats.filter(chat => String(chat.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
+    const filteredChats = Array.isArray(chats) ? chats.filter(chat => String(chat.phone).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
     
     return <div className="content">
                 <Loader active={loaderActive} />

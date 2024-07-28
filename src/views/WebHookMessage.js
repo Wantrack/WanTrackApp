@@ -242,7 +242,7 @@ function WebHookMessage (props) {
           <Col md="12">
             <Card>
               <CardHeader>
-                <h5 className="title">Lista de dispersión</h5>
+                <h5 className="title">Webhook</h5>
               </CardHeader>
               <CardBody>
                 <Form>

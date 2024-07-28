@@ -29,7 +29,7 @@ function WebHooks (props) {
                 <Loader active={loaderActive} />
                 <Card>
                     <CardHeader>
-                        <h5 className="title">Listas de dispersión</h5>
+                        <h5 className="title">Listas de Webhooks</h5>
                     </CardHeader>
                     <CardBody>
                         <div className="margin-bottom-2vh flex-left">
