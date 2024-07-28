@@ -80,7 +80,6 @@ function Chat(props) {
     }   
   }
 
-
   function loadChats(phone, phoneNumberId) {
     axios.get(`${constants.apiurl}/api/chats/${phone}/${phoneNumberId}`).then((result) => {
         setLoaderActive(false);

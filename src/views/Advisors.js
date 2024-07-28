@@ -47,15 +47,15 @@ function Advisors (props) {
                             <table className="table table-hover">
                                 <thead>
                                     <tr>                            
-                                        <th>Nombres</th>
-                                        <th>Apellidos</th>                     
+                                        <th>Nombre Completo</th>
+                                        <th>Minutos</th>                     
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredUsers.map((advisor, index) => 
                                         <tr key={index}>
-                                            <td> <Link to="/admin/advisor" onClick={() => goToAdvisorOnClick(advisor.idadviser)}>{advisor.name}</Link></td>
-                                            <td> <Link to="/admin/advisor" onClick={() => goToAdvisorOnClick(advisor.idadviser)}>{advisor.lastName}</Link></td>
+                                            <td> <Link to="/admin/advisor" onClick={() => goToAdvisorOnClick(advisor.idadviser)}>{advisor.name} {advisor.lastName}</Link></td>
+                                            <td> <Link to="/admin/advisor" onClick={() => goToAdvisorOnClick(advisor.idadviser)}>00:00</Link></td>
                                         </tr>
                                     )}                   
                                 </tbody>          

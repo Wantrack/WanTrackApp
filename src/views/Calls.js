@@ -182,7 +182,7 @@ function Calls (props) {
                                 <tbody>
                                     {cafilteredCalls.map((call, index) => 
                                         <tr key={index}>
-                                            <td> {call.name} </td>
+                                            <td> <Link to="/admin/advisor" onClick={() => goToAdvisorOnClick(call.idAdviser)}> {call.name}</Link> </td>
                                             <td> {call.satisfaction}%</td>
                                             <td className='m_title'> {call.mainEmotion || '-'} </td>
                                             <td className='m_title'> {call.feeling || '-'} </td>
@@ -206,6 +206,10 @@ function Calls (props) {
                     </CardBody>
                 </Card>
     </div>;
+}
+
+function goToAdvisorOnClick(idadviser) {
+    localStorage.setItem('currentAdvisorID', idadviser);
 }
 
 export default Calls;
