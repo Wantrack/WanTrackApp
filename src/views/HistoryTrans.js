@@ -91,7 +91,7 @@ function HistoryTrans (props) {
                                         </Table>
                                     </CardBody>
                                     <CardFooter style={{display:'flex', justifyContent:'center'}}>
-                                        <div style={{width:'90%', overflowX:'auto'}}>
+                                        <div style={{width:'90%', overflowX:'auto', display: 'flex', justifyContent: 'center'}}>
                                             <Pagination>
                                                 <PaginationItem>
                                                     <PaginationLink
