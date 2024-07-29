@@ -6,7 +6,7 @@ import constants from "../util/constans";
 import ScrollArea from "react-scrollbar";
 import { Button, Card, Col, Input, Row } from "reactstrap";
 import { Tooltip as ReactTooltip } from "react-tooltip";
-import { func } from "prop-types";
+import { socket } from "../socket";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -94,6 +94,14 @@ function Chat(props) {
     const phoneNumberId = localStorage.getItem("currentphoneNumberID");
     loadChats(phone, phoneNumberId);
   }, []);
+
+  function chatrefresh(value) {
+    const phone = localStorage.getItem("currentChatID");
+    const phoneNumberId = localStorage.getItem("currentphoneNumberID");
+    loadChats(phone, phoneNumberId);
+  }
+
+  socket.on('chatrefresh', chatrefresh);
 
   return (
     <div className="content">

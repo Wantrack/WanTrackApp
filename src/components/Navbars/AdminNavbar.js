@@ -2,17 +2,16 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 // nodejs library that concatenates classes
 import classNames from "classnames";
-
+import { axios } from "../../config/https";
+import { socket } from "../../socket";
 // reactstrap components
 import {
-  Button,
   Collapse,
   DropdownToggle,
   DropdownMenu,
   DropdownItem,
   UncontrolledDropdown,
   Input,
-  InputGroup,
   NavbarBrand,
   Navbar,
   NavLink,
@@ -22,15 +21,19 @@ import {
   NavbarToggler,
   ModalHeader,
 } from "reactstrap";
+import constants from "util/constans";
+import { func } from "prop-types";
 
 function AdminNavbar(props) {
   const navigate = useNavigate ();
 
   const [collapseOpen, setcollapseOpen] = React.useState(false);
   const [modalSearch, setmodalSearch] = React.useState(false);
+  const [notifications, setNotifications] = React.useState([]);
   const [color, setcolor] = React.useState("navbar-transparent");
   React.useEffect(() => {
     window.addEventListener("resize", updateColor);
+    loadNotifications();
     // Specify how to clean up after this effect:
     return function cleanup() {
       window.removeEventListener("resize", updateColor);
@@ -62,6 +65,35 @@ function AdminNavbar(props) {
   const toggleModalSearch = () => {
     setmodalSearch(!modalSearch);
   };
+
+  
+  function loadNotifications() {
+    axios.get(`${constants.apiurl}/api/notifications`).then((result) => {
+      if(result && result.data) {
+        setNotifications(result.data);
+      }
+     
+    });
+  }
+
+  function notificationsOnclick() {
+    setTimeout(() => {
+      deleteNotifications();
+    }, 5000);
+  }
+
+  function deleteNotifications() {
+    axios.delete(`${constants.apiurl}/api/notification`).then((result) => {
+      setNotifications([]);
+    });
+  }
+
+  function notificationrefresh() {
+    loadNotifications();
+  }
+
+  socket.on('notificationrefresh', notificationrefresh);
+
   return (
     <>
       <Navbar className={classNames("navbar-absolute", color)} expand="lg">
@@ -78,7 +110,7 @@ function AdminNavbar(props) {
                 <span className="navbar-toggler-bar bar3" />
               </NavbarToggler>
             </div>
-            <NavbarBrand href="#pablo" onClick={(e) => e.preventDefault()}>
+            <NavbarBrand href="#" onClick={(e) => e.preventDefault()}>
               <img style={{height: '5rem'}} alt="WANTRACK" src={require("assets/img/logo3.png")} />
             </NavbarBrand>
           </div>
@@ -95,45 +127,33 @@ function AdminNavbar(props) {
                   <span className="d-lg-none d-md-block">Search</span>
                 </Button>
               </InputGroup> */}
-              {/* <UncontrolledDropdown nav>
+              <UncontrolledDropdown nav>
                 <DropdownToggle
+                  onClick={notificationsOnclick}
                   caret
                   color="default"
                   data-toggle="dropdown"
                   nav
                 >
-                  <div className="notification d-none d-lg-block d-xl-block" />
+                  {
+                    (notifications.length > 0 ? <div className="notification d-none d-lg-block d-xl-block" /> : <div/>)
+                  }
+                  
                   <i className="tim-icons icon-sound-wave" />
                   <p className="d-lg-none">Notifications</p>
                 </DropdownToggle>
                 <DropdownMenu className="dropdown-navbar" right tag="ul">
                   <NavLink tag="li">
-                    <DropdownItem className="nav-item">
-                      Mike John responded to your email
-                    </DropdownItem>
-                  </NavLink>
-                  <NavLink tag="li">
-                    <DropdownItem className="nav-item">
-                      You have 5 more tasks
-                    </DropdownItem>
-                  </NavLink>
-                  <NavLink tag="li">
-                    <DropdownItem className="nav-item">
-                      Your friend Michael is in town
-                    </DropdownItem>
-                  </NavLink>
-                  <NavLink tag="li">
-                    <DropdownItem className="nav-item">
-                      Another notification
-                    </DropdownItem>
-                  </NavLink>
-                  <NavLink tag="li">
-                    <DropdownItem className="nav-item">
-                      Another one
-                    </DropdownItem>
-                  </NavLink>
+                    {
+                        notifications?.map((notification, index) => 
+                          <DropdownItem key={index} className="nav-item">
+                            {notification.text}
+                          </DropdownItem>
+                    )}  
+                   
+                  </NavLink>                  
                 </DropdownMenu>
-              </UncontrolledDropdown> */}
+              </UncontrolledDropdown>
               <UncontrolledDropdown nav>
                 <DropdownToggle
                   caret
