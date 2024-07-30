@@ -373,3 +373,17 @@ input[type="file"]::file-selector-button:active {
   background-color: #e5e7eb;
 }
 
+#webpack-dev-server-client-overlay {
+  display: none;
+}
+
+.headerchat {
+  display: flex;
+  padding: 20px 60px;
+}
+
+.herderphone {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+}

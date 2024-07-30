@@ -61,12 +61,12 @@ function Chats (props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredChats.map((scatterList, index) => 
-                                        <tr key={scatterList.idscatterlist}>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(scatterList.phone, scatterList.phoneNumberId)}>{index + 1}</Link></td>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(scatterList.phone, scatterList.phoneNumberId)}>{scatterList.phone}</Link></td>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(scatterList.phone, scatterList.phoneNumberId)}>{scatterList.name}</Link></td>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(scatterList.phone, scatterList.phoneNumberId)}>{scatterList.creationdate}</Link></td>
+                                    {filteredChats.map((chat, index) => 
+                                        <tr key={index}>
+                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId)}>{index + 1}</Link></td>
+                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId)}>{chat.phone}</Link></td>
+                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId)}>{chat.name}</Link></td>
+                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId)}>{chat.creationdate}</Link></td>
                                         </tr>
                                     )}
                                 </tbody>          
@@ -77,8 +77,8 @@ function Chats (props) {
     </div>;
 }
 
-function goToChat(idChat, phoneNumberId) {
-    localStorage.setItem('currentChatID', idChat);
+function goToChat(phone, phoneNumberId) {
+    localStorage.setItem('currentPhone', phone);
     localStorage.setItem('currentphoneNumberID', phoneNumberId);
 }
 

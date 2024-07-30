@@ -16,6 +16,7 @@ function Chat(props) {
   const scrollAreaRef = useRef(null);
   const [chats, setChats] = useState([]);
   const [message, setMessage] = useState('');
+  const [phone, setPhone] = useState('');
   const [loaderActive, setLoaderActive] = useState(false);
 
   const notificationAlertRef = useRef(null);
@@ -73,7 +74,7 @@ function Chat(props) {
   async function sendMessage() {
     if(message) {
         document.querySelector('#message').value = '';
-        const phone = localStorage.getItem("currentChatID");
+        const phone = localStorage.getItem("currentPhone");
         const phoneNumberId = localStorage.getItem("currentphoneNumberID");
         await axios.post(`${constants.apiurl}/api/chatssendmessage`, {
             phone: phone,
@@ -96,13 +97,14 @@ function Chat(props) {
 
   useEffect(() => {
     setLoaderActive(true);
-    const phone = localStorage.getItem("currentChatID");
+    const phone = localStorage.getItem("currentPhone");
     const phoneNumberId = localStorage.getItem("currentphoneNumberID");
+    setPhone(phone);
     loadChats(phone, phoneNumberId);
   }, []);
 
   function chatrefresh(value) {
-    const phone = localStorage.getItem("currentChatID");
+    const phone = localStorage.getItem("currentPhone");
     const phoneNumberId = localStorage.getItem("currentphoneNumberID");
     loadChats(phone, phoneNumberId);
   }
@@ -114,8 +116,16 @@ function Chat(props) {
       <NotificationAlert ref={notificationAlertRef} />
       <Loader active={loaderActive} />
       <Card>
+        <div className="headerchat">
+            <div>
+              <i style={{fontSize:'2rem'}} class="fa-regular fa-circle-user"></i>
+            </div>
+            <div className="herderphone">
+              {phone}
+            </div>            
+        </div>
         <ScrollArea
-          style={{ height: "80vh" }}
+          style={{ height: "70vh" }}
           speed={0.8}
           className="area"
           contentClassName="content chat-container"
