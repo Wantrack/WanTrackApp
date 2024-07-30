@@ -50,7 +50,13 @@ function Chat(props) {
   }
 
   function genAI() {
-    sendNotification('Esta opción está desactivada para tu usuario 🚫. Habla con tu asesor para solicitar una versión de prueba 📞✨', 'danger');
+    //sendNotification('Esta opción está desactivada para tu usuario 🚫. Habla con tu asesor para solicitar una versión de prueba 📞✨', 'danger');
+    setLoaderActive(true);
+    axios.get(`${constants.apiurl}/api/suggestionText/${message}`).then((result) => {
+      setLoaderActive(false);
+      document.querySelector('#message').value = result.data.textosugerido;
+      setMessage(result.data.textosugerido);
+    });
   }
 
   const onHandleChange = (e) => {
@@ -85,7 +91,7 @@ function Chat(props) {
         setLoaderActive(false);
         setChats(result.data);
         toBotton();
-      });
+    });
   }
 
   useEffect(() => {
