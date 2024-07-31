@@ -4,6 +4,8 @@ import Loader from '../components/Loader/Loader';
 import { decode } from "../util/base64";
 import { axios } from '../config/https';
 import constants from '../util/constans';
+import { socket } from "../socket";
+
 import {
     CardHeader,
     CardBody,
@@ -16,6 +18,10 @@ function Chats (props) {
     const [searchValue, setSearchValue] = useState('');
     
     useEffect(() => { 
+        loadChats();       
+    }, []);
+
+    function loadChats() {
         let idCompany = undefined;
         const _userinfoEncoded = localStorage.getItem(constants.userinfo);
         if(_userinfoEncoded) {
@@ -30,7 +36,13 @@ function Chats (props) {
             setLoaderActive(false)
             setChats(result.data);
         });
-    }, []);
+    }
+
+    function notificationrefresh() {
+        loadChats();       
+    }
+    
+    socket.on('notificationrefresh', notificationrefresh);
     
     const filteredChats = Array.isArray(chats) ? chats.filter(chat => String(chat.phone).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
     
@@ -58,15 +70,18 @@ function Chats (props) {
                                         <th>Telefono</th>
                                         <th>Nombre</th>
                                         <th>Fecha ultimo mensaje</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredChats.map((chat, index) => 
+                                    {
+                                    filteredChats.map((chat, index) => 
                                         <tr key={index}>
                                             <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId)}>{index + 1}</Link></td>
                                             <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId)}>{chat.phone}</Link></td>
                                             <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId)}>{chat.name}</Link></td>
                                             <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId)}>{chat.creationdate}</Link></td>
+                                            <td>{ chat.isalert ?  <i title='No haz leido los mensajes' style={{color:'#f5365c'}} class="fa-solid fa-circle-exclamation"></i>: <></>}</td>
                                         </tr>
                                     )}
                                 </tbody>          
