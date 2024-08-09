@@ -198,6 +198,31 @@ let chartExample2 = {
   options: chart1_2_options,
 };
 
+let chartExampleD = {
+  data: {
+    labels: [],
+    datasets: [],
+  },
+  options: chart1_2_options,
+};
+
+let chartExampleR = {
+  data: {
+    labels: [],
+    datasets: [],
+  },
+  options: chart1_2_options,
+};
+
+let chartExampleF = {
+  data: {
+    labels: [],
+    datasets: [],
+  },
+  options: chart1_2_options,
+};
+
+
 // #########################################
 // // // used inside src/views/Dashboard.js
 // #########################################
@@ -340,4 +365,7 @@ module.exports = {
   chartExample2, // in src/views/Dashboard.js
   chartExample3, // in src/views/Dashboard.js
   chartExample4, // in src/views/Dashboard.js
+  chartExampleD,
+  chartExampleR,
+  chartExampleF
 };
