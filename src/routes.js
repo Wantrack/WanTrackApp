@@ -74,7 +74,7 @@ var routes = [
   },
   {
     path: "/lists",
-    name: "Listas de difusión",
+    name: "Campañas de WhastApp",
     icon: "tim-icons icon-notes",
     component: <ScatterLists />,
     layout: "/admin",
