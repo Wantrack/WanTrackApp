@@ -22,6 +22,8 @@ import WebHookMessage from "views/WebHookMessage";
 import Advisors from "views/Advisors";
 import Advisor from "views/Advisor";
 import Calls from "views/Calls";
+import LeadsCenter from "views/LeadsCenter";
+import LeadViewer from "views/LeadViewer";
 
 var routes = [
   {
@@ -77,6 +79,14 @@ var routes = [
     name: "Campañas de WhastApp",
     icon: "tim-icons icon-notes",
     component: <ScatterLists />,
+    layout: "/admin",
+    idText: '9'
+  },
+  {
+    path: "/leadsCenter",
+    name: "Leads Center",
+    icon: "tim-icons icon-single-copy-04",
+    component: <LeadsCenter />,
     layout: "/admin",
     idText: '9'
   },
@@ -260,6 +270,14 @@ var routes = [
     component: < Advisor/>,
     layout: "/admin", 
     invisible: true
-  }
+  },
+  {
+    path: "/leadviewer",
+    name: "Leads Center",
+    icon: "tim-icons icon-single-copy-04",
+    component: <LeadViewer />,
+    layout: "/admin",
+    invisible: true
+  },
 ];
 export default routes;
