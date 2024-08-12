@@ -20,7 +20,7 @@ function LeadViewer (props) {
         const currentleadID = localStorage.getItem('currentleadID');
         axios.get(`${constants.apiurl}/api/leadsflows/${currentleadID}`).then(result => {
             const headers = [];
-            const body = [];
+            let body = [];
             const data = result.data;
 
             if(data && Array.isArray(data) && data.length > 0) {
@@ -28,18 +28,11 @@ function LeadViewer (props) {
                 for (const [key] of Object.entries(answer)) {
                     headers.push(key);
                 }
-                
-                for (let i = 0; i < data.length; i++) {
-                    const row = [];
-                    const answer = JSON.parse(data[i].answer);
-                    for (const [key, value] of Object.entries(answer)) {
-                        row.push(value);
-                    }
-                    body.push(row);
-                }
+
+                const tempdata = data.map(d => JSON.parse(d.answer));
+                body =  tempdata.map(tmpdata => headers.map(header => tmpdata[header]));
 
             }
-            console.log(body)
             setHeader(headers);
             setBody(body);
             setLoaderActive(false);            
@@ -71,7 +64,7 @@ function LeadViewer (props) {
                                         <tr key={index}>
                                              {                                                
                                                 item.map((i, index2) => 
-                                                    <td  key={index2+1000}> {i}</td>
+                                                    <td  key={index2}> {i}</td>
                                             )}
                                         </tr>
                                     )}
