@@ -77,10 +77,10 @@ function Chats (props) {
                                     {
                                     filteredChats.map((chat, index) => 
                                         <tr key={index}>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId)}>{index + 1}</Link></td>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId)}>{chat.phone}</Link></td>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId)}>{chat.name}</Link></td>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId)}>{chat.creationdate}</Link></td>
+                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{index + 1}</Link></td>
+                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.phone}</Link></td>
+                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.name}</Link></td>
+                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.creationdate}</Link></td>
                                             <td>{ chat.isalert ?  <i title='No haz leido los mensajes' style={{color:'#f5365c'}} class="fa-solid fa-circle-exclamation"></i>: <></>}</td>
                                         </tr>
                                     )}
@@ -92,8 +92,9 @@ function Chats (props) {
     </div>;
 }
 
-function goToChat(phone, phoneNumberId) {
+function goToChat(phone, phoneNumberId, name) {
     localStorage.setItem('currentPhone', phone);
+    localStorage.setItem('currentName', name);
     localStorage.setItem('currentphoneNumberID', phoneNumberId);
 }
 

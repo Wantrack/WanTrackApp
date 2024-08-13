@@ -17,6 +17,7 @@ function Chat(props) {
   const [chats, setChats] = useState([]);
   const [message, setMessage] = useState('');
   const [phone, setPhone] = useState('');
+  const [name, setName] = useState('');
   const [loaderActive, setLoaderActive] = useState(false);
 
   const notificationAlertRef = useRef(null);
@@ -98,8 +99,10 @@ function Chat(props) {
   useEffect(() => {
     setLoaderActive(true);
     const phone = localStorage.getItem("currentPhone");
+    const name = localStorage.getItem("currentName");
     const phoneNumberId = localStorage.getItem("currentphoneNumberID");
     setPhone(phone);
+    setName(name);
     loadChats(phone, phoneNumberId);
   }, []);
 
@@ -116,12 +119,13 @@ function Chat(props) {
       <NotificationAlert ref={notificationAlertRef} />
       <Loader active={loaderActive} />
       <Card>
-        <div className="headerchat">
+        <div style={{display: 'flex', alignItems: 'center'}} className="headerchat">
             <div>
               <i style={{fontSize:'2rem'}} class="fa-regular fa-circle-user"></i>
             </div>
-            <div className="herderphone">
-              {phone}
+            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'start'}} className="herderphone">
+              <h4>{name}</h4>
+              <h6>{phone}</h6>
             </div>            
         </div>
         <ScrollArea
