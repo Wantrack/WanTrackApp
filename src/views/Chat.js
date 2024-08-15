@@ -104,14 +104,14 @@ function Chat(props) {
     setPhone(phone);
     setName(name);
     loadChats(phone, phoneNumberId);
-    
+
     const socket = new SocketService();
     socket.getSocket().on('chatrefresh', chatrefresh);
 
     return () => {
       console.log('El componente Chat se desmontó');
       socket.disconnect();
-  }
+    }
   }, []);
 
   function chatrefresh(value) {
