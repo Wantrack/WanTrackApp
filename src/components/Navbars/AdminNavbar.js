@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 // nodejs library that concatenates classes
 import classNames from "classnames";
 import { axios } from "../../config/https";
-import { socket } from "../../socket";
+import SocketService  from "../../socket";
 // reactstrap components
 import {
   Collapse,
@@ -22,7 +22,6 @@ import {
   ModalHeader,
 } from "reactstrap";
 import constants from "util/constans";
-import { func } from "prop-types";
 
 function AdminNavbar(props) {
   const navigate = useNavigate ();
@@ -31,12 +30,20 @@ function AdminNavbar(props) {
   const [modalSearch, setmodalSearch] = React.useState(false);
   const [notifications, setNotifications] = React.useState([]);
   const [color, setcolor] = React.useState("navbar-transparent");
+
+  
+
   React.useEffect(() => {
     window.addEventListener("resize", updateColor);
     
+    const socket = new SocketService();
+    socket.getSocket().on('notificationrefresh', notificationrefresh);
+    
     // Specify how to clean up after this effect:
-    return function cleanup() {
+    return function cleanup() {      
       window.removeEventListener("resize", updateColor);
+      console.log('El componente AdminNavbar se desmontó');
+      socket.disconnect();
     };
   });
   // function that adds color white/transparent to the navbar on resize (this is for the collapse)
@@ -88,11 +95,10 @@ function AdminNavbar(props) {
     });
   }
 
-  function notificationrefresh() {
+  function notificationrefresh(value) {
+    console.log(value);
     loadNotifications();
-  }
-
-  socket.on('notificationrefresh', notificationrefresh);
+  }  
 
   return (
     <>

@@ -47,11 +47,10 @@ function ScatterList() {
   }
 
   const onHandleChangeCheckbox = index => e => {
-    const { name, value } = e.target;
     let newArray = [...scatterListDetails];
     const item = newArray[index];
-    newArray[index] = { ...item, selected: item.selected == 1 ? 0 : 1 }
-    item.selected = item.selected == 1 ? 0 : 1 
+    newArray[index] = { ...item, selected: item.selected === 1 ? 0 : 1 }
+    item.selected = item.selected === 1 ? 0 : 1 
     setScatterListDetails(newArray);
 
     axios.patch(`${constants.apiurl}/api/scatterlistdetailSelected`, item);
@@ -87,7 +86,7 @@ function ScatterList() {
 
   const cmbCompanyOnChange = async (e) => { 
     onHandleChange(e);   
-    const { name, value } = e.target;
+    const { value } = e.target;
 
     const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccounts/${value}`);
     setWsAccounts([{idwhatsapp_accounts: -1, displayname: 'Sin Cuenta'}, ..._wsaccounts.data]);
@@ -128,7 +127,8 @@ function ScatterList() {
     load();
   }, []);
 
-  async function saveChanges(close = true) {
+  async function saveChanges(event, close = true) {
+    event.preventDefault();
     scatterList.json = pObjectToJson();
     await axios.post(`${constants.apiurl}/api/scatterList`, scatterList);
     if(close) {
@@ -182,9 +182,10 @@ function ScatterList() {
     notificationAlertRef.current.notificationAlert(options);
   }
 
-  async function sendMessage() {
+  async function sendMessage(event) {
+    event.preventDefault();
     if (window.confirm('¿Estas seguro que deseas enviar la difusión con esta lista?')) {
-        await saveChanges(false);
+        await saveChanges(event, false);
         axios.post(`${constants.apiurl}/api/sendscatterlist`, {id: scatterList.idscatterlist}).then(async (result) => {
             sendNotification('Lista enviada');
         });
@@ -195,7 +196,8 @@ function ScatterList() {
     setModalVisible(!modalVisible);
   };
 
-  const OpenContactforUpdate= (contact) => {
+  const OpenContactforUpdate= (event, contact) => {
+    event.preventDefault();
     toggleModal();
     setContact(contact);
   }
@@ -209,7 +211,7 @@ function ScatterList() {
   const jsonToPObject = (_scatterList) => {
     if(_scatterList.json) {
       const json =  JSON.parse(_scatterList.json);
-      const header = json.find(element => element.type == 'header');
+      const header = json.find(element => element.type === 'header');
       if(header) {
         setHeaderP({
           type: header.parameters[0].type,
@@ -218,7 +220,7 @@ function ScatterList() {
         })
       }
 
-      const body = json.find(element => element.type == 'body');
+      const body = json.find(element => element.type === 'body');
       if(body) {
         const _bodyparameters = [];
         for (const parameter of body.parameters) {
@@ -227,7 +229,7 @@ function ScatterList() {
         setBodyParameters(_bodyparameters);
       }
 
-      const buttons = json.filter(element => element.type == 'button');
+      const buttons = json.filter(element => element.type === 'button');
       if(buttons && Array.isArray(buttons) && buttons.length > 0) {
         const _buttonsparameters = [];
         for (const button of buttons) {
@@ -327,6 +329,7 @@ function ScatterList() {
                 <label>Header</label>
                 <select className="form-control color_black" name='type' value={headerp.type} onChange={onHandleChangeHeader}>
                   <option selected value='image'>Imagen</option>
+                  <option value='video'>Video</option>
                   <option value='document'>Documento</option>
                 </select>
                 <Input placeholder="Link" className="form-control form-control-lg color_black" style={{marginTop: '10px'}}  type="text" name='link' defaultValue={headerp.link} onChange={onHandleChangeHeader}/>
@@ -447,17 +450,17 @@ function ScatterList() {
                                             <td> 
                                               <FormGroup check>
                                                 <Label check>
-                                                  <Input type="checkbox" name={`inputSelected_${index}`} defaultChecked={scatterListDetail.selected == 1 ? true : false}  onChange={onHandleChangeCheckbox(index)}/>
+                                                  <Input type="checkbox" name={`inputSelected_${index}`} defaultChecked={scatterListDetail.selected === 1 ? true : false}  onChange={onHandleChangeCheckbox(index)}/>
                                                   <span className="form-check-sign">
                                                     <span className="check" />
                                                   </span>
                                                 </Label>
                                               </FormGroup>
                                             </td>
-                                            <td> <Link to="javascript:void(0)" onClick={()=>{OpenContactforUpdate(scatterListDetail)}}>{scatterListDetail.name}</Link></td>
-                                            <td> <Link to="javascript:void(0)" onClick={()=>{OpenContactforUpdate(scatterListDetail)}}>{scatterListDetail.phone}</Link></td>
-                                            <td> <Link to="javascript:void(0)" onClick={()=>{OpenContactforUpdate(scatterListDetail)}}>{scatterListDetail.extra1}</Link></td>
-                                            <td> <Link to="javascript:void(0)" onClick={()=>{OpenContactforUpdate(scatterListDetail)}}>{scatterListDetail.extra2}</Link></td>
+                                            <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.name}</Link></td>
+                                            <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.phone}</Link></td>
+                                            <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.extra1}</Link></td>
+                                            <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.extra2}</Link></td>
                                         </tr>
                                     )}                   
                                 </tbody>          
@@ -479,10 +482,10 @@ function ScatterList() {
             </Card>
           </Col>
         </Row>
-        <Link to="javascript:void(0)" title="Enviar mensaje" href="#" className="float-2" onClick={sendMessage}>
+        <Link to="/" title="Enviar mensaje" href="#" className="float-2" onClick={sendMessage}>
           <i className="fa-solid fa-paper-plane my-float"></i>
         </Link>
-        <Link to="javascript:void(0)" title="Guardar y cerrar" href="#" className="float" onClick={saveChanges}>
+        <Link to="/" title="Guardar y cerrar" href="#" className="float" onClick={saveChanges}>
           <i className="fa-solid fa-floppy-disk my-float"></i>
         </Link>
       </div>

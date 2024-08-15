@@ -6,7 +6,7 @@ import constants from "../util/constans";
 import ScrollArea from "react-scrollbar";
 import { Button, Card, Col, Input, Row } from "reactstrap";
 import { Tooltip as ReactTooltip } from "react-tooltip";
-import { socket } from "../socket";
+import SocketService  from "../socket";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -20,7 +20,7 @@ function Chat(props) {
   const [name, setName] = useState('');
   const [loaderActive, setLoaderActive] = useState(false);
 
-  const notificationAlertRef = useRef(null);
+  const notificationAlertRef = useRef(null); 
 
   async function toBotton() {
     await sleep(200);
@@ -104,15 +104,22 @@ function Chat(props) {
     setPhone(phone);
     setName(name);
     loadChats(phone, phoneNumberId);
+    
+    const socket = new SocketService();
+    socket.getSocket().on('chatrefresh', chatrefresh);
+
+    return () => {
+      console.log('El componente Chat se desmontó');
+      socket.disconnect();
+  }
   }, []);
 
   function chatrefresh(value) {
+    console.log(value);
     const phone = localStorage.getItem("currentPhone");
     const phoneNumberId = localStorage.getItem("currentphoneNumberID");
     loadChats(phone, phoneNumberId);
-  }
-
-  socket.on('chatrefresh', chatrefresh);
+  }  
 
   return (
     <div className="content">
@@ -121,7 +128,7 @@ function Chat(props) {
       <Card>
         <div style={{display: 'flex', alignItems: 'center'}} className="headerchat">
             <div>
-              <i style={{fontSize:'2rem'}} class="fa-regular fa-circle-user"></i>
+              <i style={{fontSize:'2rem'}} className="fa-regular fa-circle-user"></i>
             </div>
             <div style={{display: 'flex', flexDirection: 'column', alignItems: 'start'}} className="herderphone">
               <h4>{name}</h4>
@@ -156,11 +163,11 @@ function Chat(props) {
             <Col md="1" sm="6" style={{ padding: "0px 1px"}}>
                 <Button onClick={genAI} data-tooltip-id="genAITooltip" title="Sugiere respuesta con IA" style={{width: '100%'}}>                
                     <svg fill="#FFDF00" width="14px" height="14px" viewBox="0 0 512 512" id="icons" xmlns="http://www.w3.org/2000/svg" >
-                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                        <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                         <g
                             id="SVGRepo_tracerCarrier"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                         ></g>
                         <g id="SVGRepo_iconCarrier">
                             <path d="M208,512a24.84,24.84,0,0,1-23.34-16l-39.84-103.6a16.06,16.06,0,0,0-9.19-9.19L32,343.34a25,25,0,0,1,0-46.68l103.6-39.84a16.06,16.06,0,0,0,9.19-9.19L184.66,144a25,25,0,0,1,46.68,0l39.84,103.6a16.06,16.06,0,0,0,9.19,9.19l103,39.63A25.49,25.49,0,0,1,400,320.52a24.82,24.82,0,0,1-16,22.82l-103.6,39.84a16.06,16.06,0,0,0-9.19,9.19L231.34,496A24.84,24.84,0,0,1,208,512Zm66.85-254.84h0Z"></path>
@@ -171,7 +178,7 @@ function Chat(props) {
                  </Button>
             </Col>
             <Col md="1" sm="6" style={{ padding: "0px 10px 0px 0px"}}>
-                <Button onClick={sendMessage} title="Envia el mensaje" style={{width: '100%'}}><i class="fa-solid fa-paper-plane"></i></Button>
+                <Button onClick={sendMessage} title="Envia el mensaje" style={{width: '100%'}}><i className="fa-solid fa-paper-plane"></i></Button>
             </Col>
           </Row>
         </div>

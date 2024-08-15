@@ -4,7 +4,7 @@ import Loader from '../components/Loader/Loader';
 import { decode } from "../util/base64";
 import { axios } from '../config/https';
 import constants from '../util/constans';
-import { socket } from "../socket";
+import SocketService  from "../socket";
 
 import {
     CardHeader,
@@ -15,10 +15,18 @@ import {
 function Chats (props) {
     const [chats, setChats] = useState([]);
     const [loaderActive, setLoaderActive] = useState(false);
-    const [searchValue, setSearchValue] = useState('');
+    const [searchValue, setSearchValue] = useState('');   
     
     useEffect(() => { 
-        loadChats();       
+        loadChats();
+        const socket = new SocketService();
+        socket.getSocket().on('notificationrefresh', notificationrefresh);
+        console.log('Entro');
+        
+        return () => {
+            console.log('El componente Chats se desmontó');
+            socket.disconnect();
+        }
     }, []);
 
     function loadChats() {
@@ -38,11 +46,10 @@ function Chats (props) {
         });
     }
 
-    function notificationrefresh() {
+    function notificationrefresh(value) {
+        console.log(value);
         loadChats();       
     }
-    
-    socket.on('notificationrefresh', notificationrefresh);
     
     const filteredChats = Array.isArray(chats) ? chats.filter(chat => String(chat.phone).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
     
@@ -81,7 +88,7 @@ function Chats (props) {
                                             <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.phone}</Link></td>
                                             <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.name}</Link></td>
                                             <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.creationdate}</Link></td>
-                                            <td>{ chat.isalert ?  <i title='No haz leido los mensajes' style={{color:'#f5365c'}} class="fa-solid fa-circle-exclamation"></i>: <></>}</td>
+                                            <td>{ chat.isalert ?  <i title='No haz leido los mensajes' style={{color:'#f5365c'}} className="fa-solid fa-circle-exclamation"></i>: <></>}</td>
                                         </tr>
                                     )}
                                 </tbody>          
