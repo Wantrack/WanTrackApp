@@ -389,6 +389,7 @@ function Advisor() {
                                         <th>Porcentaje de satisfaccion</th>     
                                         <th>Emocion principal</th>
                                         <th>Sentimiento predominante</th>
+                                        <th title='Net Promoter Score calculado con base a la conversación'>NPS</th>
                                         <th style={{textAlign:'center'}}>Transcripcion</th>
                                         <th style={{textAlign:'center'}}>Resumen</th>
                                         <th>Audio</th>
@@ -402,6 +403,7 @@ function Advisor() {
                                             <td> {call.satisfaction}%</td>
                                             <td className='m_title'> {call.mainEmotion || '-'} </td>
                                             <td className='m_title'> {call.feeling || '-'} </td>
+                                            <td className='m_title'> {call.scorenps || '-'} </td>
                                             <td style={{textAlign:'center'}}> 
                                                 <Link title='Ver transcripcion' to="javascript:void(0)" onClick={() => toggleModal(call.transcription)}> 
                                                     <i style={{fontSize: '20px'}} className="fa-solid fa-headset"></i>
