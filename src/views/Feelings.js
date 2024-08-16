@@ -114,14 +114,11 @@ function Feelings(props) {
               }
               setSentences(firstArray);
               
-              const negative = jsonresult.filter(f => f.feeling == 'Negative');
-              const positve = jsonresult.filter(f => f.feeling == 'Positive');
+              const negative = jsonresult.filter(f => f.feeling == 'Negativo');
+              const positve = jsonresult.filter(f => f.feeling == 'Positivo');
 
               const avgnegative = negative.length;
               const avgpositive = positve.length;
-
-              console.log(avgnegative)
-              console.log(avgpositive)
 
               const totalavg = (avgnegative* -1) + avgpositive;
 
