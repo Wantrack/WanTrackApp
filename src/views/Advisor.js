@@ -258,6 +258,20 @@ function Advisor() {
     onHandleChange(e);        
   }  
 
+  const getIcon = (value) => { 
+    if(value == undefined) {
+      return <i class="fa-solid fa-minus"></i>
+    }
+
+    if(value >3 && value < 6) {
+        return <i style={{color:'#2dce89'}} class="fa-solid fa-circle-check"></i>
+    } else if(value >2 && value < 4) {
+      return <i style={{color:'#ff8d72'}}class="fa-solid fa-triangle-exclamation"></i>
+    } else {
+      return <i style={{color:'#f5365c'}} class="fa-solid fa-xmark"></i>
+    }    
+  }  
+
   useEffect(() => { 
    async function load() {
     const currentAdvisorID = localStorage.getItem('currentAdvisorID');
@@ -505,12 +519,12 @@ function Advisor() {
                                         <th>Audio</th>
                                         <th>Tiempo</th>
                                         <th>Fecha</th>
-                                        <th>Saludo</th>
-                                        <th>Escucha</th>
-                                        <th>Comunicación clara</th>
-                                        <th>Comunicación precisa</th>
-                                        <th>Ofertas relevantes</th>
-                                        <th>Eficiencia</th>
+                                        <th style={{textAlign: 'center'}}>Saludo</th>
+                                        <th style={{textAlign: 'center'}}>Escucha</th>
+                                        <th style={{textAlign: 'center'}}>Comunicación clara</th>
+                                        <th style={{textAlign: 'center'}}>Comunicación precisa</th>
+                                        <th style={{textAlign: 'center'}}>Ofertas relevantes</th>
+                                        <th style={{textAlign: 'center'}}>Eficiencia</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -533,12 +547,12 @@ function Advisor() {
                                             </td>
                                             <td className='m_title'> { clockformat(call.audioDuration || 0)} </td>
                                             <td> {moment(call.creationdate).format('DD-MM-YYYY hh:mm:ss')}</td>
-                                            <td className='m_title'> {call.professionalgreetings || '-'} </td>
-                                            <td className='m_title'> {call.activelistening || '-'} </td>
-                                            <td className='m_title'> {call.clearcommunication || '-'} </td>
-                                            <td className='m_title'> {call.accuratecommunication || '-'} </td>
-                                            <td className='m_title'> {call.relevantoffers || '-'} </td>                                            
-                                            <td className='m_title'> {call.efficenthandling || '-'} </td>
+                                            <td style={{textAlign: 'center'}} className='m_title'> {getIcon(call.professionalgreetings)} </td>
+                                            <td style={{textAlign: 'center'}} className='m_title'> {getIcon(call.activelistening)} </td>
+                                            <td style={{textAlign: 'center'}} className='m_title'> {getIcon(call.clearcommunication)} </td>
+                                            <td style={{textAlign: 'center'}} className='m_title'> {getIcon(call.accuratecommunication)} </td>
+                                            <td style={{textAlign: 'center'}} className='m_title'> {getIcon(call.relevantoffers)} </td>                                            
+                                            <td style={{textAlign: 'center'}} className='m_title'> {getIcon(call.efficenthandling)} </td>
                                         </tr>
                                     )}                   
                                 </tbody>          
