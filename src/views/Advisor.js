@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { Doughnut, Pie } from "react-chartjs-2";
+import { Doughnut, Pie, Radar } from "react-chartjs-2";
 import {
   Button,
   Card,
@@ -35,6 +35,7 @@ function Advisor() {
   const [calls, setCalls] = useState([]);
   const [textModal, settextModal] = useState('');
   const [modalVisible, setModalVisible] = React.useState(false);
+  const [modalChartVisible, setModalChartVisible] = React.useState(false);
   const [dataChart, setDataChart] = useState([50,50]);
   const [dataChart2, setDataChart2] = useState([]);
   const [dataChart2Labels, setDataChart2Labels] = useState([]);
@@ -42,6 +43,9 @@ function Advisor() {
   const [dataChart3, setDataChart3] = useState([]);
   const [dataChart3Labels, setDataChart3Labels] = useState([]);
   const [dataChart3Colorss, setDataChart3Colors] = useState([]);
+  const [dataChart4Labels, setDataChart4Labels] = useState(['Saludo', 'Escucha', 'Comunicación clara', 'Comunicación precisa', 'Ofertas relevantes', 'Eficiencia' ]);
+  const [dataChart4, setDataChart4] = useState([5,5,4,5,5,5]);
+  const [dataChart4Colorss, setDataChart4Colors] = useState(['#29344099']);
 
   const data = {
     labels: ['😡', '😁'],
@@ -76,6 +80,17 @@ function Advisor() {
       {        
         data: dataChart3,
         backgroundColor: dataChart3Colorss,
+        borderColor: "#D1D6DC"
+      }
+    ]
+  };
+
+  const data4 = {
+    labels: dataChart4Labels,
+    datasets: [
+      {        
+        data: dataChart4,
+        backgroundColor: dataChart4Colorss,
         borderColor: "#D1D6DC"
       }
     ]
@@ -182,6 +197,55 @@ function Advisor() {
     responsive: true
   }
 
+  const options4 = {
+    maintainAspectRatio: false,
+    aspectRatio: 1,
+    scales: {
+      r: {
+        angleLines: {
+          color: '#000'
+        },
+        grid: {
+          color: '#000'
+        },
+        pointLabels: { // https://www.chartjs.org/docs/latest/axes/radial/#point-labels
+          color: 'white'
+        },
+        beginAtZero: true,
+        backdropColor: "transparent",
+        min: 1, // Set minimum tick value to 1
+        max: 5, // Set maximum tick value to 5
+        ticks: {
+          stepSize: 1, // Ensures that ticks are displayed at intervals of 1          
+        }
+      },
+    },
+    plugins: {
+      title: {
+        display: true,
+        color:'#fff',
+        text: "Areas de oportunidad",
+        align: "center",
+        padding: {
+          top: 10,
+        },
+        font: {                
+          size: 13
+        }
+      },
+      legend: {
+        display: false,       
+      },      
+      tooltip: {
+        enabled: true,
+        callbacks: {
+            label: (yDatapoint) => {return yDatapoint.raw},
+          }
+      }
+    },
+    responsive: true
+  }
+
   const onHandleChange = (e) => {
     const { name, value } = e.target;
     setAdvisor({
@@ -213,53 +277,65 @@ function Advisor() {
 
   const loadCalls = (currentAdvisorID) => {
     axios.get(`${constants.apiurl}/api/callByAdviser/${currentAdvisorID}`).then(result => {
-        setCalls(result.data);
+        setCalls(result.data);        
+    });    
 
-        if(result.data) {
-            //calculate percent
-            const positiveArray = result.data.map(d => parseInt(d.satisfaction));
+    axios.get(`${constants.apiurl}/api/call/report/satisfactionByAdvise/${currentAdvisorID}`).then(result => {
+        //calculate percent
+        const positive = parseInt(result.data.total);
+        const negative = 100 - positive;
+        setDataChart([negative, positive]);
+    });
 
-            const positive = positiveArray.reduce((a, b) => a + b, 0) / positiveArray.length;
-            const negative = 100 - positive;
-            setDataChart([negative, positive]);
+    axios.get(`${constants.apiurl}/api/call/report/emotionByAdviser/${currentAdvisorID}`).then(result => {
+      //chart main emotion
+      const arrayemotions = result.data;     
+      setDataChart2(arrayemotions.map(d => d.total));
+      setDataChart2Labels(arrayemotions.map(d => d.mainEmotion));
+      let colors2 = [];
+      for (const item of arrayemotions) {
+        const _eColorItem = eColors.find(i => i.emotion == item.mainEmotion);
+        if(_eColorItem) {
+          const _color = _eColorItem.color;
+          colors2.push(_color);
+        }else {
+          colors2.push(obtenerColor())
+        }             
+      }
+      setDataChart2Colors(colors2)
+    });
 
-            //chart main emotion
-            const arrayemotions = result.data.map(d => capitalizeFirstLetter(d.mainEmotion));
-            const _data2 = contarEmociones(arrayemotions);
-            setDataChart2(_data2.map(d => d.conteo));
-            setDataChart2Labels(_data2.map(d => d.emocion));
-            let colors2 = [];
-            for (const item of _data2) {
-              const _eColorItem = eColors.find(i => i.emotion == item.emocion);
-              if(_eColorItem) {
-                const _color = _eColorItem.color;
-                colors2.push(_color);
-              }else {
-                colors2.push(obtenerColor())
-              }             
-            }
-            setDataChart2Colors(colors2)
-
-            //chart feelins
-            const arrayfeelings = result.data.map(d => capitalizeFirstLetter(d.feeling));
-            const _data3 = contarEmociones(arrayfeelings);
-            setDataChart3(_data3.map(d => d.conteo));
-            setDataChart3Labels(_data3.map(d => d.emocion));
-            let colors3 = [];
-            for (const item of _data3) {
-              const _sColorItem = sColors.find(i => i.sentiment == item.emocion);
-              if(_sColorItem) {
-                const _color = _sColorItem.color;
-                colors3.push(_color);
-              }else {
-                colors3.push(obtenerColor());
-              }
-              
-            }
-            setDataChart3Colors(colors3)
+    axios.get(`${constants.apiurl}/api/call/report/fellingByAdviser/${currentAdvisorID}`).then(result => {      
+      //chart feelings
+      const arrayfeelings = result.data;
+      setDataChart3(arrayfeelings.map(d => d.total));
+      setDataChart3Labels(arrayfeelings.map(d => d.feeling));
+      let colors3 = [];
+      for (const item of arrayfeelings) {
+        const _sColorItem = sColors.find(i => i.sentiment == item.feeling);
+        if(_sColorItem) {
+          const _color = _sColorItem.color;
+          colors3.push(_color);
+        }else {
+          colors3.push(obtenerColor());
         }
         
-    });   
+      }
+      setDataChart3Colors(colors3)
+    });
+
+    axios.get(`${constants.apiurl}/api/call/report/callByAviser/${currentAdvisorID}`).then(result => {
+      const arrayfeelings = result.data;
+      const data = [
+        arrayfeelings.professionalgreetings,
+        arrayfeelings.activelistening,
+        arrayfeelings.clearcommunication,
+        arrayfeelings.accuratecommunication,
+        arrayfeelings.relevantoffers,
+        arrayfeelings.efficenthandling,
+      ];
+      setDataChart4(data);
+    });
   }
 
   function contarEmociones(emociones) {
@@ -290,6 +366,10 @@ function Advisor() {
     setModalVisible(!modalVisible);
   };
 
+  const toggleModalCharts = () => {    
+    setModalChartVisible(!modalChartVisible);
+  };
+
   return (
     <>
       <div className="content">
@@ -303,6 +383,58 @@ function Advisor() {
                     <textarea style={{color: '#000'}} className="form-control" placeholder="{ ... }" cols="30" rows="10" defaultValue={textModal} name='Trasncripcion'></textarea>
                 </FormGroup>
                 <Button onClick={toggleModal} style={{marginTop: '20px'}} className="btn btn-primary">
+                    Cerrar
+                </Button>
+            </ModalBody>
+        </Modal>
+
+        <Modal modalClassName='modal-charts' isOpen={modalChartVisible} toggle={toggleModalCharts} fullscreen>
+            <ModalHeader>
+                <h2 style={{color: '#000', marginBottom: '0px'}}>Insights - {advisor.name}</h2>               
+            </ModalHeader>
+            <ModalBody>
+            <Row>
+                    <Col style={{marginTop: '20px'}} md="6" sm= "12" >                      
+                      <Doughnut
+                        width="30%"
+                        height='250px'
+                        data={data}
+                        options={options}
+                      />
+                    </Col>
+
+                    <Col style={{marginTop: '20px'}} md="6" sm= "12">
+                      <Pie
+                        width="100%"
+                        height='300px'
+                        data={data2}
+                        options={options2}
+                      />
+                    </Col>
+                    
+                    <Col style={{marginTop: '20px'}} md="6" sm= "12">
+                      <Pie
+                       width="100%"
+                        height='300px'
+                        data={data3}
+                        options={options3}
+                      />
+                    </Col>
+
+                    <Col style={{marginTop: '20px'}} md="6" sm= "12">
+                      <Radar
+                       width="100%"
+                        height='300px'
+                        data={data4}
+                        options={options4}
+                      />
+                    </Col>                    
+
+                    <Col md="12">
+                        <hr></hr>
+                    </Col>
+                  </Row>
+                <Button onClick={toggleModalCharts} style={{marginTop: '20px'}} className="btn btn-primary">
                     Cerrar
                 </Button>
             </ModalBody>
@@ -327,6 +459,12 @@ function Advisor() {
                         </select>
                       </FormGroup>
                     </Col>
+
+                    <Col md="2" style={{display: 'flex', justifyContent: 'start', alignItems: 'center'}}>
+                      <Button className="btn-fill" color="primary" onClick={toggleModalCharts}>
+                        <i class="fa-solid fa-chart-simple"></i>
+                      </Button>
+                    </Col>
                   </Row>
                   <Row>
                     <Col className="pr-md-1" md="4">
@@ -350,35 +488,7 @@ function Advisor() {
                     <Col>
                         <hr></hr>
                     </Col>
-                  </Row>
-
-                  <Row>
-                    <Col style={{marginTop: '20px'}} md="4" sm= "12" >                      
-                      <Doughnut
-                        width="30%"
-                        data={data}
-                        options={options}
-                      />
-                    </Col>
-
-                    <Col style={{marginTop: '20px'}} md="4" sm= "12">
-                      <Pie
-                        data={data2}
-                        options={options2}
-                      />
-                    </Col>
-                    
-                    <Col style={{marginTop: '20px'}} md="4" sm= "12">
-                      <Pie
-                        data={data3}
-                        options={options3}
-                      />
-                    </Col>
-
-                    <Col>
-                        <hr></hr>
-                    </Col>
-                  </Row>
+                  </Row>                 
 
                   <Row>
                     <Col md="12">
@@ -395,6 +505,12 @@ function Advisor() {
                                         <th>Audio</th>
                                         <th>Tiempo</th>
                                         <th>Fecha</th>
+                                        <th>Saludo</th>
+                                        <th>Escucha</th>
+                                        <th>Comunicación clara</th>
+                                        <th>Comunicación precisa</th>
+                                        <th>Ofertas relevantes</th>
+                                        <th>Eficiencia</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -417,6 +533,12 @@ function Advisor() {
                                             </td>
                                             <td className='m_title'> { clockformat(call.audioDuration || 0)} </td>
                                             <td> {moment(call.creationdate).format('DD-MM-YYYY hh:mm:ss')}</td>
+                                            <td className='m_title'> {call.professionalgreetings || '-'} </td>
+                                            <td className='m_title'> {call.activelistening || '-'} </td>
+                                            <td className='m_title'> {call.clearcommunication || '-'} </td>
+                                            <td className='m_title'> {call.accuratecommunication || '-'} </td>
+                                            <td className='m_title'> {call.relevantoffers || '-'} </td>                                            
+                                            <td className='m_title'> {call.efficenthandling || '-'} </td>
                                         </tr>
                                     )}                   
                                 </tbody>          

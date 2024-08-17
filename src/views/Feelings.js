@@ -120,10 +120,15 @@ function Feelings(props) {
               const avgnegative = negative.length;
               const avgpositive = positve.length;
 
-              const totalavg = (avgnegative* -1) + avgpositive;
+              console.log(avgnegative)
+              console.log(avgpositive)
 
-              const valuen = (avgnegative* -1) *100 / totalavg;
-              const valuep = avgpositive * 100/ totalavg;
+              const negativereal = avgnegative < 0 ? avgnegative* -1 : avgnegative
+
+              const totalavg = negativereal + avgpositive;
+
+              const valuen = (negativereal *100) / totalavg;
+              const valuep = (avgpositive * 100)/ totalavg;
               setDataChart([valuen,valuep]);
               setLoaderVisible(false)
           }).catch(e => {

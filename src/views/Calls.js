@@ -180,6 +180,12 @@ function Calls (props) {
                                         <th>Audio</th>
                                         <th>Tiempo</th>
                                         <th>Fecha</th>
+                                        <th>Saludo</th>
+                                        <th>Escucha</th>
+                                        <th>Comunicación clara</th>
+                                        <th>Comunicación precisa</th>
+                                        <th>Ofertas relevantes</th>
+                                        <th>Eficiencia</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -203,6 +209,12 @@ function Calls (props) {
                                             </td>
                                             <td className='m_title'> { clockformat(call.audioDuration || 0)} </td>
                                             <td> {moment(call.creationdate).format('DD-MM-YYYY hh:mm:ss')}</td>
+                                            <td className='m_title'> {call.professionalgreetings || '-'} </td>
+                                            <td className='m_title'> {call.activelistening || '-'} </td>
+                                            <td className='m_title'> {call.clearcommunication || '-'} </td>
+                                            <td className='m_title'> {call.accuratecommunication || '-'} </td>
+                                            <td className='m_title'> {call.relevantoffers || '-'} </td>                                            
+                                            <td className='m_title'> {call.efficenthandling || '-'} </td>
                                         </tr>
                                     )}                   
                                 </tbody>          

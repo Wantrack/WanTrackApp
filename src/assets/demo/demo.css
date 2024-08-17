@@ -387,3 +387,22 @@ input[type="file"]::file-selector-button:active {
   align-items: center;
   margin-left: 10px;
 }
+
+.modal-charts .modal-dialog {
+  max-width: 80% !important;
+  max-height: 80% !important;
+  transform: none !important;
+}
+
+
+.modal-charts > .modal-dialog > .modal-content {
+  background-color: #25273a;
+  border: 2px solid #f5f5f5;
+}
+
+.modal-charts > .modal-dialog > .modal-content > .modal-header > h5 > h2 {
+  color: #f5f5f5 !important;
+}
+
+
+
