@@ -11,7 +11,7 @@ import WsTemplates from "views/WsTemplates";
 import WsTemplate from "views/WsTemplate";
 import ScatterLists from "views/ScatterLists";
 import ScatterList from "views/ScatterList";
-import Notifications from "views/Notifications";
+import DashboardConversation from "views/DashboardConversation";
 import Feelings from "views/Feelings";
 import FacebookSignUp from "views/FacebookSignUp";
 import Chats from "views/Chats";
@@ -145,6 +145,14 @@ var routes = [
   {  
     type: 'separator',
     idText: '16'
+  },
+  {
+    path: "/dashboardconversations",
+    name: "Dashboard",
+    icon: "tim-icons icon-chart-bar-32",
+    component: <DashboardConversation />,
+    layout: "/admin",
+    idText: '11'
   },
   {
     path: "/feelings",

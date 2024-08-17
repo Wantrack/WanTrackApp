@@ -12,6 +12,7 @@ import routes from "routes.js";
 import { BackgroundColorContext } from "contexts/BackgroundColorContext";
 import { axios } from '../../config/https';
 import constants from '../../util/constans';
+import { decode } from "util/base64";
 
 var ps;
 
@@ -21,6 +22,9 @@ function Admin(props) {
   const mainPanelRef = React.useRef(null);
   const [sidebarOpened, setsidebarOpened] = React.useState(
     document.documentElement.className.indexOf("nav-open") !== -1
+  );
+  const [pathMain, setPathMain] = React.useState(
+    '/admin/dashboard'
   );
   React.useEffect(() => {    
     const token = localStorage.getItem(constants.token);
@@ -111,7 +115,7 @@ function Admin(props) {
                 {getRoutes(routes)}
                 <Route
                   path="/"
-                  element={<Navigate to="/admin/dashboard" replace />}
+                  element={<Navigate to={pathMain} replace />}
                 />
               </Routes>
               {

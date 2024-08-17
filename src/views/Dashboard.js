@@ -6,6 +6,10 @@ import { decode } from "../util/base64";
 import { Line, Bar } from "react-chartjs-2";
 import HistoryTrans from './HistoryTrans';
 
+import {
+  useNavigate  
+} from "react-router-dom";
+
 // reactstrap components
 import {
   Card,
@@ -27,6 +31,8 @@ import {
 } from "variables/charts.js";
 
 function Dashboard(props) {
+  const navigate = useNavigate ();
+
   const [dataChartSent, setDataChartSent] = useState(chartExample2.data);
   const [dataChartDelivered, setDataChartDelivered] = useState(chartExampleD.data);
   const [dataChartRead, setDataChartRead] = useState(chartExampleR.data);
@@ -46,6 +52,12 @@ function Dashboard(props) {
       if(_userinfo.idCompany) {
         idCompany =_userinfo.idCompany
       }
+
+      const _modules = _userinfo.modules.replaceAll(' ', '').split(',');          
+      if(_modules.find(f => f == '1')) {
+      } else if(_modules.find(f => f == '11')) {
+        navigate('/admin/dashboardconversations');
+      } else {}
     }
 
     axios.get(`${constants.apiurl}/api/MessageSendChart${idCompany ? `?idcompany=${idCompany}` : ''}`).then(result => {  

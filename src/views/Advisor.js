@@ -19,7 +19,6 @@ import {
 } from "reactstrap";
 import { clockformat } from 'util/time';
 
-
 import moment from 'moment';
 
 import { axios } from '../config/https';
@@ -407,7 +406,7 @@ function Advisor() {
                 <h2 style={{color: '#000', marginBottom: '0px'}}>Insights - {advisor.name}</h2>               
             </ModalHeader>
             <ModalBody>
-            <Row>
+                  <Row>
                     <Col style={{marginTop: '20px'}} md="6" sm= "12" >                      
                       <Doughnut
                         width="30%"
