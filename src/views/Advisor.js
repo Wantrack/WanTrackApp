@@ -33,6 +33,8 @@ function Advisor() {
   const [companies, setCompanies] = useState([]); 
   const [calls, setCalls] = useState([]);
   const [textModal, settextModal] = useState('');
+  const [textModalAdvice, settextModalAdvice] = useState('');
+  const [showAdvice, setShowAdvice] = useState(false);
   const [modalVisible, setModalVisible] = React.useState(false);
   const [modalChartVisible, setModalChartVisible] = React.useState(false);
   const [dataChart, setDataChart] = useState([50,50]);
@@ -372,10 +374,15 @@ function Advisor() {
     });
   }
 
-  const toggleModal = (text) => {
+  const toggleModal = (text, advice) => {
+    setShowAdvice(false);
     if(text) {
         settextModal(text);
-    }        
+    }  
+    if(advice) {
+      setShowAdvice(true);
+      settextModalAdvice(advice);
+    }      
     setModalVisible(!modalVisible);
   };
 
@@ -393,7 +400,11 @@ function Advisor() {
             <ModalBody>
                 <FormGroup>
                     <label>Resumen</label>
-                    <textarea style={{color: '#000'}} className="form-control" placeholder="{ ... }" cols="30" rows="10" defaultValue={textModal} name='Trasncripcion'></textarea>
+                    <textarea disabled style={{color: '#000'}} className="form-control" placeholder="{ ... }" cols="30" rows="10" defaultValue={textModal} name='Trasncripcion'></textarea>
+                </FormGroup>
+                <FormGroup className={showAdvice ? 'show': 'hide'}>
+                    <label>Concejos</label>
+                    <textarea disabled style={{color: '#000'}} className="form-control" placeholder="{ ... }" cols="30" rows="10" defaultValue={textModalAdvice} name='advice'></textarea>
                 </FormGroup>
                 <Button onClick={toggleModal} style={{marginTop: '20px'}} className="btn btn-primary">
                     Cerrar
@@ -538,7 +549,7 @@ function Advisor() {
                                                     <i style={{fontSize: '20px'}} className="fa-solid fa-headset"></i>
                                                 </Link>
                                             </td>
-                                            <td style={{textAlign:'center'}}> <Link title='Ver transcripcion' to="javascript:void(0)" onClick={() => toggleModal(call.summary)}> <i style={{fontSize: '20px'}} className="fa-solid fa-clipboard-list"></i></Link></td>
+                                            <td style={{textAlign:'center'}}> <Link title='Ver transcripcion' to="javascript:void(0)" onClick={() => toggleModal(call.summary, call.advice)}> <i style={{fontSize: '20px'}} className="fa-solid fa-clipboard-list"></i></Link></td>
                                             <td> 
                                                 <Link title='Escuchar audio' to={call.audiourl} target='_blank'> 
                                                     <i style={{fontSize: '20px'}} className="fa-solid fa-circle-play"></i>

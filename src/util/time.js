@@ -7,7 +7,7 @@ function clockformat (seconds) {
     
     const formattedHours = String(hours).padStart(2, '0');
     const formattedMinutes = String(minutes).padStart(2, '0');
-    const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+    const formattedSeconds = String(remainingSeconds.toFixed(0)).padStart(2, '0');
     
     return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 }
