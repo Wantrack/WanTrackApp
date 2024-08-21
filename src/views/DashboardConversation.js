@@ -31,7 +31,7 @@ function DashboardConversation(props) {
   const [dataChart4Colorss, setDataChart4Colors] = useState(["#29344099"]);
 
   const data = {
-    labels: ["😡", "😁"],
+    labels: ["Negativo", "Positivo"],
     datasets: [
       {
         data: dataChart,

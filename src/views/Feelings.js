@@ -28,7 +28,7 @@ function Feelings(props) {
   const [loaderVisible, setLoaderVisible] = useState(false);
   const [loaderText, setLoaderText] = useState('Cargando');
   const data = {
-    labels: ['😡', '😁'],
+    labels: ['Negativo', 'Positivo'],
     datasets: [
       {        
         data: dataChart,
