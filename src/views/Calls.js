@@ -43,6 +43,14 @@ function Calls (props) {
         axios.get(`${constants.apiurl}/api/adviser`).then(result => {
             setLoaderActive(false)
             setAdvisors(result.data);
+
+            if(Array.isArray(result.data) && result.data.length > 0) {
+                console.log(result.data[0])
+                setCall({
+                    ...call,
+                    idAdviser: result.data[0].idadviser
+                });
+            }            
         }); 
         
         loadCalls()
