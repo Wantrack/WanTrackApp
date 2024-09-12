@@ -7,6 +7,8 @@ import constants from '../util/constans';
 
 import { clockformat } from 'util/time';
 
+import { decode } from "../util/base64";
+
 
 import {
     CardHeader,
