@@ -94,15 +94,15 @@ function Calls (props) {
 
     async function start() {        
         if(files && files.length > 0) {
-            for (const file of files) {
-                setLoaderActive(true);
+            files.forEach(async file => {
                 let formData = new FormData();
                 formData.append("file", file);
+                setLoaderActive(true);
                 const audiofile = await axios.post(`${constants.apiurl}/api/aws/uploadauidoemotion/audioemotions/1`, formData, { headers: {"Content-Type": "multipart/form-data"}});
-                await axios.post(`${constants.apiurl}/api/feelingsSummary`, { url : audiofile.data.url, idadviser: call.idAdviser });                
+                await axios.post(`${constants.apiurl}/api/feelingsSummary`, { url : audiofile.data.url, idadviser: call.idAdviser });
                 setLoaderActive(false);
                 await loadCalls();
-            }
+            });
             setFiles([]);
             inputFileref.current.value = "";
         } else {
