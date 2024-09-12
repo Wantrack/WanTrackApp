@@ -20,9 +20,17 @@ function Advisors (props) {
     const [searchValue, setSearchValue] = useState("");
     
     useEffect(() => { 
-        setLoaderActive(true)
-        axios.get(`${constants.apiurl}/api/adviser`).then(result => {
-            setLoaderActive(false)
+        setLoaderActive(true);
+        let idCompany = undefined;
+        const _userinfoEncoded = localStorage.getItem(constants.userinfo);
+        if(_userinfoEncoded) {
+            const _userinfo = JSON.parse(decode(_userinfoEncoded));
+            if(_userinfo.idCompany) {
+                idCompany =_userinfo.idCompany
+            }
+        }
+        axios.get(`${constants.apiurl}/api/adviser/${idCompany}`).then(result => {
+            setLoaderActive(false);
             setAdvisors(result.data);
         });       
     }, []);
