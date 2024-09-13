@@ -334,13 +334,13 @@ function DashboardConversation(props) {
 
         axios
           .get(`${constants.apiurl}/api/call/report/scorenpsByCompany/${idCompany}`)
-          .then((result) => {       
-            setNpsTotal(result.data.total);
+          .then((result) => {    
+            setNpsTotal(result.data.total || 0);
           });
 
         axios
           .get(`${constants.apiurl}/api/call/report/chatsByCompany/${idCompany}`)
-          .then((result) => {           
+          .then((result) => {
             setChatTotal(result.data.total);
           });
 
