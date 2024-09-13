@@ -2,10 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import NotificationAlert from "react-notification-alert";
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
-
+import { decode } from "../util/base64";
 import { axios } from '../config/https';
 import constants from '../util/constans';
-
 import moment from 'moment';
 
 import {
@@ -40,12 +39,19 @@ function Calls (props) {
     
     useEffect(() => { 
         setLoaderActive(true)
-        axios.get(`${constants.apiurl}/api/adviser`).then(result => {
+        let idCompany = undefined;
+        const _userinfoEncoded = localStorage.getItem(constants.userinfo);
+        if(_userinfoEncoded) {
+            const _userinfo = JSON.parse(decode(_userinfoEncoded));
+            if(_userinfo.idCompany) {
+                idCompany =_userinfo.idCompany
+            }
+        }
+        axios.get(`${constants.apiurl}/api/adviserByCompany/${idCompany}`).then(result => {
             setLoaderActive(false)
             setAdvisors(result.data);
 
             if(Array.isArray(result.data) && result.data.length > 0) {
-                console.log(result.data[0])
                 setCall({
                     ...call,
                     idAdviser: result.data[0].idadviser
@@ -57,7 +63,16 @@ function Calls (props) {
     }, []);
 
     const loadCalls = async () => {
-        const result = await axios.get(`${constants.apiurl}/api/call`);
+        setLoaderActive(true);
+        let idCompany = undefined;
+        const _userinfoEncoded = localStorage.getItem(constants.userinfo);
+        if(_userinfoEncoded) {
+            const _userinfo = JSON.parse(decode(_userinfoEncoded));
+            if(_userinfo.idCompany) {
+                idCompany =_userinfo.idCompany
+            }
+        }
+        const result = await axios.get(`${constants.apiurl}/api/callByCompany/${idCompany}`);
         setLoaderActive(false);
         setCalls(result.data);
     }
@@ -90,24 +105,63 @@ function Calls (props) {
           autoDismiss: 7,
         };
         notificationAlertRef.current.notificationAlert(options);
-      }
+    }
 
-    async function start() {        
-        if(files && files.length > 0) {
-            files.forEach(async file => {
-                let formData = new FormData();
-                formData.append("file", file);
-                setLoaderActive(true);
-                const audiofile = await axios.post(`${constants.apiurl}/api/aws/uploadauidoemotion/audioemotions/1`, formData, { headers: {"Content-Type": "multipart/form-data"}});
-                await axios.post(`${constants.apiurl}/api/feelingsSummary`, { url : audiofile.data.url, idadviser: call.idAdviser });
-                setLoaderActive(false);
-                await loadCalls();
-            });
-            setFiles([]);
-            inputFileref.current.value = "";
+    async function getExtension(filename) {
+        return filename.split('.').pop();
+    }
+
+    async function start() {
+        let idCompany = undefined;
+        const _userinfoEncoded = localStorage.getItem(constants.userinfo);
+        if(_userinfoEncoded) {
+            const _userinfo = JSON.parse(decode(_userinfoEncoded));
+            if(_userinfo.idCompany) {
+                idCompany =_userinfo.idCompany
+            }
+        }
+        if(call.idAdviser) {
+            if(idCompany && files && files.length > 0) {        
+                if(files.length > 5) {
+                    sendNotification('Solo puedes subir hasta 5 archivos.', 'danger');
+                    return;
+                }    
+                Array.from(files).forEach(async file => {
+                    setLoaderActive(true);
+                    const extension = await getExtension(file.name);
+                    console.log(extension)
+                    if(extension == 'txt') {
+                        const reader = new FileReader();
+
+                        // Cuando se haya leído el archivo, el contenido estará disponible
+                        reader.onload = function(e) {
+                            const fileContent = e.target.result;
+                            setLoaderActive(true);
+                            axios.post(`${constants.apiurl}/api/feelingsSummaryChat`, { textchat : fileContent, idadviser: call.idAdviser }).catch(e => {
+                                setLoaderActive(false);  
+                            });
+                        };
+
+                        // Leer el archivo como texto
+                        reader.readAsText(file);                       
+                    } else {
+                        let formData = new FormData();
+                        formData.append("file", file);                       
+                        const audiofile = await axios.post(`${constants.apiurl}/api/aws/uploadauidoemotion/audioemotions/${idCompany}`, formData, { headers: {"Content-Type": "multipart/form-data"}});
+                        await axios.post(`${constants.apiurl}/api/feelingsSummary`, { url : audiofile.data.url, idadviser: call.idAdviser });                                              
+                    }
+                    setLoaderActive(false);  
+                    await loadCalls();
+                });
+                setFiles([]);
+                inputFileref.current.value = "";
+            } else {
+                sendNotification('Debes escoger un archivo para iniciar', 'danger');
+            }
         } else {
-            sendNotification('Debes escoger un archivo para iniciar', 'danger');
-        }               
+            sendNotification('Debes escoger un agente para iniciar', 'danger');
+        }
+                       
     }
 
     const toggleModal = (text, advice) => {
@@ -172,7 +226,14 @@ function Calls (props) {
                                     </select>
                                 </Col>
                                 <Col md="4" sm="12" style={{marginTop: '5px'}}>
-                                    <Input ref={inputFileref} accept=".wav,.mp3" title="Escoge uno o mas archivos de audio" placeholder="Sube tu audio" type="file" name='file' multiple onChange={onHandleChangeFile}/>
+                                    <Input 
+                                        ref={inputFileref} 
+                                        accept=".txt, .3ga, .8svx, .aac, .ac3, .aif, .aiff, .alac, .amr, .ape, .au, .dss, .flac, .flv, .m4a, .m4b, .m4p, .m4r, .mp3, .mpga, .ogg, .oga, .mogg, .opus, .qcp, .tta, .voc, .wav, .wma, .wv" 
+                                        title="Escoge uno o mas archivos de audio" 
+                                        placeholder="Sube tu audio" 
+                                        type="file" 
+                                        name='file' 
+                                        multiple onChange={onHandleChangeFile}/>
                                 </Col>
                                 <Col md="1" sm="12" style={{marginTop: '5px'}}>
                                     <Link style={{padding: '10px', borderRadius: '5px', backgroundColor: '#fff', width: '100%', display: 'flex', justifyContent:'center'}} to="javascript:void(0)" title="Iniciar analisis" href="#" onClick={start}>
@@ -194,6 +255,7 @@ function Calls (props) {
                                         <th>Emocion principal</th>
                                         <th>Sentimiento predominante</th>
                                         <th title='Net Promoter Score calculado con base a la conversación'>NPS</th>
+                                        <th>Tipo</th>
                                         <th style={{textAlign:'center'}}>Transcripcion</th>
                                         <th style={{textAlign:'center'}}>Resumen</th>
                                         <th>Audio</th>
@@ -202,7 +264,7 @@ function Calls (props) {
                                         <th style={{textAlign: 'center'}}>Saludo</th>
                                         <th style={{textAlign: 'center'}}>Escucha</th>
                                         <th style={{textAlign: 'center'}}>Comunicación clara</th>
-                                        <th style={{textAlign: 'center'}}>Comunicación precisa</th>
+                                        <th style={{textAlign: 'center'}}>Información precisa</th>
                                         <th style={{textAlign: 'center'}}>Ofertas relevantes</th>
                                         <th style={{textAlign: 'center'}}>Eficiencia</th>
                                     </tr>
@@ -215,6 +277,7 @@ function Calls (props) {
                                             <td className='m_title'> {call.mainEmotion || '-'} </td>
                                             <td className='m_title'> {call.feeling || '-'} </td>
                                             <td className='m_title'> {call.scorenps || '-'} </td>
+                                            <td className='m_title'> {getIconType(call.type)} </td>
                                             <td style={{textAlign:'center'}}> 
                                                 <Link title='Ver transcripcion' to="javascript:void(0)" onClick={() => toggleModal(call.transcription)}> 
                                                     <i style={{fontSize: '20px'}} className="fa-solid fa-headset"></i>
@@ -246,17 +309,29 @@ function Calls (props) {
 
 const getIcon = (value) => { 
     if(value == undefined) {
-      return <i class="fa-solid fa-minus"></i>
+      return <i className="fa-solid fa-minus"></i>
     }
 
     if(value >3 && value < 6) {
-        return <i style={{color:'#2dce89'}} class="fa-solid fa-circle-check"></i>
+        return <i style={{color:'#2dce89'}} className="fa-solid fa-circle-check"></i>
     } else if(value >2 && value < 4) {
-      return <i style={{color:'#ff8d72'}}class="fa-solid fa-triangle-exclamation"></i>
+      return <i style={{color:'#ff8d72'}}className="fa-solid fa-triangle-exclamation"></i>
     } else {
-      return <i style={{color:'#f5365c'}} class="fa-solid fa-xmark"></i>
+      return <i style={{color:'#f5365c'}} className="fa-solid fa-xmark"></i>
     }    
-  }  
+}  
+
+const getIconType = (value) => { 
+    if(value == undefined) {
+      return <i title='Llamada' className="fa-solid fa-phone-flip"></i>
+    }
+
+    if(value == 1) {
+        return <i title='Llamada' style={{color:'#2dce89'}} className="fa-solid fa-phone-flip"></i>
+    } else if(value  == 2 ) {
+      return <i title='Chat' style={{color:'#ff8d72'}}className="fa-solid fa-comment"></i>
+    }   
+} 
 
 function goToAdvisorOnClick(idadviser) {
     localStorage.setItem('currentAdvisorID', idadviser);

@@ -45,8 +45,10 @@ function Advisor() {
   const [dataChart3Labels, setDataChart3Labels] = useState([]);
   const [dataChart3Colorss, setDataChart3Colors] = useState([]);
   const [dataChart4Labels, setDataChart4Labels] = useState(['Saludo', 'Escucha', 'Comunicación clara', 'Comunicación precisa', 'Ofertas relevantes', 'Eficiencia' ]);
-  const [dataChart4, setDataChart4] = useState([5,5,4,5,5,5]);
+  const [dataChart4, setDataChart4] = useState([0,0,0,0,0,0]);
   const [dataChart4Colorss, setDataChart4Colors] = useState(['#29344099']);
+  const [callduration, setCallDuration] = useState(0);
+  const [npstotal, setNpsTotal] = useState(0);
 
   const data = {
     labels: ['Negativo', 'Positivo'],
@@ -261,15 +263,15 @@ function Advisor() {
 
   const getIcon = (value) => { 
     if(value == undefined) {
-      return <i class="fa-solid fa-minus"></i>
+      return <i className="fa-solid fa-minus"></i>
     }
 
     if(value >3 && value < 6) {
-        return <i style={{color:'#2dce89'}} class="fa-solid fa-circle-check"></i>
+        return <i style={{color:'#2dce89'}} className="fa-solid fa-circle-check"></i>
     } else if(value >2 && value < 4) {
-      return <i style={{color:'#ff8d72'}}class="fa-solid fa-triangle-exclamation"></i>
+      return <i style={{color:'#ff8d72'}}className="fa-solid fa-triangle-exclamation"></i>
     } else {
-      return <i style={{color:'#f5365c'}} class="fa-solid fa-xmark"></i>
+      return <i style={{color:'#f5365c'}} className="fa-solid fa-xmark"></i>
     }    
   }  
 
@@ -279,19 +281,22 @@ function Advisor() {
     const _companies = await axios.get(`${constants.apiurl}/api/companies`);
     setCompanies([{idcompany: -1, name: 'Sin Empresa'}, ..._companies.data]);
     const _user =  await axios.get(`${constants.apiurl}/api/adviser/${currentAdvisorID}`);
-    setAdvisor(_user.data);
-    loadCalls(currentAdvisorID);
+    if(_user.data && _user.data != '') {
+      setAdvisor(_user.data);
+      loadCalls(currentAdvisorID);      
+    }else {
+      setAdvisor({
+        ...advisor,
+        companyId: _companies.data[0].idcompany 
+      });
+    }
    }
-   load();
-   
+   load();   
   }, []);
 
-  function capitalizeFirstLetter(str) {
-    return str[0].toUpperCase() + str.slice(1);
-  }
-
   const loadCalls = (currentAdvisorID) => {
-    axios.get(`${constants.apiurl}/api/callByAdviser/${currentAdvisorID}`).then(result => {
+    if(currentAdvisorID && currentAdvisorID != 0) {
+      axios.get(`${constants.apiurl}/api/callByAdviser/${currentAdvisorID}`).then(result => {
         setCalls(result.data);        
     });    
 
@@ -351,6 +356,19 @@ function Advisor() {
       ];
       setDataChart4(data);
     });
+
+    axios
+      .get(`${constants.apiurl}/api/call/report/durationByAdviser/${currentAdvisorID}`)
+      .then((result) => {           
+        setCallDuration(result.data.total);
+      });
+
+    axios
+      .get(`${constants.apiurl}/api/call/report/scorenpsByAdviser/${currentAdvisorID}`)
+      .then((result) => {       
+        setNpsTotal(result.data.total);
+      });
+    }    
   }
 
   function contarEmociones(emociones) {
@@ -417,6 +435,38 @@ function Advisor() {
                 <h2 style={{color: '#000', marginBottom: '0px'}}>Insights - {advisor.name}</h2>               
             </ModalHeader>
             <ModalBody>
+                    <Row>
+                      <Col md="4" sm="12">
+                        <Card>
+                          <CardHeader>
+                            <h5 className="card-category">Minutos Analizados</h5>
+                          </CardHeader>
+                          <CardBody>
+                            <h2 style={{textAlign: 'right'}}>{clockformat(callduration || 0)}</h2>
+                          </CardBody>
+                        </Card>
+                      </Col>
+                      <Col md="4" sm="12">
+                        <Card>
+                          <CardHeader>
+                            <h5 className="card-category">Chats Analizados</h5>
+                          </CardHeader>
+                          <CardBody>
+                            <h2 style={{textAlign: 'right'}}>0</h2>
+                          </CardBody>
+                        </Card>
+                      </Col>
+                      <Col md="4" sm="12">
+                        <Card>
+                          <CardHeader>
+                            <h5 className="card-category">NPS Total</h5>
+                          </CardHeader>
+                          <CardBody>
+                            <h2 style={{textAlign: 'right'}}>{npstotal}</h2>
+                          </CardBody>
+                        </Card>
+                      </Col>
+                  </Row>
                   <Row>
                     <Col style={{marginTop: '20px'}} md="6" sm= "12" >                      
                       <Doughnut
@@ -486,7 +536,7 @@ function Advisor() {
 
                     <Col md="2" style={{display: 'flex', justifyContent: 'start', alignItems: 'center'}}>
                       <Button className="btn-fill" color="primary" onClick={toggleModalCharts}>
-                        <i class="fa-solid fa-chart-simple"></i>
+                        <i className="fa-solid fa-chart-simple"></i>
                       </Button>
                     </Col>
                   </Row>

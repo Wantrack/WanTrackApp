@@ -10,6 +10,8 @@ import { obtenerColor } from "util/colors";
 import { sColors } from "util/sentimentColors";
 import { eColors } from "util/emotionColors";
 
+import { clockformat } from 'util/time';
+
 function DashboardConversation(props) {
   const navigate = useNavigate();
   const [dataChart, setDataChart] = useState([50, 50]);
@@ -27,8 +29,10 @@ function DashboardConversation(props) {
     "Ofertas relevantes",
     "Eficiencia",
   ]);
-  const [dataChart4, setDataChart4] = useState([5, 5, 4, 5, 5, 5]);
+  const [dataChart4, setDataChart4] = useState([0, 0, 0, 0, 0, 0]);
   const [dataChart4Colorss, setDataChart4Colors] = useState(["#29344099"]);
+  const [callduration, setCallDuration] = useState(0);
+  const [npstotal, setNpsTotal] = useState(0);
 
   const data = {
     labels: ["Negativo", "Positivo"],
@@ -309,7 +313,6 @@ function DashboardConversation(props) {
         axios
           .get(`${constants.apiurl}/api/call/report/callByCompany/${idCompany}`)
           .then((result) => {
-            console.log(result.data);
             const arrayfeelings = result.data;
             const data = [
               arrayfeelings.professionalgreetings,
@@ -321,6 +324,18 @@ function DashboardConversation(props) {
             ];
             setDataChart4(data);
           });
+
+        axios
+          .get(`${constants.apiurl}/api/call/report/durationByCompany/${idCompany}`)
+          .then((result) => {           
+            setCallDuration(result.data.total);
+          });
+
+        axios
+          .get(`${constants.apiurl}/api/call/report/scorenpsByCompany/${idCompany}`)
+          .then((result) => {       
+            setNpsTotal(result.data.total);
+          });
       }
     }
     load();
@@ -328,6 +343,38 @@ function DashboardConversation(props) {
 
   return (
     <div className="content">
+      <Row>
+        <Col md="4" sm="12">
+          <Card>
+            <CardHeader>
+              <h5 className="card-category">Minutos Analizados</h5>
+            </CardHeader>
+            <CardBody>
+              <h2 style={{textAlign: 'right'}}>{clockformat(callduration || 0)}</h2>
+            </CardBody>
+          </Card>
+        </Col>
+        <Col md="4" sm="12">
+          <Card>
+            <CardHeader>
+              <h5 className="card-category">Chats Analizados</h5>
+            </CardHeader>
+            <CardBody>
+              <h2 style={{textAlign: 'right'}}>0</h2>
+            </CardBody>
+          </Card>
+        </Col>
+        <Col md="4" sm="12">
+          <Card>
+            <CardHeader>
+              <h5 className="card-category">NPS Total</h5>
+            </CardHeader>
+            <CardBody>
+              <h2 style={{textAlign: 'right'}}>{npstotal}</h2>
+            </CardBody>
+          </Card>
+        </Col>
+      </Row>
       <Row>
         <Col style={{ marginTop: "20px" }} md="6" sm="12">
           <Card className="card-chart">

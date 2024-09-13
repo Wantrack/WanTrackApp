@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
-
 import { axios } from '../config/https';
 import constants from '../util/constans';
-
 import { clockformat } from 'util/time';
-
 import { decode } from "../util/base64";
-
 
 import {
     CardHeader,
@@ -31,7 +27,7 @@ function Advisors (props) {
                 idCompany =_userinfo.idCompany
             }
         }
-        axios.get(`${constants.apiurl}/api/adviser/${idCompany}`).then(result => {
+        axios.get(`${constants.apiurl}/api/adviserByCompany/${idCompany}`).then(result => {
             setLoaderActive(false);
             setAdvisors(result.data);
         });       
