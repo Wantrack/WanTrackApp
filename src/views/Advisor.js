@@ -49,6 +49,7 @@ function Advisor() {
   const [dataChart4Colorss, setDataChart4Colors] = useState(['#29344099']);
   const [callduration, setCallDuration] = useState(0);
   const [npstotal, setNpsTotal] = useState(0);
+  const [chatstotal, setChatTotal] = useState(0);
 
   const data = {
     labels: ['Negativo', 'Positivo'],
@@ -368,6 +369,13 @@ function Advisor() {
       .then((result) => {       
         setNpsTotal(result.data.total);
       });
+
+    axios
+      .get(`${constants.apiurl}/api/call/report/chatsByAdvise/${currentAdvisorID}`)
+      .then((result) => {           
+        setChatTotal(result.data.total);
+      });
+
     }    
   }
 
@@ -452,7 +460,7 @@ function Advisor() {
                             <h5 className="card-category">Chats Analizados</h5>
                           </CardHeader>
                           <CardBody>
-                            <h2 style={{textAlign: 'right'}}>0</h2>
+                            <h2 style={{textAlign: 'right'}}>{chatstotal}</h2>
                           </CardBody>
                         </Card>
                       </Col>
