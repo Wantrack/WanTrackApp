@@ -15,7 +15,8 @@ function RTL(props) {
       <BackgroundColorContext.Consumer>
         {() => (
           <React.Fragment>
-            <div className="wrapper" style={{backgroundImage: "url(./bg.jpg)", backgroundSize: "cover"}}>
+            <div className="wrapper" > 
+              {/* style={{backgroundImage: "url(./bg.jpg)", backgroundSize: "cover"}} */}
               <Login/>
             </div>
           </React.Fragment>
