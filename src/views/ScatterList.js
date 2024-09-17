@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import NotificationAlert from "react-notification-alert";
 import { useNavigate, Link } from "react-router-dom";
+import Loader from '../components/Loader/Loader';
 import {
   Button,
   Card,
@@ -25,6 +26,7 @@ import constants from '../util/constans';
 function ScatterList() {
   const navigate = useNavigate ();
   const [scatterList, setScatterList] = useState({});
+  const [loaderActive, setLoaderActive] = useState(false);
   const [contact, setContact] = useState({});
   const [bodyparameters, setBodyParameters] = useState([]);
   const [buttonsparameters, setButtonsParameters] = useState([]);
@@ -102,6 +104,7 @@ function ScatterList() {
 
   useEffect(() => { 
     async function load() {
+        setLoaderActive(true)
         const currentScatterListID = localStorage.getItem('currentScatterListID');
         const _scatterList =  await axios.get(`${constants.apiurl}/api/scatterlist/${currentScatterListID}`);
         if(_scatterList && _scatterList.data) {
@@ -122,6 +125,7 @@ function ScatterList() {
         if(_scatterListDetails.data) {
             setScatterListDetails(_scatterListDetails.data);
         } 
+        setLoaderActive(false)
     }
 
     load();
@@ -143,6 +147,7 @@ function ScatterList() {
 
   async function addContact() {
     if(validateContact(contact)) {
+      setLoaderActive(true)
       const currentScatterListID = localStorage.getItem('currentScatterListID');
       await axios.post(`${constants.apiurl}/api/scatterlistdetail`, { ...contact, idscatterlist: currentScatterListID });
       const _scatterListDetails =  await axios.get(`${constants.apiurl}/api/scatterlistdetailbyScatterlist/${currentScatterListID}`);
@@ -151,6 +156,7 @@ function ScatterList() {
       }  
       setContact({});
       toggleModal();
+      setLoaderActive(false)
     }else {
       sendNotification('Ocurrio un error guardarndo el contacto verifica que el telefono y el numero sean correctos', 'danger');
     }    
@@ -186,9 +192,18 @@ function ScatterList() {
     event.preventDefault();
     if (window.confirm('¿Estas seguro que deseas enviar la difusión con esta lista?')) {
         await saveChanges(event, false);
-        axios.post(`${constants.apiurl}/api/sendscatterlist`, {id: scatterList.idscatterlist}).then(async (result) => {
+        await axios.post(`${constants.apiurl}/api/sendscatterlist`, {id: scatterList.idscatterlist}).then(async (result) => {
             sendNotification('Lista enviada');
+            setLoaderActive(true);
+            const currentScatterListID = localStorage.getItem('currentScatterListID');
+            const _scatterListDetails =  await axios.get(`${constants.apiurl}/api/scatterlistdetailbyScatterlist/${currentScatterListID}`);
+            if(_scatterListDetails.data) {
+              setScatterListDetails(_scatterListDetails.data);
+            }
+            setLoaderActive(false);
         });
+
+        
     } 
   }
 
@@ -287,7 +302,9 @@ function ScatterList() {
 
   return (
     <>
+    
       <div className="content">
+      <Loader active={loaderActive} />
         <div className="react-notification-alert-container">
           <NotificationAlert ref={notificationAlertRef} />
         </div>
@@ -442,6 +459,7 @@ function ScatterList() {
                                         <th>Telefono</th>
                                         <th>Extra 1</th>
                                         <th>Extra 2</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -461,6 +479,9 @@ function ScatterList() {
                                             <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.phone}</Link></td>
                                             <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.extra1}</Link></td>
                                             <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.extra2}</Link></td>
+                                            <td> 
+                                                {getIcon(scatterListDetail)}
+                                            </td>
                                         </tr>
                                     )}                   
                                 </tbody>          
@@ -492,5 +513,22 @@ function ScatterList() {
     </>
   );
 }
+
+const getIcon = (scatterListDetail) => { 
+  if(scatterListDetail.read == 1) {
+    return <i style={{color: '#5e72e4'}} className="fa-solid fa-check-double"></i>
+  }
+
+  if(scatterListDetail.failed == 1) {
+    return <i  style={{color: '#f5365c'}} className="fa-solid fa-xmark"></i>
+  }
+
+  if(scatterListDetail.delivered == 1) {
+    return <i  className="fa-solid fa-check"></i>
+  }
+
+  return <i className="fa-solid fa-minus"></i>
+ 
+} 
 
 export default ScatterList;

@@ -177,6 +177,13 @@ function Dashboard(props) {
         setMessageReceive(result.data.data.slice(-1) || 0);
       }      
     });
+
+    
+    axios.get(`${constants.apiurl}/api/CompleteReportByCampaing`).then(result => {
+      if(result.data && result.data.length > 0) {
+          console.log(result.data)
+      }      
+    });
   }, []);
 
   return (
