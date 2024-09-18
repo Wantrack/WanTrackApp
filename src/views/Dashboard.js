@@ -291,31 +291,36 @@ function Dashboard(props) {
               <CardHeader>
                 <h5 className="card-category">Campañas</h5>
               </CardHeader>
-              <CardBody style={{maxHeight:'300px', overflow: 'auto'}}>
-                <Table className="tablesorter" responsive>
-                  <thead className="text-primary">
-                      <tr>
-                      <th>#</th>
-                      <th>Campaña</th>
-                      <th>Entregados</th>
-                      <th>Leidos</th>
-                      <th>Fallidos</th>
-                      <th className="text-center">Fecha</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      {completeReportScatterlist.map((crsl, index) => 
-                      <tr key={index}>
-                          <td>{(index + 1) }</td>
-                          <td>{crsl.name}</td>
-                          <td>{crsl.delivered}</td>
-                          <td>{crsl.read}</td>
-                          <td>{crsl.failed}</td>
-                          <td className="text-center">{crsl.creationdate}</td>
-                      </tr>
-                      )}                   
-                  </tbody>
-                </Table>
+              <CardBody>     
+                <div class="table-responsive" style={{maxHeight:'300px', overflowY: 'auto'}}>
+                  <Table>
+                    <thead style={{top:0, position: 'sticky', zIndex: '10000', backgroundColor: '#27293d'}}>
+                        <tr>
+                        <th>#</th>
+                        <th>Campaña</th>
+                        <th>Entregados</th>
+                        <th>Leidos</th>
+                        <th>Fallidos</th>
+                        <th className="text-center">Fecha</th>
+                        </tr>
+                    </thead>  
+                    <tbody>
+                   
+                        {completeReportScatterlist.map((crsl, index) => 
+                        <tr key={index}>
+                            <td>{(index + 1) }</td>
+                            <td>{crsl.name}</td>
+                            <td>{crsl.delivered}</td>
+                            <td>{crsl.read}</td>
+                            <td>{crsl.failed}</td>
+                            <td className="text-center">{crsl.creationdate}</td>
+                        </tr>
+                        )}   
+                             
+                    </tbody>         
+                    </Table>
+                </div>           
+                
               </CardBody>
             </Card> 
           </Col>

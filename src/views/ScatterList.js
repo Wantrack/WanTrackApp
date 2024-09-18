@@ -516,18 +516,18 @@ function ScatterList() {
 
 const getIcon = (scatterListDetail) => { 
   if(scatterListDetail.read == 1) {
-    return <i style={{color: '#5e72e4'}} className="fa-solid fa-check-double"></i>
+    return <i title='Leido' style={{color: '#5e72e4'}} className="fa-solid fa-check-double"></i>
   }
 
   if(scatterListDetail.failed == 1) {
-    return <i  style={{color: '#f5365c'}} className="fa-solid fa-xmark"></i>
+    return <i title='Fallido' style={{color: '#f5365c'}} className="fa-solid fa-xmark"></i>
   }
 
   if(scatterListDetail.delivered == 1) {
-    return <i  className="fa-solid fa-check"></i>
+    return <i title='Entregado' className="fa-solid fa-check"></i>
   }
 
-  return <i className="fa-solid fa-minus"></i>
+  return <i title='No enviado' className="fa-solid fa-minus"></i>
  
 } 
 
