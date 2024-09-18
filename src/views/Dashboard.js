@@ -5,6 +5,7 @@ import { decode } from "../util/base64";
 // react plugin used to create charts
 import { Line, Bar } from "react-chartjs-2";
 import HistoryTrans from './HistoryTrans';
+import moment from 'moment';
 
 import {
   useNavigate  
@@ -43,6 +44,7 @@ function Dashboard(props) {
   const [messageFailed, setMessageFailed] = useState(0);
   const [dataChartReceive, setDataChartReceive] = useState(chartExample3.data);
   const [messageReceive, setMessageReceive] = useState(0);
+  const [completeReportScatterlist, setCompleteReportScatterlist] = useState([]);
 
   useEffect(() => {
     let idCompany = undefined;
@@ -181,7 +183,7 @@ function Dashboard(props) {
     
     axios.get(`${constants.apiurl}/api/CompleteReportByCampaing`).then(result => {
       if(result.data && result.data.length > 0) {
-          console.log(result.data)
+        setCompleteReportScatterlist(result.data)
       }      
     });
   }, []);
@@ -284,24 +286,39 @@ function Dashboard(props) {
               </CardBody>
             </Card>
           </Col>
-          {/* <Col lg="4">
+          <Col lg="12">
             <Card className="card-chart">
               <CardHeader>
-                <h5 className="card-category">Completed Tasks</h5>
-                <CardTitle tag="h3">
-                  <i className="tim-icons icon-send text-success" /> 12,100K
-                </CardTitle>
+                <h5 className="card-category">Campañas</h5>
               </CardHeader>
-              <CardBody>
-                <div className="chart-area">
-                  <Line
-                    data={chartExample4.data}
-                    options={chartExample4.options}
-                  />
-                </div>
+              <CardBody style={{maxHeight:'300px', overflow: 'auto'}}>
+                <Table className="tablesorter" responsive>
+                  <thead className="text-primary">
+                      <tr>
+                      <th>#</th>
+                      <th>Campaña</th>
+                      <th>Entregados</th>
+                      <th>Leidos</th>
+                      <th>Fallidos</th>
+                      <th className="text-center">Fecha</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {completeReportScatterlist.map((crsl, index) => 
+                      <tr key={index}>
+                          <td>{(index + 1) }</td>
+                          <td>{crsl.name}</td>
+                          <td>{crsl.delivered}</td>
+                          <td>{crsl.read}</td>
+                          <td>{crsl.failed}</td>
+                          <td className="text-center">{crsl.creationdate}</td>
+                      </tr>
+                      )}                   
+                  </tbody>
+                </Table>
               </CardBody>
             </Card> 
-          </Col>*/}
+          </Col>
         </Row>
         <Row>
           <Col lg="12" md="12">

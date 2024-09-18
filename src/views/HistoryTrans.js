@@ -68,26 +68,26 @@ function HistoryTrans (props) {
                                     </CardHeader>
                                     <CardBody>
                                         <Table className="tablesorter" responsive>
-                                        <thead className="text-primary">
-                                            <tr>
-                                            <th>#</th>
-                                            <th>Telefono</th>
-                                            <th>Plantilla</th>
-                                            <th>Tipo</th>
-                                            <th className="text-center">Fecha</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {messagesSent.map((messageSent, index) => 
-                                            <tr key={index}>
-                                                <td>{(index + 1) + startMessagesSent }</td>
-                                                <td>{messageSent.phone}</td>
-                                                <td>{messageSent.name}</td>
-                                                <td>{messageSent.type == 1 ? 'Lista de difusion' : 'WebHook'}</td>
-                                                <td className="text-center">{moment(messageSent.creationdate).format('DD-MM-YYYY hh:mm:ss')}</td>
-                                            </tr>
-                                            )}                   
-                                        </tbody>
+                                            <thead className="text-primary">
+                                                <tr>
+                                                <th>#</th>
+                                                <th>Telefono</th>
+                                                <th>Plantilla</th>
+                                                <th>Tipo</th>
+                                                <th className="text-center">Fecha</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {messagesSent.map((messageSent, index) => 
+                                                <tr key={index}>
+                                                    <td>{(index + 1) + startMessagesSent }</td>
+                                                    <td>{messageSent.phone}</td>
+                                                    <td>{messageSent.name}</td>
+                                                    <td>{messageSent.type == 1 ? 'Lista de difusion' : 'WebHook'}</td>
+                                                    <td className="text-center">{moment(messageSent.creationdate).format('DD-MM-YYYY hh:mm:ss')}</td>
+                                                </tr>
+                                                )}                   
+                                            </tbody>
                                         </Table>
                                     </CardBody>
                                     <CardFooter style={{display:'flex', justifyContent:'center'}}>
