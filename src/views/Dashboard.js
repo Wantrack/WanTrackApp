@@ -5,7 +5,6 @@ import { decode } from "../util/base64";
 // react plugin used to create charts
 import { Line, Bar } from "react-chartjs-2";
 import HistoryTrans from './HistoryTrans';
-import moment from 'moment';
 
 import {
   useNavigate  
@@ -29,6 +28,7 @@ import {
   chartExampleR,
   chartExampleF,
   chartExample3,
+  pluginShadow
 } from "variables/charts.js";
 
 function Dashboard(props) {
@@ -205,6 +205,7 @@ function Dashboard(props) {
                   <Line
                     data={dataChartSent}
                     options={chartExample2.options}
+                    plugins={[pluginShadow]}
                   />
                 </div>
               </CardBody>
@@ -224,6 +225,7 @@ function Dashboard(props) {
                   <Bar
                     data={dataChartReceive}
                     options={chartExample3.options}
+                    plugins={[pluginShadow]}
                   />
                 </div>
               </CardBody>
@@ -243,6 +245,7 @@ function Dashboard(props) {
                   <Line
                     data={dataChartDelivered}
                     options={chartExampleD.options}
+                    plugins={[pluginShadow]}
                   />
                 </div>
               </CardBody>
@@ -262,6 +265,7 @@ function Dashboard(props) {
                   <Line
                     data={dataChartRead}
                     options={chartExample2.options}
+                    plugins={[pluginShadow]}
                   />
                 </div>
               </CardBody>
@@ -281,6 +285,7 @@ function Dashboard(props) {
                   <Line
                     data={dataChartFailed}
                     options={chartExample2.options}
+                    plugins={[pluginShadow]}
                   />
                 </div>
               </CardBody>

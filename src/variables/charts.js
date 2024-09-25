@@ -1,5 +1,33 @@
+
+let pluginShadow = {
+  id: 'customShadow',
+  beforeDatasetDraw: (chart, args) => {
+    const ctx = chart.ctx;
+    ctx.save();
+
+    const dataset = chart.data.datasets[args.index];
+    // const meta = chart.getDatasetMeta(args.index);
+
+    const originalLineDraw = ctx.stroke;
+    ctx.stroke = function () {
+      ctx.save();
+      ctx.shadowColor = dataset.pointBackgroundColor;
+      ctx.shadowBlur = 20;
+      ctx.shadowOffsetX = 5;
+      ctx.shadowOffsetY = 7;
+      originalLineDraw.apply(this, arguments);
+      ctx.restore();
+    };
+  }
+};
+
 // chartExample1 and chartExample2 options
 let chart1_2_options = {
+  plugins: {
+    legend: {
+      display: false // Si no deseas mostrar la leyenda, puedes mantener esto en 'false'
+    }
+  },
   maintainAspectRatio: false,
   legend: {
     display: false,
@@ -46,6 +74,11 @@ let chart1_2_options = {
 };
 
 let chartf_options = {
+  plugins: {
+    legend: {
+      display: false // Si no deseas mostrar la leyenda, puedes mantener esto en 'false'
+    }
+  },
   maintainAspectRatio: false,
   legend: {
     display: false,
@@ -273,11 +306,17 @@ let chartExampleF = {
 // // // used inside src/views/Dashboard.js
 // #########################################
 let chartExample3 = {
+ 
   data: {
     labels: [],
     datasets: [],
   },
   options: {
+    plugins: {
+      legend: {
+        display: false // Si no deseas mostrar la leyenda, puedes mantener esto en 'false'
+      }
+    },
     maintainAspectRatio: false,
     legend: {
       display: false,
@@ -413,5 +452,6 @@ module.exports = {
   chartExample4, // in src/views/Dashboard.js
   chartExampleD,
   chartExampleR,
-  chartExampleF
+  chartExampleF,
+  pluginShadow
 };

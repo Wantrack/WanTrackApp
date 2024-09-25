@@ -29,18 +29,9 @@ function Chats (props) {
         }
     }, []);
 
-    function loadChats() {
-        let idCompany = undefined;
-        const _userinfoEncoded = localStorage.getItem(constants.userinfo);
-        if(_userinfoEncoded) {
-            const _userinfo = JSON.parse(decode(_userinfoEncoded));
-            if(_userinfo.idCompany) {
-                idCompany =_userinfo.idCompany
-            }
-        }
-
+    function loadChats() {        
         setLoaderActive(true)
-        axios.get(`${constants.apiurl}/api/chats${idCompany ? `?idcompany=${idCompany}` : ''}`).then(result => {
+        axios.get(`${constants.apiurl}/api/chats`).then(result => {
             setLoaderActive(false)
             setChats(result.data);
         });

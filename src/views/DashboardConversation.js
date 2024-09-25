@@ -1,4 +1,4 @@
-import { Doughnut, Pie, Radar } from "react-chartjs-2";
+import { Bar, Pie, Radar } from "react-chartjs-2";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { decode } from "util/base64";
@@ -14,7 +14,8 @@ import { clockformat } from 'util/time';
 
 function DashboardConversation(props) {
   const navigate = useNavigate();
-  const [dataChart, setDataChart] = useState([50, 50]);
+  const [satisfaction, setSatisfaction] = useState(0);
+  const [satisfactionColor, setSatisfactionColor] = useState('#bc8034');
   const [dataChart2, setDataChart2] = useState([]);
   const [dataChart2Labels, setDataChart2Labels] = useState([]);
   const [dataChart2Colorss, setDataChart2Colors] = useState([]);
@@ -25,28 +26,18 @@ function DashboardConversation(props) {
     "Saludo",
     "Escucha",
     "Comunicación clara",
-    "Comunicación precisa",
+    "Información precisa",
     "Ofertas relevantes",
     "Eficiencia",
   ]);
   const [dataChart4, setDataChart4] = useState([0, 0, 0, 0, 0, 0]);
-  const [dataChart4Colorss, setDataChart4Colors] = useState(["#29344099"]);
+  const [dataChart4Colorss, setDataChart4Colors] = useState(["#29344099","#39344099","#19344099","#29344099","#29344099"]);
   const [callduration, setCallDuration] = useState(0);
   const [npstotal, setNpsTotal] = useState(0);
   const [chatstotal, setChatTotal] = useState(0);
-
-  const data = {
-    labels: ["Negativo", "Positivo"],
-    datasets: [
-      {
-        data: dataChart,
-        backgroundColor: ["#ff6961", "#77dd77"],
-        circumference: 180,
-        rotation: 270,
-        borderColor: "#D1D6DC",
-      },
-    ],
-  };
+  const [calltotal, setCallTotal] = useState(0);
+  const [mostSentiment, setMostSentiment] = useState('');
+  const [mostSentimentColor, setMostSentimentColor] = useState('#FFFFFF');
 
   const data2 = {
     labels: dataChart2Labels,
@@ -81,39 +72,6 @@ function DashboardConversation(props) {
     ],
   };
 
-  const options = {
-    maintainAspectRatio: false,
-    aspectRatio: 1,
-    plugins: {
-      title: {
-        display: false,
-        text: "Porcentaje de Satisfaccion",
-        color: "#fff",
-        align: "center",
-        padding: {
-          top: 10,
-        },
-      },
-      legend: {
-        display: true,
-        labels: {
-          font: {
-            size: 24,
-          },
-        },
-      },
-      tooltip: {
-        enabled: true,
-        callbacks: {
-          label: (yDatapoint) => {
-            return yDatapoint.raw.toFixed(2) + " %";
-          },
-        },
-      },
-    },
-    responsive: true,
-  };
-
   const options2 = {
     maintainAspectRatio: false,
     aspectRatio: 1,
@@ -131,7 +89,7 @@ function DashboardConversation(props) {
         },
       },
       legend: {
-        display: true,
+        display: false,
         labels: {
           color: "#f5f5f5",
           font: {
@@ -259,8 +217,15 @@ function DashboardConversation(props) {
           .then((result) => {
             //calculate percent
             const positive = parseInt(result.data.total);
-            const negative = 100 - positive;
-            setDataChart([negative, positive]);
+            //const negative = 100 - positive;
+            setSatisfaction(positive);
+            if(positive > 0 && positive < 45) {
+              setSatisfactionColor('#f25757');
+            } else if (positive > 45 && positive < 80) {
+              setSatisfactionColor('#bc8034');
+            } else {
+              setSatisfactionColor('#47a025');
+            }
           });
 
         axios
@@ -284,6 +249,13 @@ function DashboardConversation(props) {
                 colors2.push(obtenerColor());
               }
             }
+            if(arrayemotions && arrayemotions.length > 0) {
+              const max = arrayemotions.reduce((prev, current) => (prev && prev.total > current.total) ? prev : current)
+              setMostSentiment(max.mainEmotion);
+              const index = arrayemotions.map(item => item.mainEmotion).indexOf(max.mainEmotion);
+              setMostSentimentColor(colors2[index])
+            }
+            
             setDataChart2Colors(colors2);
           });
 
@@ -344,6 +316,12 @@ function DashboardConversation(props) {
             setChatTotal(result.data.total);
           });
 
+        axios
+          .get(`${constants.apiurl}/api/call/report/callsByCompany/${idCompany}`)
+          .then((result) => {
+            setCallTotal(result.data.total);
+          });
+
       }
     }
     load();
@@ -352,7 +330,7 @@ function DashboardConversation(props) {
   return (
     <div className="content">
       <Row>
-        <Col md="4" sm="12">
+        <Col md="2" sm="12">
           <Card>
             <CardHeader>
               <h5 className="card-category">Minutos Analizados</h5>
@@ -362,7 +340,17 @@ function DashboardConversation(props) {
             </CardBody>
           </Card>
         </Col>
-        <Col md="4" sm="12">
+        <Col md="2" sm="12">
+          <Card>
+            <CardHeader>
+              <h5 className="card-category">Llamadas Analizadas</h5>
+            </CardHeader>
+            <CardBody>
+              <h2 style={{textAlign: 'right'}}>{calltotal}</h2>
+            </CardBody>
+          </Card>
+        </Col>
+        <Col md="2" sm="12">
           <Card>
             <CardHeader>
               <h5 className="card-category">Chats Analizados</h5>
@@ -371,8 +359,18 @@ function DashboardConversation(props) {
               <h2 style={{textAlign: 'right'}}>{chatstotal}</h2>
             </CardBody>
           </Card>
+        </Col>       
+        <Col md="2" sm="12">
+          <Card>
+            <CardHeader>
+              <h5 className="card-category">Emoción Principal</h5>
+            </CardHeader>
+            <CardBody>
+              <h2 style={{textAlign: 'right', color: mostSentimentColor}}>{mostSentiment}</h2>
+            </CardBody>
+          </Card>
         </Col>
-        <Col md="4" sm="12">
+        <Col md="2" sm="12">
           <Card>
             <CardHeader>
               <h5 className="card-category">NPS Total</h5>
@@ -382,31 +380,25 @@ function DashboardConversation(props) {
             </CardBody>
           </Card>
         </Col>
-      </Row>
-      <Row>
-        <Col style={{ marginTop: "20px" }} md="6" sm="12">
-          <Card className="card-chart">
+        <Col md="2" sm="12">
+          <Card>
             <CardHeader>
               <h5 className="card-category">Porcentaje de satisfacción</h5>
             </CardHeader>
             <CardBody>
-              <Doughnut
-                width="30%"
-                height="300px"
-                data={data}
-                options={options}
-              />
+              <h2 style={{textAlign: 'right', color: satisfactionColor}}>{satisfaction}%</h2>
             </CardBody>
           </Card>
         </Col>
-
-        <Col style={{ marginTop: "20px" }} md="6" sm="12">
+      </Row>
+      <Row>
+        <Col style={{ marginTop: "20px" }} md="4" sm="12">
           <Card className="card-chart">
             <CardHeader>
               <h5 className="card-category">Emoción Principal</h5>
             </CardHeader>
             <CardBody>
-              <Pie
+              <Bar
                 width="100%"
                 height="300px"
                 data={data2}
@@ -416,7 +408,7 @@ function DashboardConversation(props) {
           </Card>
         </Col>
 
-        <Col style={{ marginTop: "20px" }} md="6" sm="12">
+        <Col style={{ marginTop: "20px" }} md="4" sm="12">
           <Card className="card-chart">
             <CardHeader>
               <h5 className="card-category">Sentimiento Predominante</h5>
@@ -432,7 +424,7 @@ function DashboardConversation(props) {
           </Card>
         </Col>
 
-        <Col style={{ marginTop: "20px" }} md="6" sm="12">
+        <Col style={{ marginTop: "20px" }} md="4" sm="12">
           <Card className="card-chart">
             <CardHeader>
               <h5 className="card-category">Areas de Oportunidad</h5>
