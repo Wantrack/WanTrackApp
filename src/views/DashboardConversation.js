@@ -1,19 +1,23 @@
-import { Bar, Pie, Radar } from "react-chartjs-2";
+import { Bar, Pie, Radar, Line } from "react-chartjs-2";
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { decode } from "util/base64";
-import { Row, Col, Card, CardBody, CardTitle, CardHeader } from "reactstrap";
+import { Row, Col, Card, CardBody, CardTitle, CardHeader, Table } from "reactstrap";
 
 import { axios } from "../config/https";
 import constants from "../util/constans";
-import { obtenerColor } from "util/colors";
+import { obtenerColor, coloresAdvisers } from "util/colors";
 import { sColors } from "util/sentimentColors";
 import { eColors } from "util/emotionColors";
 
 import { clockformat } from 'util/time';
 
+import {
+  chartExample2,
+  chartExampleR,
+  pluginShadow
+} from "variables/charts.js";
+
 function DashboardConversation(props) {
-  const navigate = useNavigate();
   const [satisfaction, setSatisfaction] = useState(0);
   const [satisfactionColor, setSatisfactionColor] = useState('#bc8034');
   const [dataChart2, setDataChart2] = useState([]);
@@ -31,13 +35,18 @@ function DashboardConversation(props) {
     "Eficiencia",
   ]);
   const [dataChart4, setDataChart4] = useState([0, 0, 0, 0, 0, 0]);
-  const [dataChart4Colorss, setDataChart4Colors] = useState(["#29344099","#39344099","#19344099","#29344099","#29344099"]);
+  const [dataChart4Colorss, setDataChart4Colors] = useState(["#2B69F5B3"]);
+  const [dataChart5, setDataChart5] = useState([]);
+  const [dataChart5Labels, setDataChart5Labels] = useState([]);
   const [callduration, setCallDuration] = useState(0);
   const [npstotal, setNpsTotal] = useState(0);
   const [chatstotal, setChatTotal] = useState(0);
   const [calltotal, setCallTotal] = useState(0);
-  const [mostSentiment, setMostSentiment] = useState('');
+  const [mostSentiment, setMostSentiment] = useState('-');
   const [mostSentimentColor, setMostSentimentColor] = useState('#FFFFFF');
+  const [informationCompany, setInformationCompany] = useState([]);
+  const [lastSatisfaction, setLastSatisfaction] = useState(0);
+  const [dataChartRead, setDataChartRead] = useState(chartExampleR.data);
 
   const data2 = {
     labels: dataChart2Labels,
@@ -67,6 +76,17 @@ function DashboardConversation(props) {
       {
         data: dataChart4,
         backgroundColor: dataChart4Colorss,
+        borderColor: "#2B69F5",
+      },
+    ],
+  };
+
+  const data5 = {
+    labels: dataChart5Labels,
+    datasets: [
+      {
+        data: dataChart5,
+        backgroundColor: coloresAdvisers,
         borderColor: "#D1D6DC",
       },
     ],
@@ -75,12 +95,24 @@ function DashboardConversation(props) {
   const options2 = {
     maintainAspectRatio: false,
     aspectRatio: 1,
+    scales: {
+      x: {
+          ticks: {
+              color: '#FFFFFF',  // Cambia el color de las etiquetas del eje X
+          }
+      },
+      y: {
+          ticks: {
+              color: '#FFFFFF',  // Cambia el color de las etiquetas del eje Y
+          }
+      }
+    },
     plugins: {
       title: {
         display: false,
         text: "Emocion principal",
         align: "center",
-        color: "#fff",
+        color: "#FFFFFF",
         padding: {
           top: 10,
         },
@@ -91,7 +123,7 @@ function DashboardConversation(props) {
       legend: {
         display: false,
         labels: {
-          color: "#f5f5f5",
+          color: "#FFFFFF",
           font: {
             size: 12,
           },
@@ -152,18 +184,21 @@ function DashboardConversation(props) {
     scales: {
       r: {
         angleLines: {
-          color: "#000",
+          color: "#FFF",
         },
         grid: {
-          color: "#000",
+          color: "#FFF",
         },
         pointLabels: {
           // https://www.chartjs.org/docs/latest/axes/radial/#point-labels
-          color: "white",
+          font: {
+            size: 12
+          },
+          color: "#F5F5F5",
         },
         beginAtZero: true,
-        backdropColor: "transparent",
-        min: 1, // Set minimum tick value to 1
+        backdropColor: "#2B69F5",
+        min: 0, // Set minimum tick value to 1
         max: 5, // Set maximum tick value to 5
         ticks: {
           stepSize: 1, // Ensures that ticks are displayed at intervals of 1
@@ -215,17 +250,19 @@ function DashboardConversation(props) {
             `${constants.apiurl}/api/call/report/satisfactionByCompany/${idCompany}`
           )
           .then((result) => {
-            //calculate percent
-            const positive = parseInt(result.data.total);
-            //const negative = 100 - positive;
-            setSatisfaction(positive);
-            if(positive > 0 && positive < 45) {
-              setSatisfactionColor('#f25757');
-            } else if (positive > 45 && positive < 80) {
-              setSatisfactionColor('#bc8034');
-            } else {
-              setSatisfactionColor('#47a025');
-            }
+            if(result && result.data && result.data.total) {
+              //calculate percent
+              const positive = parseInt(result.data.total);
+              //const negative = 100 - positive;
+              setSatisfaction(positive);
+              if(positive > 0 && positive < 45) {
+                setSatisfactionColor('#f25757');
+              } else if (positive > 45 && positive < 80) {
+                setSatisfactionColor('#bc8034');
+              } else {
+                setSatisfactionColor('#47a025');
+              }
+            }           
           });
 
         axios
@@ -322,6 +359,50 @@ function DashboardConversation(props) {
             setCallTotal(result.data.total);
           });
 
+        axios
+          .get(`${constants.apiurl}/api/call/report/informationCompanyByAdvise/${idCompany}`)
+          .then((result) => {
+            
+            if(result.data && result.data.length > 0) {
+              setInformationCompany(result.data);
+
+              const labels = result.data.map(m => { return `${m.name} ${m.lastName}`});
+              const data = result.data.map(m => { return m.avgscorenps });
+              setDataChart5Labels(labels);
+              setDataChart5(data);
+              
+            }
+          });
+
+        axios
+          .get(`${constants.apiurl}/api/call/report/lastInformationCompany/${idCompany}/6`)
+          .then((result) => {
+            if(result.data && result.data.length > 0) {
+              const labels = result.data.map(m => { return m.month});
+              const data = result.data.map(m => { return m.avg_satisfaction });
+
+              chartExampleR.data.labels = labels;
+              chartExampleR.data.datasets = []
+              chartExampleR.data.datasets.push({
+                label: "Satisfaccion",
+                fill: true,
+                borderColor: "#1f8ef1",
+                borderWidth: 2,
+                borderDash: [],
+                borderDashOffset: 0.0,
+                pointBackgroundColor: "#1f8ef1",
+                pointBorderColor: "rgba(255,255,255,0)",
+                pointHoverBackgroundColor: "#1f8ef1",
+                pointBorderWidth: 20,
+                pointHoverRadius: 4,
+                pointHoverBorderWidth: 15,
+                pointRadius: 4,
+                data: data,
+              });
+              setLastSatisfaction(data[data.length - 1])
+              setDataChartRead(chartExampleR.data);
+            }           
+          });
       }
     }
     load();
@@ -440,9 +521,81 @@ function DashboardConversation(props) {
           </Card>
         </Col>
 
+        <Col lg="6">
+            <Card className="card-chart">
+              <CardHeader>
+                <h5 className="card-category">% Satisfacción por Agente</h5>
+              </CardHeader>
+              <CardBody>     
+                <div class="table-responsive" style={{maxHeight:'300px', height:'300px', overflowY: 'auto'}}>
+                  <Table>
+                    <thead style={{top:0, position: 'sticky', zIndex: '10000', backgroundColor: '#27293d'}}>
+                        <tr>
+                        <th>#</th>
+                        <th>Agente</th>
+                        <th>% Satisfacción</th>
+                        <th>NPS</th>
+                        </tr>
+                    </thead>  
+                    <tbody>
+                   
+                        {informationCompany.map((info, index) => 
+                        <tr key={index}>
+                            <td>{(index + 1) }</td>
+                            <td>{info.name} {info.lastName}</td>
+                            <td>{info.avgsatisfaction} %</td>
+                            <td>{info.avgscorenps}</td>                          
+                        </tr>
+                        )}   
+                             
+                    </tbody>         
+                    </Table>
+                </div>           
+                
+              </CardBody>
+            </Card> 
+          </Col>
+
+          <Col md="6" sm="12">
+            <Card className="card-chart">
+              <CardHeader>
+                <h5 className="card-category">NPS por Agente</h5>
+              </CardHeader>
+              <CardBody>
+                <Bar
+                  width="100%"
+                  height="300px"
+                  data={data5}
+                  options={options2}
+                />
+              </CardBody>
+          </Card>
+        </Col>
+
+        <Col lg="12">
+            <Card className="card-chart">
+              <CardHeader>
+                <h5 className="card-category">Satisfacción</h5>
+                <CardTitle tag="h3">
+                  <i className="tim-icons icon-send text-info" /> { lastSatisfaction }
+                </CardTitle>
+              </CardHeader>
+              <CardBody>
+                <div className="chart-area">
+                  <Line
+                    data={dataChartRead}
+                    options={chartExample2.options}
+                    plugins={[pluginShadow]}
+                  />
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+
         <Col md="12">
           <hr></hr>
         </Col>
+        
       </Row>
     </div>
   );
