@@ -29,6 +29,7 @@ function Calls (props) {
     const [loaderActive, setLoaderActive] = useState(false);
     const [searchValue, setSearchValue] = useState("");
     const [files, setFiles] = useState([]);
+    const [inputKey, setInputKey] = useState(Date.now());
     const [textModal, settextModal] = useState('');
     const [textModalAdvice, settextModalAdvice] = useState('');
     const [showAdvice, setShowAdvice] = useState(false);
@@ -131,19 +132,11 @@ function Calls (props) {
                     const extension = await getExtension(file.name);
                     console.log(extension)
                     if(extension == 'txt') {
-                        const reader = new FileReader();
-
-                        // Cuando se haya leído el archivo, el contenido estará disponible
-                        reader.onload = function(e) {
-                            const fileContent = e.target.result;
-                            setLoaderActive(true);
-                            axios.post(`${constants.apiurl}/api/feelingsSummaryChat`, { textchat : fileContent, idadviser: call.idAdviser }).catch(e => {
-                                setLoaderActive(false);  
-                            });
-                        };
-
-                        // Leer el archivo como texto
-                        reader.readAsText(file);                       
+                        let formData = new FormData();
+                        formData.append("file", file);    
+                        await axios.post(`${constants.apiurl}/api/feelingsSummaryChat/${call.idAdviser }`, formData).catch(e => {
+                            setLoaderActive(false);  
+                        });                    
                     } else {
                         let formData = new FormData();
                         formData.append("file", file);                       
@@ -154,7 +147,8 @@ function Calls (props) {
                     await loadCalls();
                 });
                 setFiles([]);
-                inputFileref.current.value = "";
+                inputFileref.current.value = '';
+                setInputKey(Date.now());
             } else {
                 sendNotification('Debes escoger un archivo para iniciar', 'danger');
             }
@@ -227,6 +221,7 @@ function Calls (props) {
                                 </Col>
                                 <Col md="4" sm="12" style={{marginTop: '5px'}}>
                                     <Input 
+                                        key={inputKey} 
                                         ref={inputFileref} 
                                         accept=".txt, .3ga, .8svx, .aac, .ac3, .aif, .aiff, .alac, .amr, .ape, .au, .dss, .flac, .flv, .m4a, .m4b, .m4p, .m4r, .mp3, .mpga, .ogg, .oga, .mogg, .opus, .qcp, .tta, .voc, .wav, .wma, .wv" 
                                         title="Escoge uno o mas archivos de audio" 
