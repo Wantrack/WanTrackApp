@@ -424,7 +424,7 @@ function DashboardConversation(props) {
         <Col md="2" sm="12">
           <Card>
             <CardHeader>
-              <h5 className="card-category">Llamadas Analizadas</h5>
+              <h5 className="card-category title-card-dashboard">Llamadas Analizadas</h5>
             </CardHeader>
             <CardBody>
               <h2 style={{textAlign: 'right'}}>{calltotal}</h2>
@@ -434,7 +434,7 @@ function DashboardConversation(props) {
         <Col md="2" sm="12">
           <Card>
             <CardHeader>
-              <h5 className="card-category">Chats Analizados</h5>
+              <h5 className="card-category title-card-dashboard">Chats Analizados</h5>
             </CardHeader>
             <CardBody>
               <h2 style={{textAlign: 'right'}}>{chatstotal}</h2>
@@ -444,7 +444,7 @@ function DashboardConversation(props) {
         <Col md="2" sm="12">
           <Card>
             <CardHeader>
-              <h5 className="card-category">Emoción Principal</h5>
+              <h5 className="card-category title-card-dashboard">Emoción Principal</h5>
             </CardHeader>
             <CardBody>
               <h2 style={{textAlign: 'right', color: mostSentimentColor}}>{mostSentiment}</h2>
@@ -454,7 +454,7 @@ function DashboardConversation(props) {
         <Col md="2" sm="12">
           <Card>
             <CardHeader>
-              <h5 className="card-category">NPS Total</h5>
+              <h5 className="card-category title-card-dashboard">NPS Total</h5>
             </CardHeader>
             <CardBody>
               <h2 style={{textAlign: 'right'}}>{npstotal}</h2>
@@ -464,7 +464,7 @@ function DashboardConversation(props) {
         <Col md="2" sm="12">
           <Card>
             <CardHeader>
-              <h5 className="card-category">Porcentaje de satisfacción</h5>
+              <h5 className="card-category title-card-dashboard">Porcentaje de satisfacción</h5>
             </CardHeader>
             <CardBody>
               <h2 style={{textAlign: 'right', color: satisfactionColor}}>{satisfaction}%</h2>

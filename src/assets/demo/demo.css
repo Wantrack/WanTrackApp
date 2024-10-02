@@ -404,5 +404,11 @@ input[type="file"]::file-selector-button:active {
   color: #f5f5f5 !important;
 }
 
+.title-card-dashboard {
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+  text-wrap: nowrap;
+}
+
 
 
