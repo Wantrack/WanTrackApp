@@ -345,7 +345,7 @@ input[type="file"]::after {
   top: 11px;
   left: 40px;
   color: #0964b0;
-  content: "Sube uno o mas audios";
+  content: "Sube uno o mas archivos";
 }
 
 /* ------- From Step 1 ------- */

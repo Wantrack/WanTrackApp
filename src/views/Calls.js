@@ -55,7 +55,8 @@ function Calls (props) {
             if(Array.isArray(result.data) && result.data.length > 0) {
                 setCall({
                     ...call,
-                    idAdviser: result.data[0].idadviser
+                    idAdviser: result.data[0].idadviser,
+                    languague: 1
                 });
             }            
         }); 
@@ -134,14 +135,14 @@ function Calls (props) {
                     if(extension == 'txt') {
                         let formData = new FormData();
                         formData.append("file", file);    
-                        await axios.post(`${constants.apiurl}/api/feelingsSummaryChat/${call.idAdviser }`, formData).catch(e => {
+                        await axios.post(`${constants.apiurl}/api/feelingsSummaryChat/${call.idAdviser}/${call.languague}`, formData).catch(e => {
                             setLoaderActive(false);  
                         });                    
                     } else {
                         let formData = new FormData();
                         formData.append("file", file);                       
                         const audiofile = await axios.post(`${constants.apiurl}/api/aws/uploadauidoemotion/audioemotions/${idCompany}`, formData, { headers: {"Content-Type": "multipart/form-data"}});
-                        await axios.post(`${constants.apiurl}/api/feelingsSummary`, { url : audiofile.data.url, idadviser: call.idAdviser });                                              
+                        await axios.post(`${constants.apiurl}/api/feelingsSummary`, { url : audiofile.data.url, idadviser: call.idAdviser, languague: call.languague });                                              
                     }
                     setLoaderActive(false);  
                     await loadCalls();
@@ -211,7 +212,8 @@ function Calls (props) {
 
                         <div>
                             <Row>
-                                <Col md="4" sm="12" style={{marginTop: '5px'}}>
+                                <Col md="3" sm="12" style={{marginTop: '5px'}}>
+                                    <label>Escoge un agente</label>
                                     <select title="Escoge un agente"  className="form-control" name="idAdviser" value={call.idAdviser} onChange={onHandleChange}>
                                         {
                                             advisors?.map((advisor, index) => 
@@ -219,18 +221,29 @@ function Calls (props) {
                                         )} 
                                     </select>
                                 </Col>
-                                <Col md="4" sm="12" style={{marginTop: '5px'}}>
+                                <Col md="3" sm="12" style={{marginTop: '5px'}}>
+                                    <label>Escoge el idioma de los archivos</label>
+                                    <select title="Escoge un idioma para los archivos" className="form-control" name="languague" onChange={onHandleChange}>
+                                        <option value="1">Español</option>
+                                        <option value="2">English</option>
+                                        <option value="3">Français</option>
+                                    </select>
+                                </Col>
+                                <Col md="3" sm="12" style={{marginTop: '5px'}}>
+                                    <label>Sube archivos de audio o texto</label>
                                     <Input 
                                         key={inputKey} 
                                         ref={inputFileref} 
                                         accept=".txt, .3ga, .8svx, .aac, .ac3, .aif, .aiff, .alac, .amr, .ape, .au, .dss, .flac, .flv, .m4a, .m4b, .m4p, .m4r, .mp3, .mpga, .ogg, .oga, .mogg, .opus, .qcp, .tta, .voc, .wav, .wma, .wv" 
-                                        title="Escoge uno o mas archivos de audio" 
-                                        placeholder="Sube tu audio" 
+                                        title="Escoge uno o mas archivos" 
+                                        placeholder="Sube tu archivo" 
                                         type="file" 
                                         name='file' 
                                         multiple onChange={onHandleChangeFile}/>
                                 </Col>
+                               
                                 <Col md="1" sm="12" style={{marginTop: '5px'}}>
+                                    <label> </label>
                                     <Link style={{padding: '10px', borderRadius: '5px', backgroundColor: '#fff', width: '100%', display: 'flex', justifyContent:'center'}} to="javascript:void(0)" title="Iniciar analisis" href="#" onClick={start}>
                                         <i style={{fontSize: '20px'}} className="fa-solid fa-play"></i>
                                     </Link>
@@ -280,9 +293,11 @@ function Calls (props) {
                                             </td>
                                             <td style={{textAlign:'center'}}> <Link title='Ver transcripcion' to="javascript:void(0)" onClick={() => toggleModal(call.summary, call.advice)}> <i style={{fontSize: '20px'}} className="fa-solid fa-clipboard-list"></i></Link></td>
                                             <td> 
-                                                <Link title='Escuchar audio' to={call.audiourl} target='_blank'> 
+                                                <Link className={call.type == 1 ? 'show' : 'hide'} title='Escuchar audio' to={call.audiourl} target='_blank'> 
                                                     <i style={{fontSize: '20px'}} className="fa-solid fa-circle-play"></i>
                                                 </Link>
+
+                                                <i style={{fontSize: '20px'}} className={call.type == 1 ? 'hide' : 'show fa-solid fa-circle-minus'}></i>
                                             </td>
                                             <td className='m_title'> { clockformat(call.audioDuration || 0)} </td>
                                             <td> {moment(call.creationdate).format('DD-MM-YYYY hh:mm:ss')}</td>
