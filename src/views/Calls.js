@@ -31,9 +31,11 @@ function Calls (props) {
     const [files, setFiles] = useState([]);
     const [inputKey, setInputKey] = useState(Date.now());
     const [textModal, settextModal] = useState('');
+    const [selectedCall, setSelectedCall] = useState({});
     const [textModalAdvice, settextModalAdvice] = useState('');
     const [showAdvice, setShowAdvice] = useState(false);
     const [modalVisible, setModalVisible] = React.useState(false);
+    const [modalVisibleT, setModalVisibleT] = React.useState(false);
 
     const notificationAlertRef = useRef(null);
     const inputFileref = useRef();
@@ -170,17 +172,66 @@ function Calls (props) {
         }
         setModalVisible(!modalVisible);
     };
+
+    const toggleModalTranscription = (call) => {
+        if(call.transcription) {
+            setSelectedCall(call);
+            if(call.transcription) {
+                settextModal(call.transcription);
+            }           
+        }
+        setModalVisibleT(!modalVisibleT);
+    };
     
     const cafilteredCalls = Array.isArray(calls) ? calls.filter(call => String(call.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : [];
+
+    const setTranscription = (type) => {
+        if(type == 1) {
+            const arrayTranscription = JSON.parse(textModal);
+            if(arrayTranscription && Array.isArray(arrayTranscription) && arrayTranscription.length > 0) {
+                let firstPerson = arrayTranscription[0].speaker ;
+                return (
+                    <div style={{display:'flex', flexDirection: 'column'}}>
+                    {arrayTranscription.map((item, index) => (                
+                <div
+                key={index}              
+                className={`${item.speaker == firstPerson ? "message-left" : "message-right"}`}
+                >
+                <div>
+                    <p style={{color:'#FFFFFF'}}>{item.text}</p>
+                </div>
+                <p style={{display:'flex', justifyContent: 'space-between', color:'#F5F5F5'}} className="type-message"> <span style={{color:'#F5F5F5'}}>{item.startTime} - {item.endTime}</span> Emocion: {item.emotion}</p>
+                </div>
+                ))}</div>)
+            }            
+        } else {
+            const text = textModal.replaceAll('\"', '').replaceAll(/\r/g, ' ').replaceAll('\\n', '\n');
+            return (<textarea disabled readOnly style={{color: '#000'}} className="form-control" placeholder="{ ... }" cols="30" rows="10" value={text} name='Trasncripcion'></textarea>);
+        }
+    }
     
     return <div className="content">
                 <div className="react-notification-alert-container">
                     <NotificationAlert ref={notificationAlertRef} />
                 </div>
                 <Loader active={loaderActive} />
+                <Modal modalClassName='modal-charts' isOpen={modalVisibleT} toggle={toggleModalTranscription} fullscreen>
+                    <ModalHeader>
+                        <h2 style={{color: '#000', marginBottom: '0px'}}>Transcripcion</h2>
+                    </ModalHeader>
+                    <ModalBody>
+                        <FormGroup style={{maxHeight: '30rem', overflowY: 'auto'}}>
+                            <label>Transcripcion</label>
+                            {setTranscription(selectedCall.type)}
+                        </FormGroup>                       
+                        <Button onClick={toggleModalTranscription} style={{marginTop: '20px'}} className="btn btn-primary">
+                            Cerrar
+                        </Button>
+                    </ModalBody>
+                </Modal>
                 <Modal isOpen={modalVisible} toggle={toggleModal}>
                     <ModalHeader>
-                        <h2 style={{color: '#000', marginBottom: '0px'}}>Payload Accion</h2>
+                        <h2 style={{color: '#000', marginBottom: '0px'}}>Resumen</h2>
                     </ModalHeader>
                     <ModalBody>
                         <FormGroup>
@@ -287,7 +338,7 @@ function Calls (props) {
                                             <td className='m_title'> {call.scorenps || '-'} </td>
                                             <td className='m_title'> {getIconType(call.type)} </td>
                                             <td style={{textAlign:'center'}}> 
-                                                <Link title='Ver transcripcion' to="javascript:void(0)" onClick={() => toggleModal(call.transcription)}> 
+                                                <Link title='Ver transcripcion' to="javascript:void(0)" onClick={() => toggleModalTranscription(call)}> 
                                                     <i style={{fontSize: '20px'}} className="fa-solid fa-headset"></i>
                                                 </Link>
                                             </td>
