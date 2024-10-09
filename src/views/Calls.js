@@ -205,8 +205,10 @@ function Calls (props) {
                 ))}</div>)
             }            
         } else {
-            const text = textModal.replaceAll('\"', '').replaceAll(/\r/g, ' ').replaceAll('\\n', '\n');
-            return (<textarea disabled readOnly style={{color: '#000'}} className="form-control" placeholder="{ ... }" cols="30" rows="10" value={text} name='Trasncripcion'></textarea>);
+            if(textModal && (typeof textModal === 'string' || textModal instanceof String)) {
+                const text = textModal.replaceAll('\"', '').replaceAll(/\r/g, ' ').replaceAll('\\n', '\n');
+                return (<textarea disabled readOnly style={{color: '#000'}} className="form-control" placeholder="{ ... }" cols="30" rows="10" value={text} name='Trasncripcion'></textarea>);
+            }           
         }
     }
     
