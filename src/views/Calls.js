@@ -187,7 +187,8 @@ function Calls (props) {
 
     const setTranscription = (type) => {
         if(type == 1) {
-            const arrayTranscription = JSON.parse(textModal);
+            try {
+                const arrayTranscription = JSON.parse(textModal);
             if(arrayTranscription && Array.isArray(arrayTranscription) && arrayTranscription.length > 0) {
                 let firstPerson = arrayTranscription[0].speaker ;
                 return (
@@ -203,7 +204,9 @@ function Calls (props) {
                 <p style={{display:'flex', justifyContent: 'space-between', color:'#F5F5F5'}} className="type-message"> <span style={{color:'#F5F5F5'}}>{item.startTime} - {item.endTime}</span> Emocion: {item.emotion}</p>
                 </div>
                 ))}</div>)
-            }            
+            }
+            } catch (error) { }
+                        
         } else {
             if(textModal && (typeof textModal === 'string' || textModal instanceof String)) {
                 const text = textModal.replaceAll('\"', '').replaceAll(/\r/g, ' ').replaceAll('\\n', '\n');
