@@ -55,8 +55,8 @@ function LeadsCenter (props) {
                                 <tbody>
                                     {filteredScatterList.map((scatterList, index) => 
                                         <tr key={scatterList.idscatterlist}>
-                                            <td> <Link to="/admin/leadviewer" onClick={() => goToScatterLists(scatterList.idscatterlist)}>{index + 1}</Link></td>
-                                            <td> <Link to="/admin/leadviewer" onClick={() => goToScatterLists(scatterList.idscatterlist)}>{scatterList.name}</Link></td>
+                                            <td> <Link to="/admin/leadviewer" onClick={() => goToScatterLists(scatterList.idscatterlist, scatterList.name)}>{index + 1}</Link></td>
+                                            <td> <Link to="/admin/leadviewer" onClick={() => goToScatterLists(scatterList.idscatterlist, scatterList.name)}>{scatterList.name}</Link></td>
                                         </tr>
                                     )}
                                 </tbody>          
@@ -67,8 +67,9 @@ function LeadsCenter (props) {
     </div>;
 }
 
-function goToScatterLists(idscatterlist) {
+function goToScatterLists(idscatterlist, name) {
     localStorage.setItem('currentleadID', idscatterlist);
+    localStorage.setItem('currentleadName', name);
 }
 
 export default LeadsCenter;

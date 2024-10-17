@@ -14,10 +14,13 @@ function LeadViewer (props) {
     const [body, setBody] = useState([]);
     const [header, setHeader] = useState([]);
     const [loaderActive, setLoaderActive] = useState(false);
+    const [currentleadName, setCurrentleadName] = useState('');
     
     useEffect(() => {  
         setLoaderActive(true);
         const currentleadID = localStorage.getItem('currentleadID');
+        const _currentleadName = localStorage.getItem('currentleadName');
+        setCurrentleadName(_currentleadName);
         axios.get(`${constants.apiurl}/api/leadsflows/${currentleadID}`).then(result => {
             const headers = [];
             let body = [];
@@ -31,7 +34,6 @@ function LeadViewer (props) {
 
                 const tempdata = data.map(d => JSON.parse(d.answer));
                 body =  tempdata.map(tmpdata => headers.map(header => tmpdata[header]));
-
             }
             setHeader(headers);
             setBody(body);
@@ -43,7 +45,7 @@ function LeadViewer (props) {
                 <Loader active={loaderActive} />
                 <Card>
                     <CardHeader>
-                        <h5 className="title">Visor de lead</h5>
+                        <h5 className="title">Visor de lead - {currentleadName}</h5>
                     </CardHeader>
                     <CardBody>
                         <div className="margin-bottom-2vh flex-left">                           
