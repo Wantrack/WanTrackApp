@@ -126,8 +126,8 @@ function Calls (props) {
         }
         if(call.idAdviser) {
             if(idCompany && files && files.length > 0) {        
-                if(files.length > 5) {
-                    sendNotification('Solo puedes subir hasta 5 archivos.', 'danger');
+                if(files.length > 10) {
+                    sendNotification('Solo puedes subir hasta 10 archivos.', 'danger');
                     return;
                 }    
                 Array.from(files).forEach(async file => {
