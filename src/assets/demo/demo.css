@@ -188,6 +188,20 @@
   flex-direction: column;
 }
 
+.float-3 {
+	position:fixed;
+	width:60px;
+	height:60px;
+	bottom:200px;
+	right:40px;
+	background-color:#e14eca;
+	color:#FFF;
+	border-radius:50px;
+	text-align:center;
+	box-shadow: 2px 2px 3px #999;
+}
+
+
 .float-2 {
 	position:fixed;
 	width:60px;
@@ -218,10 +232,17 @@
 	color:#F5F5F5;
 }
 
+.float-3:focus {
+	color:#F5F5F5;
+}
+
 .float:focus {
   color:#F5F5F5;
 }
 
+.float-3:hover {
+	color:#F5F5F5;
+}
 
 .float-2:hover {
 	color:#F5F5F5;
@@ -232,7 +253,7 @@
 }
 
 .my-float{
-	margin-top:22px;
+	margin-top:22px;  
 }
 
 .chat-container {

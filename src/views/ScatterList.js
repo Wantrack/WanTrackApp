@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import NotificationAlert from "react-notification-alert";
 import { useNavigate, Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
+import * as XLSX from 'xlsx';
 import {
   Button,
   Card,
@@ -25,9 +26,11 @@ import constants from '../util/constans';
 
 function ScatterList() {
   const navigate = useNavigate ();
+  const [inputKey, setInputKey] = useState(Date.now());
   const [scatterList, setScatterList] = useState({});
   const [loaderActive, setLoaderActive] = useState(false);
   const [contact, setContact] = useState({});
+  const [importContacts, setImportContacts] = useState([]);
   const [bodyparameters, setBodyParameters] = useState([]);
   const [buttonsparameters, setButtonsParameters] = useState([]);
   const [headerp, setHeaderP] = useState({});
@@ -35,10 +38,13 @@ function ScatterList() {
   const [companies, setCompanies] = useState([]); 
   const [wsTemplates, setWsTemplates] = useState([]); 
   const [wsaccounts, setWsAccounts] = useState([]); 
-  const [modalVisible, setModalVisible] = React.useState(false);
-  const [modalParameterVisible, setModalParameterVisible] = React.useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalParameterVisible, setModalParameterVisible] = useState(false);
+  const [currentSL, setCurrentSL] = useState(0);
+  const [token, setToken] = useState('');
 
   const notificationAlertRef = useRef(null);
+  const inputFileref = useRef();
 
   const onHandleChange = (e) => {
     const { name, value } = e.target;
@@ -106,6 +112,9 @@ function ScatterList() {
     async function load() {
         setLoaderActive(true)
         const currentScatterListID = localStorage.getItem('currentScatterListID');
+        const token = localStorage.getItem(constants.token);
+        setToken(token);
+        setCurrentSL(currentScatterListID);
         const _scatterList =  await axios.get(`${constants.apiurl}/api/scatterlist/${currentScatterListID}`);
         if(_scatterList && _scatterList.data) {
             setScatterList(_scatterList.data);
@@ -201,14 +210,19 @@ function ScatterList() {
               setScatterListDetails(_scatterListDetails.data);
             }
             setLoaderActive(false);
-        });
-
-        
+        });        
     } 
   }
 
   const toggleModal = () => {
     setModalVisible(!modalVisible);
+  };
+
+  const openFile = () => {
+    if (inputFileref.current) {
+      console.log(inputFileref.current)
+      inputFileref.current.click();
+    }
   };
 
   const OpenContactforUpdate= (event, contact) => {
@@ -298,6 +312,34 @@ function ScatterList() {
     }
 
     return JSON.stringify(json)
+  }
+
+  const onHandleChangeFile = (event) => {
+    const file = event.target.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+
+            const sheetName = workbook.SheetNames[0]; // Assuming the first sheet
+            const worksheet = workbook.Sheets[sheetName];
+
+            console.log(worksheet['!ref']);
+
+            // Convert the worksheet into a JSON array
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            console.log(jsonData);
+
+            //setImportContacts(processedData);
+        };
+
+        reader.readAsArrayBuffer(file);
+    }
+    inputFileref.current.value = '';
+    setInputKey(Date.now());
   }
 
   return (
@@ -441,10 +483,25 @@ function ScatterList() {
 
                   <Row>
                     <Col style={{display: 'flex', justifyContent: 'space-between'}} md="12">
-                      <Button title="Agregar contacto" onClick={toggleModal} className="btn btn-primary">
-                        <i className="fa fa-user-plus" />
-                      </Button>
-
+                      <div>
+                        <Button title="Agregar contacto" onClick={toggleModal} className="btn btn-primary">
+                          <i className="fa fa-user-plus" />
+                        </Button>
+                        <Button  style={{display: 'none'}} title="Agregar lista de contactos" onClick={openFile} className="btn btn-primary">
+                          <i className="fa fa-upload" />
+                        </Button>
+                        <input 
+                          style={{display: 'none'}}
+                          key={inputKey} 
+                          ref={inputFileref} 
+                          accept=".xls, .xlsx" 
+                          title="Escoge el archivo con los contactos" 
+                          placeholder="Sube tu archivo" 
+                          type="file" 
+                          name='file' 
+                          single onChange={onHandleChangeFile}/>
+                      </div>
+                     
                       <Button title="Agregar parametros" onClick={toggleParameterModal} className="btn btn-primary">
                         Agregar parametos
                       </Button>
@@ -453,7 +510,8 @@ function ScatterList() {
                         <div className="table-responsive">
                             <table className="table table-hover">
                                 <thead>
-                                    <tr>       
+                                    <tr>  
+                                        <th>Check</th>
                                         <th>#</th>                           
                                         <th>Nombre</th>
                                         <th>Telefono</th>
@@ -475,6 +533,7 @@ function ScatterList() {
                                                 </Label>
                                               </FormGroup>
                                             </td>
+                                            <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{index + 1}</Link></td>
                                             <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.name}</Link></td>
                                             <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.phone}</Link></td>
                                             <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.extra1}</Link></td>
@@ -503,6 +562,9 @@ function ScatterList() {
             </Card>
           </Col>
         </Row>
+        <Link target="link" to={`${constants.apiurl}/api/downloadReportExcel/${token}/${currentSL}`} title="Descargar reporte" className="float-3">
+          <i className="fa-solid fa-file-arrow-down my-float"></i>
+        </Link>
         <Link to="/" title="Enviar mensaje" href="#" className="float-2" onClick={sendMessage}>
           <i className="fa-solid fa-paper-plane my-float"></i>
         </Link>
