@@ -51,7 +51,7 @@ function WebHookMessage (props) {
             const _wstemplates = await axios.get(`${constants.apiurl}/api/wstemplatebyCompany/${_webhook.data.idcompany || _companies.data[0].idcompany}`);
             setWsTemplates([{idwstemplate: -1, name: 'Sin Plantilla'}, ..._wstemplates.data]);
     
-            const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccounts/${_webhook.data.idcompany || _companies.data[0].idcompany}`);
+            const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccountsbyCompany/${_webhook.data.idcompany || _companies.data[0].idcompany}`);
             setWsAccounts([{idwhatsapp_accounts: -1, displayname: 'Sin Cuenta'}, ..._wsaccounts.data]);
             
             if(_webhook.data) {
@@ -139,7 +139,7 @@ function WebHookMessage (props) {
 
         const { name, value } = e.target;
 
-        const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccounts/${value}`);
+        const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccountsbyCompany/${value}`);
         setWsAccounts([{idwhatsapp_accounts: -1, displayname: 'Sin Cuenta'}, ..._wsaccounts.data]);
 
         const _wstemplates = await axios.get(`${constants.apiurl}/api/wstemplatebyCompany/${value}`);
