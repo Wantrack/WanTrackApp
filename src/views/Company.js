@@ -16,6 +16,8 @@ import {
 
 import { axios } from '../config/https';
 import constants from '../util/constans';
+import { getUserInfo } from 'util/localStorageInfo';
+import { func } from 'prop-types';
 
 function Company() {
   const navigate = useNavigate ();
@@ -46,7 +48,7 @@ function Company() {
         if(_company.data) {
             setCompany(_company.data);
 
-            const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccounts/${currentCompanyID}`);
+            const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccountsbyCompany/${currentCompanyID}`);
             setWsAccounts(_wsaccounts.data);
         } 
     }
@@ -59,6 +61,21 @@ function Company() {
     axios.post(`${constants.apiurl}/api/company`, company).then(async (result) => {
         navigate('/admin/companies');
     });
+  }
+
+  function renderButton() {
+    const userInfo = getUserInfo();
+    if(userInfo.idroles == 1) {
+      return  <Button className="btn-fill" color="primary" type="submit" onClick={saveChanges}>
+      Guardar
+    </Button>
+    } else {
+      return  <div></div>
+    }
+  }
+
+  function goToWhatsAppAccountOnClick(idwhatsapp_accounts) {
+    localStorage.setItem('currentWhatsAppAccountID', idwhatsapp_accounts);
   }
 
   return (
@@ -146,9 +163,9 @@ function Company() {
                 </Form>
               </CardBody>
               <CardFooter>
-                <Button className="btn-fill" color="primary" type="submit" onClick={saveChanges}>
-                  Guardar
-                </Button>
+                {
+                  renderButton()
+                }               
               </CardFooter>
             </Card>
           </Col>
@@ -170,10 +187,10 @@ function Company() {
                             {wsaccounts?.map((wsaccount, index) => 
                                 <tr key={index}>
                                     <td>    
-                                      <Link to="javascript:void(0)">{index + 1}</Link>                     
+                                      <Link to="/admin/whatsappaccount" onClick={() => goToWhatsAppAccountOnClick(wsaccount.idwhatsapp_accounts)}>{index + 1}</Link>                     
                                     </td>
-                                    <td> <Link to="javascript:void(0)">{wsaccount.displayname}</Link></td>
-                                    <td> <Link to="javascript:void(0)">{wsaccount.phone}</Link></td>
+                                    <td> <Link to="/admin/whatsappaccount" onClick={() => goToWhatsAppAccountOnClick(wsaccount.idwhatsapp_accounts)}>{wsaccount.displayname}</Link></td>
+                                    <td> <Link to="/admin/whatsappaccount" onClick={() => goToWhatsAppAccountOnClick(wsaccount.idwhatsapp_accounts)}>{wsaccount.phone}</Link></td>
                                 </tr>
                             )}                   
                         </tbody>          

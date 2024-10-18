@@ -24,6 +24,7 @@ import Advisor from "views/Advisor";
 import Calls from "views/Calls";
 import LeadsCenter from "views/LeadsCenter";
 import LeadViewer from "views/LeadViewer";
+import WhatsAppAccount from "views/WhatsAppAccount";
 
 var routes = [
   {
@@ -287,5 +288,13 @@ var routes = [
     layout: "/admin",
     invisible: true
   },
+  {
+    path: "/whatsappaccount",
+    name: "WhatsAppAccount",
+    icon: "tim-icons icon-single-copy-04",
+    component: <WhatsAppAccount />,
+    layout: "/admin",
+    invisible: true
+  }
 ];
 export default routes;
