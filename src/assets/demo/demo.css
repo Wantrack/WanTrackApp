@@ -556,3 +556,7 @@ input[type="file"]::file-selector-button:active {
   text-transform: uppercase;
   font-weight: 700;
 }
+
+.gray {
+  color: #6c757d;
+}

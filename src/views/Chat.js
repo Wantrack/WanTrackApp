@@ -7,6 +7,7 @@ import ScrollArea from "react-scrollbar";
 import { Button, Card, Col, Input, Row } from "reactstrap";
 import { Tooltip as ReactTooltip } from "react-tooltip";
 import SocketService  from "../socket";
+import { Link } from "react-router-dom";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -19,6 +20,25 @@ function Chat(props) {
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [loaderActive, setLoaderActive] = useState(false);
+  const [startchat, setStarChat] = useState(false);
+
+  async function toggleChat() {
+    const _startchat =!startchat;
+    setStarChat(!startchat)
+    const phone = localStorage.getItem("currentPhone");
+    const phoneNumberId = localStorage.getItem("currentphoneNumberID");
+    if(_startchat) {
+      await axios.post(`${constants.apiurl}/api/chatasesorstart`, {
+        phone: phone,
+        phoneNumberId: phoneNumberId
+    });
+    } else {
+      await axios.post(`${constants.apiurl}/api/chatasesorstop`, {
+        phone: phone,
+        phoneNumberId: phoneNumberId
+    });
+    }
+  }
 
   const notificationAlertRef = useRef(null); 
 
@@ -94,6 +114,10 @@ function Chat(props) {
         setChats(result.data);
         toBotton();
     });
+
+    axios.get(`${constants.apiurl}/api/chatisstop/${phone}/${phoneNumberId}`).then((result) => {
+      setStarChat(result.data.isStop);
+  });
   }
 
   const elements = document.querySelectorAll('.ps__rail-y');
@@ -138,9 +162,14 @@ function Chat(props) {
               <i style={{fontSize:'2rem'}} className="fa-regular fa-circle-user"></i>
             </div>
             <div style={{display: 'flex', flexDirection: 'column', alignItems: 'start'}} className="herderphone">
-              <h4>{name}</h4>
-              <h6>{phone}</h6>
-            </div>            
+              <h4 style={{marginBottom: '5px'}}>{name}</h4>
+              <span style={{fontSize: '11px'}}>{phone}</span>
+            </div>  
+            <div>
+              <Link to="javascript:void(0)" onClick={()=>{toggleChat()}}>
+                <i style={{fontSize:'2rem', marginLeft:'2rem'}} className={startchat ? 'fa-solid fa-toggle-on' : 'fa-solid fa-toggle-off gray'} title={startchat ? 'Chat con asesor activo' : 'Chat con asesor inactivo'}></i>
+              </Link>              
+            </div>          
         </div>
         <ScrollArea
           style={{ height: "70vh" }}
@@ -164,10 +193,10 @@ function Chat(props) {
         </ScrollArea>
         <div style={{ padding: "10px"}}>
           <Row>
-            <Col md="10" sm="12" style={{ padding: "0px 2px 0px 10px"}}>
+            <Col lg="10" sm="8" style={{ padding: "0px 2px 0px 10px"}}>
                 <Input style={{marginTop: '5px'}} id="message" name="message" defaultValue={message} placeholder="Escribe un mensaje" onChange={onHandleChange} onKeyPress={handleKeyPress}></Input>
             </Col>            
-            <Col md="1" sm="6" style={{ padding: "0px 1px"}}>
+            <Col lg="1" sm="2" style={{ padding: "0px 1px"}}>
                 <Button onClick={genAI} data-tooltip-id="genAITooltip" title="Sugiere respuesta con IA" style={{width: '100%'}}>                
                     <svg fill="#FFDF00" width="14px" height="14px" viewBox="0 0 512 512" id="icons" xmlns="http://www.w3.org/2000/svg" >
                         <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
@@ -184,7 +213,7 @@ function Chat(props) {
                     </svg>
                  </Button>
             </Col>
-            <Col md="1" sm="6" style={{ padding: "0px 10px 0px 0px"}}>
+            <Col lg="1" sm="2" style={{ padding: "0px 10px 0px 0px"}}>
                 <Button onClick={sendMessage} title="Envia el mensaje" style={{width: '100%'}}><i className="fa-solid fa-paper-plane"></i></Button>
             </Col>
           </Row>
