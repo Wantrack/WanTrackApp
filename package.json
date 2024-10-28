@@ -17,6 +17,7 @@
     "react-dom": ">=16.8.0",
     "react-loader-spinner": "^6.1.6",
     "react-notification-alert": "0.0.13",
+    "react-pdftotext": "^1.3.3",
     "react-router-dom": "6.11.1",
     "react-scripts": "5.0.1",
     "react-scrollbar": "^0.5.6",

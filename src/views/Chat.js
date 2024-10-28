@@ -96,6 +96,13 @@ function Chat(props) {
     });
   }
 
+  const elements = document.querySelectorAll('.ps__rail-y');
+  for (let index = 0; index < elements.length; index++) {
+    const element = elements[index];
+    console.log(element);
+    element.style.display = 'none';
+  }
+
   useEffect(() => {
     setLoaderActive(true);
     const phone = localStorage.getItem("currentPhone");
@@ -106,7 +113,7 @@ function Chat(props) {
     loadChats(phone, phoneNumberId);
 
     const socket = new SocketService();
-    socket.getSocket().on('chatrefresh', chatrefresh);
+    socket.getSocket().on('chatrefresh', chatrefresh);   
 
     return () => {
       console.log('El componente Chat se desmontó');
@@ -125,7 +132,7 @@ function Chat(props) {
     <div className="content">
       <NotificationAlert ref={notificationAlertRef} />
       <Loader active={loaderActive} />
-      <Card>
+      <Card style={{marginBottom: '0px'}}>
         <div style={{display: 'flex', alignItems: 'center'}} className="headerchat">
             <div>
               <i style={{fontSize:'2rem'}} className="fa-regular fa-circle-user"></i>
