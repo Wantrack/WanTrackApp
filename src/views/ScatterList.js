@@ -494,7 +494,8 @@ function ScatterList() {
                 <hr></hr>                
                 {
                   bodyparameters?.map((parameter, index) => 
-                    <Input key={index} className="form-control form-control-lg color_black" placeholder="Texto" style={{marginTop: '10px'}} type="text" name={`body${index}`} defaultValue={parameter.text} onChange={onHandleChangeBodyP(index)}/>
+                    <textarea key={index} className="form-control form-control-lg color_black" style={{marginTop: '10px'}} placeholder="Texto" cols="30" rows="10" defaultValue={parameter.text} name={`body${index}`} onChange={onHandleChangeBodyP(index)}></textarea>
+                   
                 )}                  
             </FormGroup>
             <hr></hr>       
