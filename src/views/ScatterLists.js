@@ -15,7 +15,11 @@ function ScatterLists (props) {
     const [loaderActive, setLoaderActive] = useState(false);
     const [searchValue, setSearchValue] = useState('');
     
-    useEffect(() => { 
+    useEffect(() => {
+        getScatterLists()
+    }, []);
+
+    async function getScatterLists() {
         let idCompany = undefined;
         const _userinfoEncoded = localStorage.getItem(constants.userinfo);
         if(_userinfoEncoded) {
@@ -30,7 +34,12 @@ function ScatterLists (props) {
             setLoaderActive(false)
             setScatterLists(result.data);
         });
-    }, []);
+    }
+
+    async function copyScatterList(idscatterlist) {
+        await axios.post(`${constants.apiurl}/api/scatterlistscopy`, {idscatterlist});
+        await getScatterLists();
+    }
     
     const filteredScatterList = Array.isArray(scatterLists) ? scatterLists.filter(wsTemplate => String(wsTemplate.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
     
@@ -55,8 +64,9 @@ function ScatterLists (props) {
                             <table className="table table-hover">
                                 <thead>
                                     <tr>       
-                                        <th>#</th>                           
-                                        <th>Nombre</th>                           
+                                        <th>#</th>
+                                        <th>Nombre</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -64,6 +74,7 @@ function ScatterLists (props) {
                                         <tr key={scatterList.idscatterlist}>
                                             <td> <Link to="/admin/list" onClick={() => goToScatterLists(scatterList.idscatterlist)}>{index + 1}</Link></td>
                                             <td> <Link to="/admin/list" onClick={() => goToScatterLists(scatterList.idscatterlist)}>{scatterList.name}</Link></td>
+                                            <td> <Link to="javascript:void(0)" onClick={() => copyScatterList(scatterList.idscatterlist)}><i title='Copiar campaña' className="fa-solid fa-copy"></i></Link></td>
                                         </tr>
                                     )}
                                 </tbody>          

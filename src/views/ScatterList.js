@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import NotificationAlert from "react-notification-alert";
 import { useNavigate, Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
@@ -29,6 +29,7 @@ function ScatterList() {
   const [inputKey, setInputKey] = useState(Date.now());
   const [scatterList, setScatterList] = useState({});
   const [loaderActive, setLoaderActive] = useState(false);
+  const [loaderText, setLoaderText] = useState('');
   const [contact, setContact] = useState({});
   const [importContacts, setImportContacts] = useState([]);
   const [bodyparameters, setBodyParameters] = useState([]);
@@ -39,9 +40,12 @@ function ScatterList() {
   const [wsTemplates, setWsTemplates] = useState([]); 
   const [wsaccounts, setWsAccounts] = useState([]); 
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisibleDocument, setModalVisibleDocuemnt] = useState(false);
   const [modalParameterVisible, setModalParameterVisible] = useState(false);
   const [currentSL, setCurrentSL] = useState(0);
   const [token, setToken] = useState('');
+  const [file, setFile] = useState(undefined);
+  const [checkAll, setCheckAll] = useState(true);
 
   const notificationAlertRef = useRef(null);
   const inputFileref = useRef();
@@ -52,6 +56,14 @@ function ScatterList() {
       ...pre,
       [name]: value 
     }));
+  }
+
+  const toggleModalDocument = () => {
+    setModalVisibleDocuemnt(!modalVisibleDocument);
+  };
+
+  async function getExtension(filename) {
+    return filename.split('.').pop();
   }
 
   const onHandleChangeCheckbox = index => e => {
@@ -100,8 +112,7 @@ function ScatterList() {
     setWsAccounts([{idwhatsapp_accounts: -1, displayname: 'Sin Cuenta'}, ..._wsaccounts.data]);
 
     const _wstemplates = await axios.get(`${constants.apiurl}/api/wstemplatebyCompany/${value}`);
-    setWsTemplates([{idwstemplate: -1, name: 'Sin Plantilla'}, ..._wstemplates.data]);
-        
+    setWsTemplates([{idwstemplate: -1, name: 'Sin Plantilla'}, ..._wstemplates.data]);        
   }
 
   const cmbOnChange = async (e) => { 
@@ -218,6 +229,17 @@ function ScatterList() {
     setModalVisible(!modalVisible);
   };
 
+  async function checkAllChecks() {
+    const _checkAll = !checkAll;
+    const currentScatterListID = localStorage.getItem('currentScatterListID');
+    setCheckAll(_checkAll);
+    const _selectedInt = _checkAll ? 1 : 0;
+    const newList = scatterListDetails.map(sld =>{ return {...sld, selected: _selectedInt}});
+    console.log(newList);
+    axios.patch(`${constants.apiurl}/api/scatterlistdetailSelectedAll`, {selected: _selectedInt, idscatterlist:currentScatterListID});
+    setScatterListDetails([...newList]);
+  };
+
   const openFile = () => {
     if (inputFileref.current) {
       console.log(inputFileref.current)
@@ -316,7 +338,7 @@ function ScatterList() {
 
   const onHandleChangeFile = (event) => {
     const file = event.target.files[0];
-
+    setFile(file);
     if (file) {
         const reader = new FileReader();
 
@@ -331,25 +353,92 @@ function ScatterList() {
 
             // Convert the worksheet into a JSON array
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            setImportContacts(jsonData)
             console.log(jsonData);
 
             //setImportContacts(processedData);
         };
 
         reader.readAsArrayBuffer(file);
-    }
+    }    
+  }
+
+  const removeFile = () => {
+    setFile(undefined);
     inputFileref.current.value = '';
     setInputKey(Date.now());
   }
 
+  const addFile = async () => {
+    if(importContacts && importContacts.length > 0) {
+      const amount = importContacts.length;
+      const currentScatterListID = localStorage.getItem('currentScatterListID');
+      setLoaderActive(true);
+      for (let index = 0; index < amount; index++) {
+        const element = importContacts[index];
+        if(element && element.length > 1 && element[0] && element[1]) {
+          await axios.post(`${constants.apiurl}/api/scatterlistdetail`, { ...{ name: element[0],  phone:fixNumber(element[1])}, idscatterlist: currentScatterListID });
+        }  
+        setLoaderText(`Importado contacto #${index+1} de ${amount}`);
+      }      
+      const _scatterListDetails = await axios.get(`${constants.apiurl}/api/scatterlistdetailbyScatterlist/${currentScatterListID}`);
+      if(_scatterListDetails.data) {
+        setScatterListDetails(_scatterListDetails.data);
+      }
+      setLoaderActive(false)
+    }
+    setModalVisibleDocuemnt(false);
+    setFile(undefined);
+    inputFileref.current.value = '';
+    setInputKey(Date.now());
+    setLoaderText('');
+  }
+
+  const fixNumber = (number) =>{
+    return `${number}`.replace(/[^0-9]/g, '');
+  }
+
   return (
-    <>
-    
+    <>    
       <div className="content">
-      <Loader active={loaderActive} />
+      <Loader active={loaderActive} text={loaderText} />
         <div className="react-notification-alert-container">
           <NotificationAlert ref={notificationAlertRef} />
         </div>
+        <Modal isOpen={modalVisibleDocument} toggle={toggleModalDocument}>
+          <ModalHeader>
+            <h2 style={{color: '#000', marginBottom: '0px'}}>Documento</h2>
+          </ModalHeader>
+          <ModalBody>            
+          <div className='file-upload show'>
+            <div className={!file ? 'show' : 'hide'}>
+              <button className="file-upload-btn" type="button" onClick={openFile}>Escoger documento</button>
+              <div className="image-upload-wrap">
+                <input 
+                  className="file-upload-input" 
+                  key={inputKey} 
+                  ref={inputFileref} 
+                  accept=".xls, .xlsx" 
+                  title="Escoge el documento" 
+                  placeholder="Sube tu documento" 
+                  type="file" 
+                  name='file' 
+                  single onChange={onHandleChangeFile}/>
+                <div className="drag-text">              
+                  <h3>Arrastra el documento aqui</h3>
+                </div>
+            </div>            
+            </div>
+            <div  md="6" sm="12" className={file ? 'file-upload-content show' : 'hide'} >
+              <Label style={{marginTop: '15px'}}>{file?.name}</Label>
+              <button type="button" onClick={removeFile} className="remove-image">Eliminar <span className="image-title">Documento</span></button>
+            </div>
+            <div className={file ? 'file-upload-content show' : 'hide'} >
+              <button type="button" onClick={addFile} className="add-image"><span className="image-title">Importar</span></button>
+            </div>
+          </div>
+          </ModalBody>
+        </Modal>
         <Modal isOpen={modalVisible} toggle={toggleModal}>
           <ModalHeader>
             <h2 style={{color: '#000', marginBottom: '0px'}}>Agregar contacto</h2>
@@ -487,19 +576,9 @@ function ScatterList() {
                         <Button title="Agregar contacto" onClick={toggleModal} className="btn btn-primary">
                           <i className="fa fa-user-plus" />
                         </Button>
-                        <Button  style={{display: 'none'}} title="Agregar lista de contactos" onClick={openFile} className="btn btn-primary">
+                        <Button title="Agregar lista de contactos" onClick={toggleModalDocument} className="btn btn-primary">
                           <i className="fa fa-upload" />
-                        </Button>
-                        <input 
-                          style={{display: 'none'}}
-                          key={inputKey} 
-                          ref={inputFileref} 
-                          accept=".xls, .xlsx" 
-                          title="Escoge el archivo con los contactos" 
-                          placeholder="Sube tu archivo" 
-                          type="file" 
-                          name='file' 
-                          single onChange={onHandleChangeFile}/>
+                        </Button>                        
                       </div>
                      
                       <Button title="Agregar parametros" onClick={toggleParameterModal} className="btn btn-primary">
@@ -511,7 +590,16 @@ function ScatterList() {
                             <table className="table table-hover">
                                 <thead>
                                     <tr>  
-                                        <th>Check</th>
+                                        <th>
+                                            <FormGroup check>
+                                              <Label check>
+                                                <Input type="checkbox" name='checkall' defaultChecked={checkAll} onChange={checkAllChecks}/>
+                                                <span className="form-check-sign">
+                                                  <span className="check" />
+                                                </span>
+                                              </Label>
+                                            </FormGroup>
+                                        </th>
                                         <th>#</th>                           
                                         <th>Nombre</th>
                                         <th>Telefono</th>
@@ -526,7 +614,7 @@ function ScatterList() {
                                             <td> 
                                               <FormGroup check>
                                                 <Label check>
-                                                  <Input type="checkbox" name={`inputSelected_${index}`} defaultChecked={scatterListDetail.selected === 1 ? true : false}  onChange={onHandleChangeCheckbox(index)}/>
+                                                  <Input type="checkbox" name={`inputSelected_${index}`} checked={scatterListDetail.selected === 1 ? true : false} defaultChecked={scatterListDetail.selected === 1 ? true : false}  onChange={onHandleChangeCheckbox(index)}/>
                                                   <span className="form-check-sign">
                                                     <span className="check" />
                                                   </span>
