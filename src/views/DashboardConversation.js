@@ -527,7 +527,7 @@ function DashboardConversation(props) {
                 <h5 className="card-category">% Satisfacción por Agente</h5>
               </CardHeader>
               <CardBody>     
-                <div class="table-responsive" style={{maxHeight:'300px', height:'300px', overflowY: 'auto'}}>
+                <div className="table-responsive" style={{maxHeight:'300px', height:'300px', overflowY: 'auto'}}>
                   <Table>
                     <thead style={{top:0, position: 'sticky', zIndex: '10000', backgroundColor: '#27293d'}}>
                         <tr>

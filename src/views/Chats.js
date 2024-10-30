@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
-import { decode } from "../util/base64";
 import { axios } from '../config/https';
 import constants from '../util/constans';
 import SocketService  from "../socket";
@@ -9,16 +8,22 @@ import SocketService  from "../socket";
 import {
     CardHeader,
     CardBody,
-    Card
+    Card,
+    CardFooter,
+    Pagination,
+    PaginationItem,
+    PaginationLink
   } from "reactstrap";
 
 function Chats (props) {
     const [chats, setChats] = useState([]);
     const [loaderActive, setLoaderActive] = useState(false);
-    const [searchValue, setSearchValue] = useState('');   
+    const [searchValue, setSearchValue] = useState('');
+    const [rows, setRows] = useState([]);
+    const [max, setMax] = useState(0);
     
     useEffect(() => { 
-        loadChats();
+        loadChats(0);
         const socket = new SocketService();
         socket.getSocket().on('notificationrefresh', notificationrefresh);
         console.log('Entro');
@@ -29,11 +34,20 @@ function Chats (props) {
         }
     }, []);
 
-    function loadChats() {        
+    function loadChats(from) {        
         setLoaderActive(true)
-        axios.get(`${constants.apiurl}/api/chats`).then(result => {
+        axios.get(`${constants.apiurl}/api/chats?start=${from}`).then(result => {
             setLoaderActive(false)
             setChats(result.data);
+        });
+
+        axios.get(`${constants.apiurl}/api/chatsCount`).then(result => {
+            const amount = result.data.count;
+            const max = Math.ceil(amount/25);
+            var rows = [], i = 0, len = max
+            while (++i <= len) rows.push(i);
+            setRows(rows);
+            setMax(max);
         });
     }
 
@@ -86,6 +100,38 @@ function Chats (props) {
                             </table>
                         </div> 
                     </CardBody>
+                    <CardFooter style={{display:'flex', justifyContent:'center'}}>
+                        <div style={{width:'90%', overflowX:'auto', display: 'flex', justifyContent: 'center'}}>
+                            <Pagination>
+                                <PaginationItem>
+                                    <PaginationLink
+                                    onClick={() => {loadChats(0, 25)}}
+                                    first
+                                    href="javascript:void(0)"
+                                    />
+                                </PaginationItem>
+                                {
+                                    rows.map((item, index) => 
+                                        <PaginationItem  key={index}>
+                                            <PaginationLink 
+                                            href="javascript:void(0)"
+                                            onClick={() => {loadChats(index + 1, 25)}}
+                                            >
+                                            {index + 1}
+                                            </PaginationLink>
+                                    </PaginationItem> 
+                                    )
+                                }                    
+                                <PaginationItem>
+                                    <PaginationLink
+                                    onClick={() => {loadChats(max, 25)}}
+                                    href="javascript:void(0)"
+                                    last
+                                    />
+                                </PaginationItem>
+                            </Pagination>
+                        </div>                                        
+                    </CardFooter>
                 </Card>
     </div>;
 }

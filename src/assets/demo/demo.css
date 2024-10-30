@@ -560,3 +560,7 @@ input[type="file"]::file-selector-button:active {
 .gray {
   color: #6c757d;
 }
+
+nav[aria-label="pagination"] {
+  width: 100% !important;
+}
