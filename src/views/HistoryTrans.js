@@ -40,7 +40,7 @@ function HistoryTrans (props) {
             setLoaderActive(false);
             var rows = [], i = 0, len = max
             while (++i <= len) rows.push(i);
-            setAmountMessagesSentArray(rows);-
+            setAmountMessagesSentArray(rows);
             setMaxMessagesSent(max);
             setLoaderActive(false);
         });
