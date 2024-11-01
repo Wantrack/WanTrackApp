@@ -564,3 +564,19 @@ input[type="file"]::file-selector-button:active {
 nav[aria-label="pagination"] {
   width: 100% !important;
 }
+
+.width100p {
+  width: 100% !important;
+}
+
+.listItem {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+.badge-override {
+  color: #FFF;
+  background-color: #5e72e4;
+}

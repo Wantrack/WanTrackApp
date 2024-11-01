@@ -18,7 +18,10 @@ import {
     Modal,
     ModalHeader,
     ModalBody,
-    FormGroup
+    FormGroup,
+    ListGroup,
+    ListGroupItem,
+    Badge
   } from "reactstrap";
 import { clockformat } from 'util/time';
 
@@ -36,6 +39,7 @@ function Calls (props) {
     const [showAdvice, setShowAdvice] = useState(false);
     const [modalVisible, setModalVisible] = React.useState(false);
     const [modalVisibleT, setModalVisibleT] = React.useState(false);
+    const [modalVisibleUploadFile, setModalVisibleUploadFile] = React.useState(false);
 
     const notificationAlertRef = useRef(null);
     const inputFileref = useRef();
@@ -111,11 +115,25 @@ function Calls (props) {
         notificationAlertRef.current.notificationAlert(options);
     }
 
-    async function getExtension(filename) {
+    function getExtension(filename) {
         return filename.split('.').pop();
     }
 
+    const getFileListIcon = (filename) => {
+        const fileAudioExtension = ['3ga', '8svx', 'aac', 'ac3', 'aif', 'aiff', 'alac', 'amr', 'ape', 'au', 'dss', 'flac', 'flv', 'm4a', 'm4b', 'm4p', 'm4r', 'mp3', 'mpga', 'ogg', 'oga', 'mogg', 'opus', 'qcp', 'tta', 'voc', 'wav', 'wma', 'wv'];
+    
+        const extension = getExtension(filename);
+        if(fileAudioExtension.includes(extension)) {
+            return <i style={{fontSize: '16px'}} className="fa-solid fa-file-audio"></i>;
+        } else if(extension == 'txt') {
+            return <i style={{fontSize: '16px'}} className="fa-solid fa-file-lines"></i>;
+        }else {
+            return <i style={{fontSize: '16px'}} className="fa-solid fa-question"></i>;
+        }
+    }
+
     async function start() {
+        setModalVisibleUploadFile(false);
         let idCompany = undefined;
         const _userinfoEncoded = localStorage.getItem(constants.userinfo);
         if(_userinfoEncoded) {
@@ -132,7 +150,7 @@ function Calls (props) {
                 }    
                 Array.from(files).forEach(async file => {
                     setLoaderActive(true);
-                    const extension = await getExtension(file.name);
+                    const extension = getExtension(file.name);
                     console.log(extension)
                     if(extension == 'txt') {
                         let formData = new FormData();
@@ -182,6 +200,10 @@ function Calls (props) {
         }
         setModalVisibleT(!modalVisibleT);
     };
+
+    const toggleModalUploadFile = () => {
+        setModalVisibleUploadFile(!modalVisibleUploadFile);
+    }
     
     const cafilteredCalls = Array.isArray(calls) ? calls.filter(call => String(call.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : [];
 
@@ -220,6 +242,77 @@ function Calls (props) {
                     <NotificationAlert ref={notificationAlertRef} />
                 </div>
                 <Loader active={loaderActive} />
+                <Modal isOpen={modalVisibleUploadFile} toggle={toggleModalUploadFile}>
+                    <ModalHeader>
+                        <h3 style={{color: '#000', marginBottom: '0px'}}>Propiedades</h3>
+                    </ModalHeader>
+                    <ModalBody>
+                        <Row>
+                            <Col md="12" sm="12" style={{marginTop: '5px'}}>
+                                <label>Escoge un agente</label>
+                                <select title="Escoge un agente" className="form-control color_black" name="idAdviser" value={call.idAdviser} onChange={onHandleChange}>
+                                    {
+                                        advisors?.map((advisor, index) => 
+                                        <option key={index} value={advisor.idadviser}>{advisor.name} {advisor.lastName}</option>
+                                    )} 
+                                </select>
+                            </Col>
+                            <Col md="12" sm="12" style={{marginTop: '5px'}}>
+                                <label>Escoge el idioma de los archivos</label>
+                                <select title="Escoge un idioma para los archivos" className="form-control color_black" name="languague" onChange={onHandleChange}>
+                                    <option value="1">Español</option>
+                                    <option value="2">English</option>
+                                    <option value="3">Français</option>
+                                </select>
+                            </Col>
+                            <Col md="12" sm="12" style={{marginTop: '5px'}}>
+                                <label>Sube archivos de audio o texto</label>
+                                <Input 
+                                    key={inputKey} 
+                                    ref={inputFileref} 
+                                    accept=".txt, .3ga, .8svx, .aac, .ac3, .aif, .aiff, .alac, .amr, .ape, .au, .dss, .flac, .flv, .m4a, .m4b, .m4p, .m4r, .mp3, .mpga, .ogg, .oga, .mogg, .opus, .qcp, .tta, .voc, .wav, .wma, .wv" 
+                                    title="Escoge uno o mas archivos" 
+                                    placeholder="Sube tu archivo" 
+                                    type="file" 
+                                    name='file'
+                                    multiple onChange={onHandleChangeFile}/>
+                            </Col>   
+                            <Col md="12" style={{maxHeight:'300px', overflowY: 'auto'}}>                                
+                                <ListGroup>
+                                    { Array.from(files)?.map((file, index) =>
+                                    <ListGroupItem  key={index}  className="color_black">
+                                        <Row>
+                                            <Col sm="10" className='listItem'>
+                                                {file.name}
+                                            </Col>                                               
+                                            <Col sm="2">
+                                                <Badge pill className='badge-override'>
+                                                    {getFileListIcon(file.name)}
+                                                </Badge>
+                                            </Col>
+                                        </Row> 
+                                    </ListGroupItem>
+                                    )}
+                                </ListGroup>
+                            </Col>
+                            <Col md="12">
+                                <hr></hr>
+                            </Col>                              
+                        </Row>     
+                        <Row style={{display:'flex', justifyContent: 'space-between'}}>
+                            <Col md="6" sm="12" style={{marginTop: '5px'}}>
+                                <Button onClick={start} style={{marginTop: '20px'}} className="btn btn-primary width100p">
+                                    Iniciar Analisis
+                                </Button>
+                            </Col>
+                            <Col md="6" sm="12" style={{marginTop: '5px'}}>
+                                <Button onClick={toggleModalUploadFile} style={{marginTop: '20px'}} className="btn btn-primary width100p">
+                                    Cerrar
+                                </Button>
+                            </Col>
+                        </Row>                   
+                    </ModalBody>
+                </Modal>
                 <Modal modalClassName='modal-charts' isOpen={modalVisibleT} toggle={toggleModalTranscription} fullscreen>
                     <ModalHeader>
                         <h2 style={{color: '#000', marginBottom: '0px'}}>Transcripcion</h2>
@@ -268,46 +361,19 @@ function Calls (props) {
 
                         <div>
                             <Row>
-                                <Col md="3" sm="12" style={{marginTop: '5px'}}>
-                                    <label>Escoge un agente</label>
-                                    <select title="Escoge un agente"  className="form-control" name="idAdviser" value={call.idAdviser} onChange={onHandleChange}>
-                                        {
-                                            advisors?.map((advisor, index) => 
-                                            <option key={index} value={advisor.idadviser}>{advisor.name} {advisor.lastName}</option>
-                                        )} 
-                                    </select>
-                                </Col>
-                                <Col md="3" sm="12" style={{marginTop: '5px'}}>
-                                    <label>Escoge el idioma de los archivos</label>
-                                    <select title="Escoge un idioma para los archivos" className="form-control" name="languague" onChange={onHandleChange}>
-                                        <option value="1">Español</option>
-                                        <option value="2">English</option>
-                                        <option value="3">Français</option>
-                                    </select>
-                                </Col>
-                                <Col md="3" sm="12" style={{marginTop: '5px'}}>
-                                    <label>Sube archivos de audio o texto</label>
-                                    <Input 
-                                        key={inputKey} 
-                                        ref={inputFileref} 
-                                        accept=".txt, .3ga, .8svx, .aac, .ac3, .aif, .aiff, .alac, .amr, .ape, .au, .dss, .flac, .flv, .m4a, .m4b, .m4p, .m4r, .mp3, .mpga, .ogg, .oga, .mogg, .opus, .qcp, .tta, .voc, .wav, .wma, .wv" 
-                                        title="Escoge uno o mas archivos" 
-                                        placeholder="Sube tu archivo" 
-                                        type="file" 
-                                        name='file' 
-                                        multiple onChange={onHandleChangeFile}/>
-                                </Col>
-                               
                                 <Col md="1" sm="12" style={{marginTop: '5px'}}>
                                     <label> </label>
-                                    <Link style={{padding: '10px', borderRadius: '5px', backgroundColor: '#fff', width: '100%', display: 'flex', justifyContent:'center'}} to="javascript:void(0)" title="Iniciar analisis" href="#" onClick={start}>
-                                        <i style={{fontSize: '20px'}} className="fa-solid fa-play"></i>
-                                    </Link>
+                                    <Link style={{padding: '10px', borderRadius: '5px', backgroundColor: '#fff', width: '100%', display: 'flex', justifyContent:'center'}} to="javascript:void(0)" title="Subir archivos" href="#" onClick={toggleModalUploadFile}>
+                                        <i style={{fontSize: '20px'}} className="fa-solid fa-upload"></i>
+                                    </Link>                                   
                                 </Col>
-                                <Col md="12">
-                                    <hr></hr>
+                                <Col md="1" sm="12" style={{marginTop: '5px'}}>
+                                    <label> </label>
+                                    <Link style={{padding: '10px', borderRadius: '5px', backgroundColor: '#fff', width: '100%', display: 'flex', justifyContent:'center'}} to="javascript:void(0)" title="Subir archivos" href="#" onClick={toggleModalUploadFile}>
+                                        <i style={{fontSize: '20px'}} className="fa-solid fa-filter"></i>
+                                    </Link>                                   
                                 </Col>
-                            </Row>
+                            </Row>                            
                         </div>
 
                         <div className="table-responsive">
