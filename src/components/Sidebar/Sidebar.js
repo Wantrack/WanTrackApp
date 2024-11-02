@@ -121,7 +121,7 @@ function Sidebar(props) {
                 if (prop.invisible) return null;
                 if (prop.idText && !modules.includes(prop.idText)) return null;
                 if (prop.idSep && !modules.includes(prop.idSep)) return null;
-                return prop.type == 'separator' ? (<li><hr style={{width:'80%', backgroundColor: '#0AA3BB', height: '2px'}}></hr></li>) :  (
+                return prop.type == 'separator' ? (<li><hr className="separator"></hr></li>) :  (
                   <li
                     className={
                       activeRoute(prop.path) + (prop.pro ? " active-pro" : "")

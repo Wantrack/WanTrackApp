@@ -580,3 +580,11 @@ nav[aria-label="pagination"] {
   color: #FFF;
   background-color: #5e72e4;
 }
+
+.separator {
+  margin-top: 0rem;
+  margin-bottom: 0rem;
+  width: 80%;
+  background-color: rgb(10, 163, 187);
+  height: 2px;
+}

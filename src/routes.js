@@ -251,7 +251,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '118'
+    idSep: '3'
   },
   {
     path: "/companies",
@@ -263,7 +263,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '119'
+    idSep: '2'
   },   
   {
     path: "/user",
