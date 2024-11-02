@@ -37,7 +37,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '1'
+    idSep: '1'
   },
   {
     path: "/conversations",
@@ -47,6 +47,10 @@ var routes = [
     layout: "/admin",
     idText: '7'
   },
+  {  
+    type: 'separator',
+    idSep: '7'
+  },
   {
     path: "/steps",
     name: "Pasos",
@@ -55,13 +59,17 @@ var routes = [
     layout: "/admin",
     idText: '10'
   },
+  {  
+    type: 'separator',
+    idSep: '10'
+  },
   {
     path: "/chatsws",
     name: "Chat",
     icon: "tim-icons icon-chat-33",
     component: < Chats/>,
     layout: "/admin", 
-    idText: '15'
+    idSep: '15'
   },
   {  
     type: 'separator',
@@ -75,6 +83,10 @@ var routes = [
     layout: "/admin",
     idText: '8'
   },
+  {  
+    type: 'separator',
+    idSep: '8'
+  },
   {
     path: "/lists",
     name: "Campañas de WhastApp",
@@ -82,6 +94,10 @@ var routes = [
     component: <ScatterLists />,
     layout: "/admin",
     idText: '9'
+  },
+  {  
+    type: 'separator',
+    idSep: '9'
   },
   {
     path: "/leadsCenter",
@@ -93,7 +109,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '9'
+    idSep: '9'
   },
   {
     path: "/wstemplates",
@@ -103,6 +119,10 @@ var routes = [
     layout: "/admin",
     idText: '5'
   },
+  {  
+    type: 'separator',
+    idSep: '5'
+  },
   {
     path: "/wstemplates",
     name: "Plantillas de Email",
@@ -110,6 +130,10 @@ var routes = [
     component: <WsTemplates />,
     layout: "/admin",
     idText: '12'
+  },
+  {  
+    type: 'separator',
+    idSep: '12'
   }, 
   {
     path: "/wstemplates",
@@ -121,7 +145,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '13'
+    idSep: '13'
   },
   {
     path: "/fbsignup",
@@ -133,7 +157,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '14'
+    idSep: '14'
   },
   {
     path: "/summary",
@@ -145,7 +169,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '16'
+    idSep: '16'
   },
   {
     path: "/dashboardconversations",
@@ -155,6 +179,10 @@ var routes = [
     layout: "/admin",
     idText: '11'
   },
+  {  
+    type: 'separator',
+    idSep: '11'
+  },
   {
     path: "/feelings",
     name: "AI Sentimientos Banco de pruebas",
@@ -163,6 +191,10 @@ var routes = [
     layout: "/admin", 
     idText: '19'
   },
+  {  
+    type: 'separator',
+    idSep: '19'
+  },
   {
     path: "/calls",
     name: "Llamadas",
@@ -170,6 +202,10 @@ var routes = [
     component: < Calls/>,
     layout: "/admin", 
     idText: '11'
+  },
+  {  
+    type: 'separator',
+    idSep: '11'
   },
   {
     path: "/advisors",
@@ -181,7 +217,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '11'
+    idSep: '11'
   },{
     path: "/advisors",
     name: "Lead Automatization",
@@ -189,6 +225,10 @@ var routes = [
     component: < Advisors/>,
     layout: "/admin", 
     idText: '17'
+  },
+  {  
+    type: 'separator',
+    idSep: '17'
   },{
     path: "/advisors",
     name: "Asesores Lead",
@@ -199,7 +239,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idText: '18'
+    idSep: '18'
   },
   {
     path: "/users",
@@ -209,6 +249,10 @@ var routes = [
     layout: "/admin",
     idText: '3'
   },
+  {  
+    type: 'separator',
+    idText: '118'
+  },
   {
     path: "/companies",
     name: "Empresas",
@@ -216,6 +260,10 @@ var routes = [
     component: <Companies />,
     layout: "/admin",
     idText: '2'
+  },
+  {  
+    type: 'separator',
+    idText: '119'
   },   
   {
     path: "/user",

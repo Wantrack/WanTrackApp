@@ -119,8 +119,9 @@ function Sidebar(props) {
               {routes.map((prop, key) => {
                 if (prop.redirect) return null;
                 if (prop.invisible) return null;
-                if (!modules.includes(prop.idText)) return null;
-                return prop.type == 'separator' ? (<li><hr></hr></li>) :  (
+                if (prop.idText && !modules.includes(prop.idText)) return null;
+                if (prop.idSep && !modules.includes(prop.idSep)) return null;
+                return prop.type == 'separator' ? (<li><hr style={{width:'80%', backgroundColor: '#0AA3BB', height: '2px'}}></hr></li>) :  (
                   <li
                     className={
                       activeRoute(prop.path) + (prop.pro ? " active-pro" : "")
