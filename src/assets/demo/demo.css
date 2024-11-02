@@ -588,3 +588,34 @@ nav[aria-label="pagination"] {
   background-color: rgb(10, 163, 187);
   height: 2px;
 }
+
+.paddinleft0 {
+  padding-left: 0px;
+}
+
+.paddingright0 {
+  padding-right: 0px;
+}
+
+.paddinleftrifht0 {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.card-dashboard-nav {
+  box-shadow: none !important;
+  border-radius: 0px;
+  padding: 1rem 0rem;
+  max-height: 130px;
+}
+
+.card-dashboard-nav > div {
+  border-left: 2px solid rgb(10, 163, 187) !important;
+}
+
+.card-dashboard-nav-corner {
+  box-shadow: none !important;
+  border-radius: 10px 0px 0px 0px;
+  padding: 1rem 0rem;
+  max-height: 130px;
+}

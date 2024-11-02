@@ -35,7 +35,7 @@ function DashboardConversation(props) {
     "Eficiencia",
   ]);
   const [dataChart4, setDataChart4] = useState([0, 0, 0, 0, 0, 0]);
-  const [dataChart4Colorss, setDataChart4Colors] = useState(["#2B69F5B3"]);
+  const [dataChart4Colorss, setDataChart4Colors] = useState(["#0AA3BB90"]);
   const [dataChart5, setDataChart5] = useState([]);
   const [dataChart5Labels, setDataChart5Labels] = useState([]);
   const [callduration, setCallDuration] = useState(0);
@@ -76,7 +76,7 @@ function DashboardConversation(props) {
       {
         data: dataChart4,
         backgroundColor: dataChart4Colorss,
-        borderColor: "#2B69F5",
+        borderColor: "#0AA3BB90",
       },
     ],
   };
@@ -197,7 +197,7 @@ function DashboardConversation(props) {
           color: "#F5F5F5",
         },
         beginAtZero: true,
-        backdropColor: "#2B69F5",
+        backdropColor: "#0AA3BB",
         min: 0, // Set minimum tick value to 1
         max: 5, // Set maximum tick value to 5
         ticks: {
@@ -411,63 +411,63 @@ function DashboardConversation(props) {
   return (
     <div className="content">
       <Row>
-        <Col md="2" sm="12">
-          <Card>
+        <Col className="paddingright0" md="2" sm="12">
+          <Card className="card-dashboard-nav-corner">
             <CardHeader>
               <h5 className="card-category">Minutos Analizados</h5>
             </CardHeader>
             <CardBody>
-              <h2 style={{textAlign: 'right'}}>{clockformat(callduration || 0)}</h2>
+              <h2 style={{textAlign: 'right', fontWeight:'bold'}}>{clockformat(callduration || 0)}</h2>
             </CardBody>
           </Card>
         </Col>
-        <Col md="2" sm="12">
-          <Card>
+        <Col className="paddinleftrifht0" md="2" sm="12">
+          <Card className="card-dashboard-nav">
             <CardHeader>
               <h5 className="card-category title-card-dashboard">Llamadas Analizadas</h5>
             </CardHeader>
             <CardBody>
-              <h2 style={{textAlign: 'right'}}>{calltotal}</h2>
+              <h2 style={{textAlign: 'right', fontWeight:'bold'}}>{calltotal}</h2>
             </CardBody>
           </Card>
         </Col>
-        <Col md="2" sm="12">
-          <Card>
+        <Col className="paddinleftrifht0" md="2" sm="12">
+          <Card className="card-dashboard-nav">
             <CardHeader>
               <h5 className="card-category title-card-dashboard">Chats Analizados</h5>
             </CardHeader>
             <CardBody>
-              <h2 style={{textAlign: 'right'}}>{chatstotal}</h2>
+              <h2 style={{textAlign: 'right', fontWeight:'bold'}}>{chatstotal}</h2>
             </CardBody>
           </Card>
         </Col>       
-        <Col md="2" sm="12">
-          <Card>
+        <Col className="paddinleftrifht0" md="2" sm="12">
+          <Card className="card-dashboard-nav">
             <CardHeader>
               <h5 className="card-category title-card-dashboard">Emoción Principal</h5>
             </CardHeader>
             <CardBody>
-              <h2 style={{textAlign: 'right', color: mostSentimentColor}}>{mostSentiment}</h2>
+              <h2 style={{textAlign: 'right', fontWeight:'bold', color: mostSentimentColor}}>{mostSentiment}</h2>
             </CardBody>
           </Card>
         </Col>
-        <Col md="2" sm="12">
-          <Card>
+        <Col className="paddinleftrifht0" md="2" sm="12">
+          <Card className="card-dashboard-nav">
             <CardHeader>
               <h5 className="card-category title-card-dashboard">NPS Total</h5>
             </CardHeader>
             <CardBody>
-              <h2 style={{textAlign: 'right'}}>{npstotal}</h2>
+              <h2 style={{textAlign: 'right', fontWeight:'bold'}}>{npstotal}</h2>
             </CardBody>
           </Card>
         </Col>
-        <Col md="2" sm="12">
-          <Card>
+        <Col className="paddinleft0" md="2" sm="12">
+          <Card className="card-dashboard-nav">
             <CardHeader>
               <h5 className="card-category title-card-dashboard">Porcentaje de satisfacción</h5>
             </CardHeader>
             <CardBody>
-              <h2 style={{textAlign: 'right', color: satisfactionColor}}>{satisfaction}%</h2>
+              <h2 style={{textAlign: 'right', fontWeight:'bold', color: satisfactionColor}}>{satisfaction}%</h2>
             </CardBody>
           </Card>
         </Col>
