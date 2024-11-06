@@ -137,7 +137,7 @@ function Chat(props) {
     loadChats(phone, phoneNumberId);
 
     const socket = new SocketService();
-    socket.getSocket().on('chatrefresh', chatrefresh);   
+    socket.getSocket().on('chatrefresh', chatrefresh);      
 
     return () => {
       console.log('El componente Chat se desmontó');
@@ -150,7 +150,15 @@ function Chat(props) {
     const phone = localStorage.getItem("currentPhone");
     const phoneNumberId = localStorage.getItem("currentphoneNumberID");
     loadChats(phone, phoneNumberId);
-  }  
+  } 
+  
+  const showMeanMessageType = (messageType, message) => {
+    if(messageType == 'image') {
+      return <a target="link" href={`${constants.apiurl}/api/aws/getfileImage/imagesws2/${message}`}>Descarga Imagen</a>
+    } else {
+      return <p>{message}</p>
+    }
+  }
 
   return (
     <div className="content">
@@ -185,7 +193,7 @@ function Chat(props) {
               className={`${chat.type == 0 ? "message-left" : "message-right"}`}
             >
               <div>
-                <p>{chat.message}</p>
+                {showMeanMessageType(chat.typeMessage, chat.message)}
               </div>
               <p className="type-message">Tipo: {chat.typeMessage}</p>
             </div>
