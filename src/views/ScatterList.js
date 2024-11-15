@@ -18,7 +18,10 @@ import {
   ModalBody,
   ModalHeader,
   ModalFooter,
-  Label
+  Label,
+  Pagination,
+  PaginationItem,
+  PaginationLink
 } from "reactstrap";
 
 import { axios } from '../config/https';
@@ -42,10 +45,14 @@ function ScatterList() {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalVisibleDocument, setModalVisibleDocuemnt] = useState(false);
   const [modalParameterVisible, setModalParameterVisible] = useState(false);
+  const [modalCalendarVisible, setModalCalendarVisible] = useState(false);
   const [currentSL, setCurrentSL] = useState(0);
   const [token, setToken] = useState('');
   const [file, setFile] = useState(undefined);
   const [checkAll, setCheckAll] = useState(true);
+  const [maxmessaelist, setMaxmessaelist] = useState(0);
+  const [startMessageList, setStartMessageList] = useState(0);
+  const [amountMessageList, setAmountMessageList] = useState([]);
 
   const notificationAlertRef = useRef(null);
   const inputFileref = useRef();
@@ -132,6 +139,16 @@ function ScatterList() {
             jsonToPObject(_scatterList.data);
         }
 
+        try {
+          const _count =  await axios.get(`${constants.apiurl}/api/getCountByScatterList/${currentScatterListID}`);
+        if(_count && _count.data) {
+          const length = Math.ceil(_count.data.count / 25);
+          setMaxmessaelist(length)
+          const array = Array.from({ length }, (_, index) => index + 1);
+          setAmountMessageList(array)
+        }
+        } catch (error) {}        
+
         const _companies = await axios.get(`${constants.apiurl}/api/companies`);
         setCompanies([{idcompany: -1, name: 'Sin Empresa'}, ..._companies.data]);
 
@@ -141,10 +158,7 @@ function ScatterList() {
         const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccountsbyCompany/${_scatterList.data.idcompnay || _companies.data[0].idcompany}`);
         setWsAccounts([{idwhatsapp_accounts: -1, displayname: 'Sin Cuenta'}, ..._wsaccounts.data]);
        
-        const _scatterListDetails =  await axios.get(`${constants.apiurl}/api/scatterlistdetailbyScatterlist/${currentScatterListID}`);
-        if(_scatterListDetails.data) {
-            setScatterListDetails(_scatterListDetails.data);
-        } 
+        await getScatterlistdetailbyScatterlist();
         setLoaderActive(false)
     }
 
@@ -160,8 +174,13 @@ function ScatterList() {
     }   
   }
 
+  async function openModalCalendar(event, close = true) {
+    event.preventDefault();
+    setModalCalendarVisible(!modalCalendarVisible);
+  }
+
   function validateContact(contactInfo) {
-    const regexPhone = /^([+]\d{2})?\d{10}/;
+    const regexPhone = /^([+]\d{2})?/;
     return (contactInfo.phone && regexPhone.test(contactInfo.phone) && contactInfo.name);
   }
 
@@ -170,10 +189,7 @@ function ScatterList() {
       setLoaderActive(true)
       const currentScatterListID = localStorage.getItem('currentScatterListID');
       await axios.post(`${constants.apiurl}/api/scatterlistdetail`, { ...contact, idscatterlist: currentScatterListID });
-      const _scatterListDetails =  await axios.get(`${constants.apiurl}/api/scatterlistdetailbyScatterlist/${currentScatterListID}`);
-      if(_scatterListDetails.data) {
-        setScatterListDetails(_scatterListDetails.data);
-      }  
+      await getScatterlistdetailbyScatterlist(); 
       setContact({});
       toggleModal();
       setLoaderActive(false)
@@ -208,6 +224,15 @@ function ScatterList() {
     notificationAlertRef.current.notificationAlert(options);
   }
 
+  async function getScatterlistdetailbyScatterlist(pstart = 0) {
+    setStartMessageList(pstart > 0 ? pstart : 0)
+    const currentScatterListID = localStorage.getItem('currentScatterListID');
+    const _scatterListDetails =  await axios.get(`${constants.apiurl}/api/scatterlistdetailbyScatterlist/${currentScatterListID}?pstart=${pstart}`);
+    if(_scatterListDetails.data) {
+      setScatterListDetails(_scatterListDetails.data);
+    }
+  }
+
   async function sendMessage(event) {
     event.preventDefault();
     if (window.confirm('¿Estas seguro que deseas enviar la difusión con esta lista?')) {
@@ -215,11 +240,7 @@ function ScatterList() {
         await axios.post(`${constants.apiurl}/api/sendscatterlist`, {id: scatterList.idscatterlist}).then(async (result) => {
             sendNotification('Lista enviada');
             setLoaderActive(true);
-            const currentScatterListID = localStorage.getItem('currentScatterListID');
-            const _scatterListDetails =  await axios.get(`${constants.apiurl}/api/scatterlistdetailbyScatterlist/${currentScatterListID}`);
-            if(_scatterListDetails.data) {
-              setScatterListDetails(_scatterListDetails.data);
-            }
+            await getScatterlistdetailbyScatterlist();
             setLoaderActive(false);
         });        
     } 
@@ -377,14 +398,18 @@ function ScatterList() {
       for (let index = 0; index < amount; index++) {
         const element = importContacts[index];
         if(element && element.length > 1 && element[0] && element[1]) {
-          await axios.post(`${constants.apiurl}/api/scatterlistdetail`, { ...{ name: element[0],  phone:fixNumber(element[1])}, idscatterlist: currentScatterListID });
+          await axios.post(`${constants.apiurl}/api/scatterlistdetail`, { 
+            ...{ 
+              name: element[0],  
+              phone:fixNumber(element[1]),
+              extra1: element.length > 2 ? element[2]: '',
+              extra2: element.length > 3 ? element[3]: ''
+            }, 
+              idscatterlist: currentScatterListID });
         }  
         setLoaderText(`Importado contacto #${index+1} de ${amount}`);
       }      
-      const _scatterListDetails = await axios.get(`${constants.apiurl}/api/scatterlistdetailbyScatterlist/${currentScatterListID}`);
-      if(_scatterListDetails.data) {
-        setScatterListDetails(_scatterListDetails.data);
-      }
+      await getScatterlistdetailbyScatterlist();
       setLoaderActive(false)
     }
     setModalVisibleDocuemnt(false);
@@ -405,6 +430,36 @@ function ScatterList() {
         <div className="react-notification-alert-container">
           <NotificationAlert ref={notificationAlertRef} />
         </div>
+        <Modal isOpen={modalCalendarVisible} toggle={openModalCalendar}>
+          <ModalHeader>
+            <h3 style={{color: '#000', marginBottom: '0px'}}>Programar envio</h3>
+          </ModalHeader>
+          <ModalBody>            
+          <FormGroup>
+            <Label for="exampleDate">
+              Date
+            </Label>
+            <Input
+              className=''
+              id="exampleDate"
+              name="date"
+              placeholder="date placeholder"
+              type="date"
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label for="exampleTime">
+              Time
+            </Label>
+            <Input
+              id="exampleTime"
+              name="time"
+              placeholder="time placeholder"
+              type="time"
+            />
+           </FormGroup>
+          </ModalBody>
+        </Modal>
         <Modal isOpen={modalVisibleDocument} toggle={toggleModalDocument}>
           <ModalHeader>
             <h2 style={{color: '#000', marginBottom: '0px'}}>Documento</h2>
@@ -622,7 +677,7 @@ function ScatterList() {
                                                 </Label>
                                               </FormGroup>
                                             </td>
-                                            <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{index + 1}</Link></td>
+                                            <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{(index + 1) + startMessageList}</Link></td>
                                             <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.name}</Link></td>
                                             <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.phone}</Link></td>
                                             <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.extra1}</Link></td>
@@ -640,17 +695,43 @@ function ScatterList() {
                 </Form>
               </CardBody>
               <CardFooter  style={{display: 'flex', justifyContent: 'space-between'}} >
-                {/* <Button title="Guardar y cerrar" className="btn-fill" color="primary" type="submit">
-                  
-                </Button> */}
-
-                {/* <Button title="Enviar mensaje" className="btn-fill" color="primary" type="submit" onClick={sendMessage}>
-                  Enviar mensaje 
-                </Button> */}
+              <div style={{width:'90%', overflowX:'auto', display: 'flex', justifyContent: 'center'}}>
+                <Pagination>
+                    <PaginationItem>
+                        <PaginationLink
+                        onClick={() => {getScatterlistdetailbyScatterlist(0)}}
+                        first
+                        href="javascript:void(0)"
+                        />
+                    </PaginationItem>
+                    {
+                        amountMessageList.map((item, index) => 
+                            <PaginationItem  key={index}>
+                                <PaginationLink 
+                                href="javascript:void(0)"
+                                onClick={() => {getScatterlistdetailbyScatterlist(index * 25)}}
+                                >
+                                {index + 1}
+                                </PaginationLink>
+                        </PaginationItem> 
+                        )
+                    }                    
+                    <PaginationItem>
+                        <PaginationLink
+                        onClick={() => {getScatterlistdetailbyScatterlist(maxmessaelist)}}
+                        href="javascript:void(0)"
+                        last
+                        />
+                    </PaginationItem>
+                </Pagination>
+                </div>       
               </CardFooter>
             </Card>
           </Col>
         </Row>
+        <Link to="#" title="Programar envio" className="float-4" onClick={openModalCalendar}>
+            <i className="fa-solid fa-calendar-plus my-float"></i>
+          </Link>      
         <Link target="link" to={`${constants.apiurl}/api/downloadReportExcel/${token}/${currentSL}`} title="Descargar reporte" className="float-3">
           <i className="fa-solid fa-file-arrow-down my-float"></i>
         </Link>

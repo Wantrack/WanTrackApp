@@ -154,7 +154,9 @@ function Chat(props) {
   
   const showMeanMessageType = (messageType, message) => {
     if(messageType == 'image') {
-      return <a target="link" href={`${constants.apiurl}/api/aws/getfileImage/imagesws2/${message}`}>Descarga Imagen</a>
+      return <div style={{display: 'flex', flexDirection: 'column'}}>
+          <a target="link" href={`${constants.apiurl}/api/aws/getfileImage/imagesws2/${message}`}>Descarga Imagen</a>
+        </div>
     } else {
       return <p>{message}</p>
     }

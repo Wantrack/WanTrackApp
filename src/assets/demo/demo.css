@@ -188,6 +188,19 @@
   flex-direction: column;
 }
 
+.float-4 {
+	position:fixed;
+	width:60px;
+	height:60px;
+	bottom:280px;
+	right:40px;
+	background-color:#e14eca;
+	color:#FFF;
+	border-radius:50px;
+	text-align:center;
+	box-shadow: 2px 2px 3px #999;
+}
+
 .float-3 {
 	position:fixed;
 	width:60px;
@@ -236,11 +249,19 @@
 	color:#F5F5F5;
 }
 
+.float-4.add-image {
+	color:#F5F5F5;
+}
+
 .float:focus {
   color:#F5F5F5;
 }
 
 .float-3:hover {
+	color:#F5F5F5;
+}
+
+.float-4:hover {
 	color:#F5F5F5;
 }
 
