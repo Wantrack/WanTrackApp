@@ -17,7 +17,6 @@ import {
 import { axios } from '../config/https';
 import constants from '../util/constans';
 import { getUserInfo } from 'util/localStorageInfo';
-import { func } from 'prop-types';
 
 function Company() {
   const navigate = useNavigate ();
