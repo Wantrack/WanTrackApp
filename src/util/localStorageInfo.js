@@ -10,4 +10,13 @@ function getUserInfo() {
     return undefined
 }
 
-export { getUserInfo }
+function getCompanyId() {
+    const _userinfoEncoded = localStorage.getItem(constants.userinfo);
+    if(_userinfoEncoded) {
+        const _userinfo = JSON.parse(decode(_userinfoEncoded));
+        return _userinfo.idCompany;
+    }
+    return undefined
+}
+
+export { getUserInfo, getCompanyId }

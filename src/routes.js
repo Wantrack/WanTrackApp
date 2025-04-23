@@ -25,6 +25,12 @@ import Calls from "views/Calls";
 import LeadsCenter from "views/LeadsCenter";
 import LeadViewer from "views/LeadViewer";
 import WhatsAppAccount from "views/WhatsAppAccount";
+import Automatizations from "views/Automatizations";
+import Automatization from "views/Automatization,";
+import EmailTemplates from "views/EmailTemplates";
+import EmailTemplate from "views/EmailTemplate";
+import DocumentsCheck from "views/DocumentsCheck";
+import DocumentCheck from "views/DocumentCheck";
 
 var routes = [
   {
@@ -78,7 +84,7 @@ var routes = [
   {
     path: "/webhooks",
     name: "WebHooks",
-    icon: "tim-icons icon-cloud-upload-94",
+    icon: "fa-solid fa-network-wired",
     component: <WebHooks />,
     layout: "/admin",
     idText: '8'
@@ -90,7 +96,7 @@ var routes = [
   {
     path: "/lists",
     name: "Campañas de WhastApp",
-    icon: "tim-icons icon-notes",
+    icon: "fa-brands fa-whatsapp",
     component: <ScatterLists />,
     layout: "/admin",
     idText: '9'
@@ -100,10 +106,34 @@ var routes = [
     idSep: '9'
   },
   {
+    path: "/emailcampaing",
+    name: "Campañas de Email",
+    icon: "fa-solid fa-envelopes-bulk",
+    component: <Companies />,
+    layout: "/admin",
+    idText: '23'
+  },
+  {  
+    type: 'separator',
+    idSep: '23'
+  }, 
+  {
     path: "/leadsCenter",
     name: "Leads Center",
-    icon: "tim-icons icon-single-copy-04",
+    icon: "fa-solid fa-users-line",
     component: <LeadsCenter />,
+    layout: "/admin",
+    idText: '9'
+  },
+  {  
+    type: 'separator',
+    idSep: '9'
+  },
+  {
+    path: "/automatizations",
+    name: "Automatizacion",
+    icon: "fa-solid fa-robot",
+    component: <Automatizations />,
     layout: "/admin",
     idText: '9'
   },
@@ -114,7 +144,7 @@ var routes = [
   {
     path: "/wstemplates",
     name: "Plantillas de Whatsapp",
-    icon: "tim-icons icon-puzzle-10",
+    icon: "fa-brands fa-square-whatsapp",
     component: <WsTemplates />,
     layout: "/admin",
     idText: '5'
@@ -124,12 +154,12 @@ var routes = [
     idSep: '5'
   },
   {
-    path: "/wstemplates",
+    path: "/emailtemplates",
     name: "Plantillas de Email",
-    icon: "tim-icons icon-email-85",
-    component: <WsTemplates />,
+    icon: "fa-solid fa-square-envelope",
+    component: <EmailTemplates />,
     layout: "/admin",
-    idText: '12'
+    idText: '12'    
   },
   {  
     type: 'separator',
@@ -141,16 +171,18 @@ var routes = [
     icon: "tim-icons icon-mobile",
     component: <WsTemplates />,
     layout: "/admin",
-    idText: '13'
+    idText: '13',
+    invisible: true
   },
   {  
     type: 'separator',
-    idSep: '13'
+    idSep: '13',
+    invisible: true
   },
   {
     path: "/fbsignup",
     name: "Registrar cliente Meta",
-    icon: "tim-icons icon-badge",
+    icon: "fa-brands fa-meta",
     component: < FacebookSignUp/>,
     layout: "/admin", 
     idText: '14'
@@ -264,6 +296,18 @@ var routes = [
   {  
     type: 'separator',
     idSep: '2'
+  },
+  {
+    path: "/documentsCheck",
+    name: "Verifi. Documentos",
+    icon: "fa-solid fa-file-circle-check",
+    component: <DocumentsCheck />,
+    layout: "/admin",
+    idText: '21'
+  },
+  {  
+    type: 'separator',
+    idSep: '21'
   },   
   {
     path: "/user",
@@ -297,6 +341,13 @@ var routes = [
     path: "/wstemplate",
     name: "Plantilla Whastapp",
     component: <WsTemplate />,
+    layout: "/admin",
+    invisible: true
+  },
+  {
+    path: "/emailtemplate",
+    name: "Plantilla Email",
+    component: <EmailTemplate />,
     layout: "/admin",
     invisible: true
   },
@@ -341,6 +392,22 @@ var routes = [
     name: "WhatsAppAccount",
     icon: "tim-icons icon-single-copy-04",
     component: <WhatsAppAccount />,
+    layout: "/admin",
+    invisible: true
+  },
+  {
+    path: "/automatization",
+    name: "Automatizacion",
+    icon: "tim-icons icon-single-copy-04",
+    component: <Automatization />,
+    layout: "/admin",
+    invisible: true
+  },
+  {
+    path: "/documentCheck",
+    name: "Document Check",
+    icon: "tim-icons icon-single-copy-04",
+    component: <DocumentCheck />,
     layout: "/admin",
     invisible: true
   }

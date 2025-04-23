@@ -21,7 +21,8 @@ import {
     FormGroup,
     ListGroup,
     ListGroupItem,
-    Badge
+    Badge,
+    ButtonGroup
   } from "reactstrap";
 import { clockformat } from 'util/time';
 
@@ -40,6 +41,9 @@ function Calls (props) {
     const [modalVisible, setModalVisible] = React.useState(false);
     const [modalVisibleT, setModalVisibleT] = React.useState(false);
     const [modalVisibleUploadFile, setModalVisibleUploadFile] = React.useState(false);
+    const [modalVisibleFilter, setModalVisibleFilter] = React.useState(false);
+
+    const [filterSaludo, setFilterSaludo] = useState([]);
 
     const notificationAlertRef = useRef(null);
     const inputFileref = useRef();
@@ -204,6 +208,10 @@ function Calls (props) {
     const toggleModalUploadFile = () => {
         setModalVisibleUploadFile(!modalVisibleUploadFile);
     }
+
+    const toggleModalFilter = () => {
+        setModalVisibleFilter(!modalVisibleFilter);
+    }
     
     const cafilteredCalls = Array.isArray(calls) ? calls.filter(call => String(call.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : [];
 
@@ -236,6 +244,16 @@ function Calls (props) {
             }           
         }
     }
+
+    const onCheckboxBtnSaludoClick = (selected) => {
+        const index = filterSaludo.indexOf(selected);
+        if (index < 0) {
+            filterSaludo.push(selected);
+        } else {
+            filterSaludo.splice(index, 1);
+        }
+        setFilterSaludo([...filterSaludo]);
+      };
     
     return <div className="content">
                 <div className="react-notification-alert-container">
@@ -313,6 +331,108 @@ function Calls (props) {
                         </Row>                   
                     </ModalBody>
                 </Modal>
+
+                <Modal isOpen={modalVisibleFilter} toggle={toggleModalFilter}>
+                    <ModalHeader>
+                        <h3 style={{color: '#000', marginBottom: '0px'}}>Filtros</h3>
+                    </ModalHeader>
+                    <ModalBody>
+                        <Row>
+                            <Col md="12" sm="12" style={{marginTop: '5px'}}>
+                                <label>Filtra por agente</label>
+                                <select title="Escoge un agente" className="form-control color_black" name="idAdviser" value={call.idAdviser} onChange={onHandleChange}>
+                                    {
+                                        advisors?.map((advisor, index) => 
+                                        <option key={index} value={advisor.idadviser}>{advisor.name} {advisor.lastName}</option>
+                                    )} 
+                                </select>
+                            </Col>
+                            <Col md="12" sm="12" style={{marginTop: '5px'}}>
+                                <label>Filtra por idioma</label>
+                                <select title="Escoge un idioma para los archivos" className="form-control color_black" name="languague" onChange={onHandleChange}>
+                                    <option value="1">Español</option>
+                                    <option value="2">English</option>
+                                    <option value="3">Français</option>
+                                </select>
+                            </Col>
+                            <Col md="12" sm="12" style={{marginTop: '5px'}}>                               
+                                <Row>
+                                    <Col md="6">
+                                        <label>Desde</label>
+                                        <Input
+                                        id="exampleDate"
+                                        name="date"
+                                        placeholder="Fecha Inicial"
+                                        type="date"
+                                        />
+                                    </Col>
+                                    <Col md="6">
+                                        <label>Hasta</label>
+                                        <Input
+                                        id="exampleDate"
+                                        name="date"
+                                        placeholder="Fecha Inicial"
+                                        type="date"
+                                        />
+                                    </Col>
+                                </Row>
+                            </Col>   
+                            <Col md="12" style={{maxHeight:'300px', overflowY: 'auto'}}>                                
+                                <label>Areas de Oportunidad</label>
+                                <Row>
+                                    <Col md="12">
+                                        <label>Saludo</label>
+                                        <ButtonGroup style={{marginLeft: '10px'}}>
+                                            <Button
+                                            className='button-filter'
+                                            color="primary"
+                                            outline
+                                            onClick={() => onCheckboxBtnSaludoClick(1)}
+                                            active={filterSaludo.includes(1)}
+                                            >
+                                            <i style={{color:'#2dce89'}} className="fa-solid fa-circle-check"></i>
+                                            </Button>
+                                            <Button
+                                            className='button-filter'
+                                            color="primary"
+                                            outline
+                                            onClick={() => onCheckboxBtnSaludoClick(2)}
+                                            active={filterSaludo.includes(2)}
+                                            >
+                                            <i style={{color:'#ff8d72'}}className="fa-solid fa-triangle-exclamation"></i>
+                                            </Button>
+                                            <Button
+                                            className='button-filter'
+                                            color="primary"
+                                            outline
+                                            onClick={() => onCheckboxBtnSaludoClick(3)}
+                                            active={filterSaludo.includes(3)}
+                                            >
+                                            <i style={{color:'#f5365c'}} className="fa-solid fa-xmark"></i>
+                                            </Button>
+                                        </ButtonGroup>
+                                    </Col>
+                                </Row>
+                            </Col>
+                            <Col md="12">
+                                <hr></hr>
+                            </Col>                              
+                        </Row>     
+                        <Row style={{display:'flex', justifyContent: 'space-between'}}>
+                            <Col md="6" sm="12" style={{marginTop: '5px'}}>
+                                <Button onClick={start} style={{marginTop: '20px'}} className="btn btn-primary width100p">
+                                    Filtrar
+                                </Button>
+                            </Col>
+                            <Col md="6" sm="12" style={{marginTop: '5px'}}>
+                                <Button onClick={toggleModalFilter} style={{marginTop: '20px'}} className="btn btn-primary width100p">
+                                    Cerrar
+                                </Button>
+                            </Col>
+                        </Row>                   
+                    </ModalBody>
+                </Modal>
+
                 <Modal modalClassName='modal-charts' isOpen={modalVisibleT} toggle={toggleModalTranscription} fullscreen>
                     <ModalHeader>
                         <h2 style={{color: '#000', marginBottom: '0px'}}>Transcripcion</h2>
@@ -369,7 +489,7 @@ function Calls (props) {
                                 </Col>
                                 <Col md="1" sm="12" style={{marginTop: '5px'}}>
                                     <label> </label>
-                                    <Link style={{padding: '10px', borderRadius: '5px', backgroundColor: '#fff', width: '100%', display: 'flex', justifyContent:'center'}} to="javascript:void(0)" title="Subir archivos" href="#" onClick={toggleModalUploadFile}>
+                                    <Link style={{padding: '10px', borderRadius: '5px', backgroundColor: '#fff', width: '100%', display: 'flex', justifyContent:'center'}} to="javascript:void(0)" title="Subir archivos" href="#" onClick={toggleModalFilter}>
                                         <i style={{fontSize: '20px'}} className="fa-solid fa-filter"></i>
                                     </Link>                                   
                                 </Col>

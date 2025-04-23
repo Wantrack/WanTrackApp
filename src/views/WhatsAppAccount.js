@@ -17,8 +17,6 @@ import {
   Label
 } from "reactstrap";
 
-import * as XLSX from 'xlsx';
-
 import { axios } from '../config/https';
 import constants from '../util/constans';
 import { getUserInfo } from 'util/localStorageInfo';

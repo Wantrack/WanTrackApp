@@ -34,7 +34,7 @@ const disabledLoginButton = !formData['email'] || !formData['password']
         localStorage.setItem(constants.userinfo, encode(JSON.stringify(userinfo.data)));
         navigate('/admin');
       }
-    }).catch(error => {
+    }).catch(error => {                                                                       
       sendNotification('No se pudo autenticar al usuario, Usuario o Contraseña Incorrectos', 'danger')
     });
     setFormData({

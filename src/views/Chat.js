@@ -176,7 +176,8 @@ function Chat(props) {
               <span style={{fontSize: '11px'}}>{phone}</span>
             </div>  
             <div>
-              <Link to="javascript:void(0)" onClick={()=>{toggleChat()}}>
+              <Link style={{marginLeft: '35px'}} to="javascript:void(0)" onClick={()=>{toggleChat()}}>
+                <span  className={startchat ? 'gray' : ''}>{startchat ? 'Desactivar respuesta humana' : 'Activar respuesta humana'}</span> <br></br>
                 <i style={{fontSize:'2rem', marginLeft:'2rem'}} className={startchat ? 'fa-solid fa-toggle-on' : 'fa-solid fa-toggle-off gray'} title={startchat ? 'Chat con asesor activo' : 'Chat con asesor inactivo'}></i>
               </Link>              
             </div>          
