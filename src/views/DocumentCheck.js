@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import NotificationAlert from "react-notification-alert";
 import { useNavigate, Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
+import { getCompanyId } from 'util/localStorageInfo';
 import {
   Button,
   Card,
@@ -40,6 +41,7 @@ function DocumentCheck() {
    const [modalVisibleRules, setModalVisibleRules] = useState(false);
    const [verificationResult, setVerificationResult] = useState({});
    const [modalVisibleDocument, setModalVisibleDocuemnt] = useState(false);
+   const [companyId, setCompanyId] = useState(undefined);
 
   const notificationAlertRef = useRef(null);
   const inputFileref = useRef();
@@ -67,6 +69,8 @@ function DocumentCheck() {
         const _document =  await axios.get(`${constants.apiurl}/api/verificators/${currentVerificatorID}`);
         if(_document && _document.data) {
             setDocument(_document.data);
+
+            setCompanyId(getCompanyId());
 
             const _rules = await axios.get(`${constants.apiurl}/api/rulesbyVerificator/${currentVerificatorID}`);
             setRules(_rules.data);
@@ -339,15 +343,18 @@ function DocumentCheck() {
                             </FormGroup>
                         </Col>
                         <Col md="6">
+                          {
+                            !companyId && 
                             <FormGroup>
                                 <label>Empresa</label>
-                                <select className="form-control" name="idcompnay" value={document.idcompany} onChange={cmbCompanyOnChange}>
+                                <select className="form-control" name="idcompany" value={document.idcompany} onChange={cmbCompanyOnChange}>
                                 {
                                     companies?.map((company, index) => 
                                     <option key={index} value={company.idcompany}>{company.name}</option>
                                 )} 
                                 </select>
                             </FormGroup>
+                          } 
                         </Col>
                   </Row>
 

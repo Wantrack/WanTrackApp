@@ -46,21 +46,25 @@ function Dashboard(props) {
   const [messageReceive, setMessageReceive] = useState(0);
   const [completeReportScatterlist, setCompleteReportScatterlist] = useState([]);
 
-  useEffect(() => {
-    let idCompany = undefined;
-    const _userinfoEncoded = localStorage.getItem(constants.userinfo);
-    if(_userinfoEncoded) {
-    const _userinfo = JSON.parse(decode(_userinfoEncoded));
+    useEffect(() => {
+      let idCompany = undefined;
+      const _userinfoEncoded = localStorage.getItem(constants.userinfo);
+      if(_userinfoEncoded) {
+      const _userinfo = JSON.parse(decode(_userinfoEncoded));
       if(_userinfo.idCompany) {
         idCompany =_userinfo.idCompany
       }
 
-      const _modules = _userinfo.modules.replaceAll(' ', '').split(',');          
-      if(_modules.find(f => f == '1')) {
-      } else if(_modules.find(f => f == '11')) {
-        navigate('/admin/dashboardconversations');
-      } else {}
-    }
+    //   try {
+    //     const _modules = _userinfo.modules.replaceAll(' ', '').split(',');          
+    //     if(_modules.find(f => f == '1')) {
+    //     } else if(_modules.find(f => f == '11')) {
+    //       navigate('/admin/dashboardconversations');
+    //     } else if(_modules.length == 1 && _modules[0] == '21') {
+    //       navigate('/admin/documentsCheck');
+    //     } else {}
+    //   } catch (error) {}
+      }
 
     axios.get(`${constants.apiurl}/api/MessageSendChart${idCompany ? `?idcompany=${idCompany}` : ''}`).then(result => {  
       if(result.data && result.data.data && result.data.data.length > 0) {

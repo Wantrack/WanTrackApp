@@ -24,7 +24,7 @@ function Admin(props) {
     document.documentElement.className.indexOf("nav-open") !== -1
   );
   const [pathMain, setPathMain] = React.useState(
-    '/admin/dashboard'
+    ''
   );
   React.useEffect(() => {    
     const token = localStorage.getItem(constants.token);
@@ -35,6 +35,27 @@ function Admin(props) {
       });
     }else {
       navigate('/login');
+    }
+
+    const _userinfoEncoded = localStorage.getItem(constants.userinfo);
+    if (_userinfoEncoded) {
+      try {
+        const _userinfo = JSON.parse(decode(_userinfoEncoded));
+
+        const _modules = _userinfo.modules?.replaceAll(' ', '').split(',') || [];
+        if (_modules.length === 1 && _modules[0] === '21') {
+          setPathMain('/admin/documentsCheck');
+        } else if (_modules.includes('11')) {
+          setPathMain('/admin/dashboardconversations');
+        }
+        if (_modules.includes('1')) {
+          setPathMain('/admin/dashboard');
+        } else {
+
+        }
+      } catch (error) {
+        console.error('Error parsing user info:', error);
+      }
     }
   });
   React.useEffect(() => {
