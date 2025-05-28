@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
-import { decode } from "../util/base64";
 import { axios } from '../config/https';
 import constants from '../util/constans';
 import {

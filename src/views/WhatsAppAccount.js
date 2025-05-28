@@ -90,7 +90,7 @@ function WhatsAppAccount() {
 
   function renderButton() {
     const userInfo = getUserInfo();
-    if(userInfo.idroles == 1) {
+    if(userInfo.idroles === 1) {
       return  <Button className="btn-fill" color="primary" type="submit" onClick={saveChanges}>
       Guardar
     </Button>
@@ -101,7 +101,7 @@ function WhatsAppAccount() {
 
   function renderTokenInput() {
     const userInfo = getUserInfo();
-    if(userInfo.idroles == 1) {
+    if(userInfo.idroles === 1) {
       return  <Col md="12">
       <FormGroup>
         <label htmlFor="exampleInputEmail1">
@@ -117,7 +117,7 @@ function WhatsAppAccount() {
 
   function renderInstructions() {
     const userInfo = getUserInfo();
-    if(userInfo.idroles == 1) {
+    if(userInfo.idroles === 1) {
       return   <Col md="12">
       <FormGroup>
         <label>Instrucciones</label>
@@ -158,7 +158,7 @@ function WhatsAppAccount() {
     if(file) {
       const extension = await getExtension(file.name);
       let result = '';
-      if(extension == 'pdf') {
+      if(extension === 'pdf') {
         result = await analizePdf(file);
         console.log(result);
       } else {
@@ -305,11 +305,11 @@ function WhatsAppAccount() {
                             {documents?.map((document, index) => 
                                 <tr key={index}>
                                     <td>    
-                                      <Link to="javascript:void(0)">{index + 1}</Link>                     
+                                      <Link to="#">{index + 1}</Link>                     
                                     </td>
-                                    <td> <Link to="javascript:void(0)">{document.name}</Link></td>
-                                    <td> <Link to="javascript:void(0)">{document.description}</Link></td>
-                                    <td> <Link to="javascript:void(0)">{document.file}</Link></td>
+                                    <td> <Link to="#">{document.name}</Link></td>
+                                    <td> <Link to="#">{document.description}</Link></td>
+                                    <td> <Link to="#">{document.file}</Link></td>
                                 </tr>
                             )}                   
                         </tbody>          

@@ -18,10 +18,8 @@ import {
     Modal,
     ModalBody,
     ModalHeader,
-    ModalFooter,
     Label
   } from "reactstrap";
-import { func } from 'prop-types';
 
 function WebHookMessage (props) {
     const navigate = useNavigate ();
@@ -37,6 +35,30 @@ function WebHookMessage (props) {
     const [isaValidJSON, setIsaValidJSON] = React.useState(false);
 
     const notificationAlertRef = useRef(null);
+
+    const isValidJson = (showNotification = false, overridewebHook = false, webHookData = null) => {
+      const _webhook = overridewebHook ? webHookData : webHook;
+
+      try {
+        if(_webhook.jsonschema) {
+          JSON.parse(_webhook.jsonschema);           
+        }else {
+          if(showNotification) {
+            sendNotification('El JSON esta vacio', 'danger');
+          }
+          console.error('here')
+          return false;
+        }
+        return true;
+      } catch (e) {
+        console.error(e)
+        if(showNotification) {
+          sendNotification('El JSON es Invalido', 'danger');
+        }
+        console.error('here')
+        return false;
+      }
+    }
 
     useEffect(() => { 
         async function load() {
@@ -137,7 +159,7 @@ function WebHookMessage (props) {
     const cmbCompanyOnChange = async (e) => {       
         onHandleChange(e);
 
-        const { name, value } = e.target;
+        const { value } = e.target;
 
         const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccountsbyCompany/${value}`);
         setWsAccounts([{idwhatsapp_accounts: -1, displayname: 'Sin Cuenta'}, ..._wsaccounts.data]);
@@ -188,31 +210,7 @@ function WebHookMessage (props) {
           document.querySelector('#jsonschema').value = JsonFormated;
         }   
       } catch (error) {} 
-    }
-
-    function isValidJson(showNotification = false, overridewebHook = false, webHookData = null) {
-      const _webhook = overridewebHook ? webHookData : webHook;
-
-      try {
-        if(_webhook.jsonschema) {
-          JSON.parse(_webhook.jsonschema);           
-        }else {
-          if(showNotification) {
-            sendNotification('El JSON esta vacio', 'danger');
-          }
-          console.error('here')
-          return false;
-        }
-        return true;
-      } catch (e) {
-        console.error(e)
-        if(showNotification) {
-          sendNotification('El JSON es Invalido', 'danger');
-        }
-        console.error('here')
-        return false;
-      }
-    }
+    }    
 
     const toggleModal = (index) => {
       setSelectedRuleIndex(index);

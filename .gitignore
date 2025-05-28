@@ -4,3 +4,7 @@ package-lock.json
 /build
 .vscode
 .eslintcache
+
+.vercel
+.env*.local
+.env
