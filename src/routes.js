@@ -123,7 +123,7 @@ var routes = [
     icon: "fa-solid fa-users-line",
     component: <LeadsCenter />,
     layout: "/admin",
-    idText: '9'
+    idText: '24'
   },
   {  
     type: 'separator',
@@ -135,7 +135,7 @@ var routes = [
     icon: "fa-solid fa-robot",
     component: <Automatizations />,
     layout: "/admin",
-    idText: '9'
+    idText: '25'
   },
   {  
     type: 'separator',
