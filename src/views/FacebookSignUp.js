@@ -4,6 +4,7 @@ import Loader from '../components/Loader/Loader';
 
 import { axios } from '../config/https';
 import constants from '../util/constans';
+import MetaFlow from "./MetaFlow";
 
 import {
     CardHeader,
@@ -25,6 +26,7 @@ function FbScript() {
 function FacebookSignUp (props) {
     return <div className="content">
              <FbScript/>
+             <MetaFlow/>
     </div>;
 }
 
