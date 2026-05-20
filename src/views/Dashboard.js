@@ -90,7 +90,7 @@ function Dashboard(props) {
     axios.get(buildDashboardUrl('MessageSendChart')).then(result => {  
       if(result.data && result.data.data && result.data.data.length > 0) {
         chartExample2.data.labels = result.data.labels;
-        chartExample2.data.datasets = []
+        chartExample2.data.datasets = [] 
         chartExample2.data.datasets.push({
           label: "Mensajes enviados",
           fill: true,
