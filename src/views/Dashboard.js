@@ -66,7 +66,28 @@ function Dashboard(props) {
     //   } catch (error) {}
       }
 
-    axios.get(`${constants.apiurl}/api/MessageSendChart${idCompany ? `?idcompany=${idCompany}` : ''}`).then(result => {  
+    const formatDate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 6);
+    const createdDateParams = {
+      startCreatedDate: formatDate(startDate),
+      endCreatedDate: formatDate(endDate),
+    };
+    const buildDashboardUrl = (endpoint, includeCompany = true) => {
+      const params = new URLSearchParams(createdDateParams);
+      if(idCompany && includeCompany) {
+        params.append('idcompany', idCompany);
+      }
+      return `${constants.apiurl}/api/${endpoint}?${params.toString()}`;
+    };
+
+    axios.get(buildDashboardUrl('MessageSendChart')).then(result => {  
       if(result.data && result.data.data && result.data.data.length > 0) {
         chartExample2.data.labels = result.data.labels;
         chartExample2.data.datasets = []
@@ -91,7 +112,7 @@ function Dashboard(props) {
       }      
     });
 
-    axios.get(`${constants.apiurl}/api/MessageDeliveredChart${idCompany ? `?idcompany=${idCompany}` : ''}`).then(result => {  
+    axios.get(buildDashboardUrl('MessageDeliveredChart')).then(result => {  
       if(result.data && result.data.data && result.data.data.length > 0) {
         chartExampleD.data.labels = result.data.labels;
         chartExampleD.data.datasets = []
@@ -116,7 +137,7 @@ function Dashboard(props) {
       }      
     });
 
-    axios.get(`${constants.apiurl}/api/MessageReadChart${idCompany ? `?idcompany=${idCompany}` : ''}`).then(result => {  
+    axios.get(buildDashboardUrl('MessageReadChart')).then(result => {  
       if(result.data && result.data.data && result.data.data.length > 0) {
         chartExampleR.data.labels = result.data.labels;
         chartExampleR.data.datasets = []
@@ -141,7 +162,7 @@ function Dashboard(props) {
       }      
     });
 
-    axios.get(`${constants.apiurl}/api/MessageFailedChart${idCompany ? `?idcompany=${idCompany}` : ''}`).then(result => {  
+    axios.get(buildDashboardUrl('MessageFailedChart')).then(result => {  
       if(result.data && result.data.data && result.data.data.length > 0) {
         chartExampleF.data.labels = result.data.labels;
         chartExampleF.data.datasets = []
@@ -166,7 +187,7 @@ function Dashboard(props) {
       }      
     });
 
-    axios.get(`${constants.apiurl}/api/MessageReceiveChart${idCompany ? `?idcompany=${idCompany}` : ''}`).then(result => {
+    axios.get(buildDashboardUrl('MessageReceiveChart')).then(result => {
       if(result.data && result.data.data && result.data.data.length > 0) {
         chartExample3.data.labels = result.data.labels;
         chartExample3.data.datasets = [];
@@ -185,7 +206,7 @@ function Dashboard(props) {
     });
 
     
-    axios.get(`${constants.apiurl}/api/CompleteReportByCampaing`).then(result => {
+    axios.get(buildDashboardUrl('CompleteReportByCampaing', false)).then(result => {
       if(result.data && result.data.length > 0) {
         setCompleteReportScatterlist(result.data)
       }      
