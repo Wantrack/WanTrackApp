@@ -53,6 +53,8 @@ function ScatterList() {
   const [maxmessaelist, setMaxmessaelist] = useState(0);
   const [startMessageList, setStartMessageList] = useState(0);
   const [amountMessageList, setAmountMessageList] = useState([]);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [headerImageFile, setHeaderImageFile] = useState(undefined);
 
   const notificationAlertRef = useRef(null);
   const inputFileref = useRef();
@@ -62,6 +64,10 @@ function ScatterList() {
     setScatterList(pre => ({
       ...pre,
       [name]: value 
+    }));
+    setValidationErrors(pre => ({
+      ...pre,
+      [name]: ''
     }));
   }
 
@@ -79,6 +85,12 @@ function ScatterList() {
     newArray[index] = { ...item, selected: item.selected === 1 ? 0 : 1 }
     item.selected = item.selected === 1 ? 0 : 1 
     setScatterListDetails(newArray);
+    if(newArray.some(detail => detail.selected === 1)) {
+      setValidationErrors(pre => ({
+        ...pre,
+        contacts: ''
+      }));
+    }
 
     axios.patch(`${constants.apiurl}/api/scatterlistdetailSelected`, item);
   }
@@ -97,6 +109,66 @@ function ScatterList() {
       ...pre,
       [name]: value 
     }));
+  }
+
+  const getScatterListImageCompanyId = () => {
+    return scatterList.idcompnay || scatterList.idcompany;
+  }
+
+  const onHandleChangeHeaderImage = async (event) => {
+    const imageFile = event.target.files[0];
+    setHeaderImageFile(imageFile);
+
+    if(!imageFile) {
+      return;
+    }
+
+    if(!imageFile.type || !imageFile.type.startsWith('image/')) {
+      sendNotification('El archivo seleccionado debe ser una imagen.', 'danger');
+      event.target.value = '';
+      setHeaderImageFile(undefined);
+      return;
+    }
+
+    const companyId = getScatterListImageCompanyId();
+    if(!hasValidSelection(companyId)) {
+      sendNotification('Seleccione una empresa antes de subir la imagen.', 'danger');
+      event.target.value = '';
+      setHeaderImageFile(undefined);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', imageFile);
+
+    try {
+      setLoaderActive(true);
+      setLoaderText('Subiendo imagen...');
+      const bucketName = encodeURIComponent(constants.scatterListImagesBucket);
+      const uploadResult = await axios.post(
+        `${constants.apiurl}/api/aws/uploadscatterlistimage/${bucketName}/${companyId}`,
+        formData,
+        { headers: {"Content-Type": "multipart/form-data"}}
+      );
+
+      if(uploadResult?.data?.url) {
+        setHeaderP(pre => ({
+          ...pre,
+          type: 'image',
+          link: uploadResult.data.url
+        }));
+        sendNotification('Imagen subida correctamente.');
+      } else {
+        sendNotification('La imagen se subio, pero el servidor no devolvio una URL.', 'danger');
+      }
+    } catch (error) {
+      sendNotification(error?.response?.data || 'No se pudo subir la imagen.', 'danger');
+      event.target.value = '';
+      setHeaderImageFile(undefined);
+    } finally {
+      setLoaderActive(false);
+      setLoaderText('');
+    }
   }
 
   const onHandleChangeBodyP = index => e => {
@@ -167,8 +239,17 @@ function ScatterList() {
 
   async function saveChanges(event, close = true) {
     event.preventDefault();
-    scatterList.json = pObjectToJson();
-    await axios.post(`${constants.apiurl}/api/scatterList`, scatterList);
+    if(!validateScatterList()) {
+      return;
+    }
+
+    const currentScatterListId = Number(currentSL || localStorage.getItem('currentScatterListID'));
+    const scatterListPayload = {
+      ...scatterList,
+      ...(currentScatterListId > 0 ? { idscatterlist: scatterList.idscatterlist || currentScatterListId } : {}),
+      json: pObjectToJson()
+    };
+    await axios.post(`${constants.apiurl}/api/scatterList`, scatterListPayload);
     if(close) {
       navigate('/admin/lists');
     }   
@@ -224,6 +305,46 @@ function ScatterList() {
     notificationAlertRef.current.notificationAlert(options);
   }
 
+  const hasValidSelection = (value) => {
+    return value !== undefined && value !== null && String(value) !== '' && Number(value) > 0;
+  }
+
+  const validateScatterList = (requireContacts = false) => {
+    const errors = {};
+    const selectedContacts = Array.isArray(scatterListDetails)
+      ? scatterListDetails.filter(detail => detail.selected === 1)
+      : [];
+
+    if(!scatterList.name || !scatterList.name.trim()) {
+      errors.name = 'El nombre de la lista es obligatorio.';
+    }
+
+    if(!hasValidSelection(scatterList.idcompnay)) {
+      errors.idcompnay = 'Seleccione una empresa.';
+    }
+
+    if(!hasValidSelection(scatterList.idwstemplate)) {
+      errors.idwstemplate = 'Seleccione una plantilla.';
+    }
+
+    if(!hasValidSelection(scatterList.idwhatsapp_accounts)) {
+      errors.idwhatsapp_accounts = 'Seleccione una cuenta de WhatsApp.';
+    }
+
+    if(requireContacts && selectedContacts.length === 0) {
+      errors.contacts = 'Agregue al menos un contacto seleccionado a la lista.';
+    }
+
+    setValidationErrors(errors);
+
+    if(Object.keys(errors).length > 0) {
+      sendNotification('Completa los campos obligatorios antes de continuar.', 'danger');
+      return false;
+    }
+
+    return true;
+  }
+
   async function getScatterlistdetailbyScatterlist(pstart = 0) {
     setStartMessageList(pstart > 0 ? pstart : 0)
     const currentScatterListID = localStorage.getItem('currentScatterListID');
@@ -235,6 +356,9 @@ function ScatterList() {
 
   async function sendMessage(event) {
     event.preventDefault();
+    if(!validateScatterList(true)) {
+      return;
+    }
     if (window.confirm('¿Estas seguro que deseas enviar la difusión con esta lista?')) {
         await saveChanges(event, false);
         await axios.post(`${constants.apiurl}/api/sendscatterlist`, {id: scatterList.idscatterlist}).then(async (result) => {
@@ -256,6 +380,12 @@ function ScatterList() {
     setCheckAll(_checkAll);
     const _selectedInt = _checkAll ? 1 : 0;
     const newList = scatterListDetails.map(sld =>{ return {...sld, selected: _selectedInt}});
+    if(_selectedInt === 1 && newList.length > 0) {
+      setValidationErrors(pre => ({
+        ...pre,
+        contacts: ''
+      }));
+    }
     console.log(newList);
     axios.patch(`${constants.apiurl}/api/scatterlistdetailSelectedAll`, {selected: _selectedInt, idscatterlist:currentScatterListID});
     setScatterListDetails([...newList]);
@@ -530,13 +660,32 @@ function ScatterList() {
           <ModalBody>
             <FormGroup>
                 <label>Header</label>
-                <select className="form-control color_black" name='type' value={headerp.type} onChange={onHandleChangeHeader}>
-                  <option selected value='image'>Imagen</option>
+                <select className="form-control color_black" name='type' value={headerp.type || 'image'} onChange={onHandleChangeHeader}>
+                  <option value='image'>Imagen</option>
                   <option value='video'>Video</option>
                   <option value='document'>Documento</option>
                 </select>
-                <Input placeholder="Link" className="form-control form-control-lg color_black" style={{marginTop: '10px'}}  type="text" name='link' defaultValue={headerp.link} onChange={onHandleChangeHeader}/>
-                <Input placeholder="Texto" className="form-control form-control-lg color_black" style={{marginTop: '10px'}} type="text" name='text' defaultValue={headerp.text} onChange={onHandleChangeHeader}/>
+                {(headerp.type || 'image') === 'image' ? (
+                  <>
+                    <Input
+                      accept="image/*"
+                      className="form-control form-control-lg color_black"
+                      style={{marginTop: '10px'}}
+                      type="file"
+                      name="headerImage"
+                      onChange={onHandleChangeHeaderImage}
+                    />
+                    {headerImageFile && <Label style={{marginTop: '10px'}}>{headerImageFile.name}</Label>}
+                    {headerp.link && (
+                      <a href={headerp.link} target="_blank" rel="noreferrer" style={{display: 'block', marginTop: '10px'}}>
+                        Ver imagen subida
+                      </a>
+                    )}
+                  </>
+                ) : (
+                  <Input placeholder="Link" className="form-control form-control-lg color_black" style={{marginTop: '10px'}} type="text" name='link' value={headerp.link || ''} onChange={onHandleChangeHeader}/>
+                )}
+                <Input placeholder="Texto" className="form-control form-control-lg color_black" style={{marginTop: '10px'}} type="text" name='text' value={headerp.text || ''} onChange={onHandleChangeHeader}/>
             </FormGroup>
             <hr></hr>       
             <FormGroup>
@@ -588,40 +737,44 @@ function ScatterList() {
                         <Col className="pr-md-1" md="6">
                             <FormGroup>
                                 <label>Nombre</label>
-                                <Input placeholder="Nombre de la lista aqui" type="text" name='name' defaultValue={scatterList.name} onChange={onHandleChange}/>
+                                <Input invalid={!!validationErrors.name} placeholder="Nombre de la lista aqui" type="text" name='name' value={scatterList.name || ''} onChange={onHandleChange}/>
+                                {validationErrors.name && <small className="text-danger">{validationErrors.name}</small>}
                             </FormGroup>
                         </Col>
                         <Col md="6">
                             <FormGroup>
                                 <label>Empresa</label>
-                                <select className="form-control" name="idcompnay" value={scatterList.idcompnay} onChange={cmbCompanyOnChange}>
+                                <select className={`form-control ${validationErrors.idcompnay ? 'is-invalid' : ''}`} name="idcompnay" value={scatterList.idcompnay || -1} onChange={cmbCompanyOnChange}>
                                 {
                                     companies?.map((company, index) => 
                                     <option key={index} value={company.idcompany}>{company.name}</option>
                                 )} 
                                 </select>
+                                {validationErrors.idcompnay && <small className="text-danger">{validationErrors.idcompnay}</small>}
                             </FormGroup>
                         </Col>
                         <Col md="6">
                             <FormGroup>
                                 <label>Plantilla</label>
-                                <select className="form-control" name="idwstemplate" value={scatterList.idwstemplate} onChange={cmbOnChange}>
+                                <select className={`form-control ${validationErrors.idwstemplate ? 'is-invalid' : ''}`} name="idwstemplate" value={scatterList.idwstemplate || -1} onChange={cmbOnChange}>
                                 {
                                     wsTemplates?.map((wstemplate, index) => 
                                     <option key={index} value={wstemplate.idwstemplate}>{wstemplate.name}</option>
                                 )} 
                                 </select>
+                                {validationErrors.idwstemplate && <small className="text-danger">{validationErrors.idwstemplate}</small>}
                             </FormGroup>
                         </Col>
                         <Col md="6">
                             <FormGroup>
                                 <label>WhatsApp Account</label>
-                                <select className="form-control" name="idwhatsapp_accounts" value={scatterList.idwhatsapp_accounts} onChange={cmbOnChange}>
+                                <select className={`form-control ${validationErrors.idwhatsapp_accounts ? 'is-invalid' : ''}`} name="idwhatsapp_accounts" value={scatterList.idwhatsapp_accounts || -1} onChange={cmbOnChange}>
                                 {
                                     wsaccounts?.map((wsaccount, index) => 
                                     <option key={index} value={wsaccount.idwhatsapp_accounts}>{wsaccount.displayname}</option>
                                 )} 
                                 </select>
+                                {validationErrors.idwhatsapp_accounts && <small className="text-danger">{validationErrors.idwhatsapp_accounts}</small>}
                             </FormGroup>
                         </Col>
                   </Row>
@@ -642,6 +795,7 @@ function ScatterList() {
                       </Button>
                     </Col>
                     <Col md="12">
+                        {validationErrors.contacts && <small className="text-danger">{validationErrors.contacts}</small>}
                         <div className="table-responsive">
                             <table className="table table-hover">
                                 <thead>
