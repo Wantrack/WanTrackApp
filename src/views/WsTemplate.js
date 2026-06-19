@@ -25,17 +25,17 @@ const TEMPLATE_LIMITS = {
 };
 
 const languages = [
-  { value: 'en_US', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'pt_BR', label: 'Portuguese (Brazil)' },
-  { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
+  { value: 'en_US', label: 'Ingles' },
+  { value: 'es', label: 'Espanol' },
+  { value: 'pt_BR', label: 'Portugues (Brasil)' },
+  { value: 'fr', label: 'Frances' },
+  { value: 'de', label: 'Aleman' },
 ];
 
 const buttonTypes = [
-  { value: 'QUICK_REPLY', label: 'Quick reply' },
-  { value: 'URL', label: 'Visit website' },
-  { value: 'PHONE_NUMBER', label: 'Call phone number' },
+  { value: 'QUICK_REPLY', label: 'Respuesta rapida' },
+  { value: 'URL', label: 'Visitar sitio web' },
+  { value: 'PHONE_NUMBER', label: 'Llamar por telefono' },
 ];
 
 function countVariables(value = '') {
@@ -316,18 +316,18 @@ function WsTemplate() {
           <Col md="12">
             <Card className="template-panel">
               <CardBody>
-                <div className="section-title">Template name and language</div>
+                <div className="section-title">Nombre de la plantilla e idioma</div>
                 <Row>
                   <Col className="pr-md-1" md="8">
                     <FormGroup>
-                      <label>Name your template</label>
+                      <label>Nombre de la plantilla</label>
                       <div className="field-shell">
                         <Input
                           className="with-count"
                           maxLength={TEMPLATE_LIMITS.name}
                           name="name"
                           onChange={onHandleChange}
-                          placeholder="Enter a template name"
+                          placeholder="Escriba el nombre de la plantilla"
                           type="text"
                           value={wstemplate.name || ''}
                         />
@@ -347,7 +347,7 @@ function WsTemplate() {
                   </Col>
                   <Col className="pl-md-1" md="2">
                     <FormGroup>
-                      <label>Select language</label>
+                      <label>Seleccione el idioma</label>
                       <select className="form-control" name="language" value={wstemplate.language || 'en_US'} onChange={onHandleChange}>
                         {languages.map(language =>
                           <option key={language.value} value={language.value}>{language.label}</option>
@@ -362,9 +362,9 @@ function WsTemplate() {
             <Card className="template-panel">
               <CardBody>
                 <Form>
-                  <div className="section-title">Content</div>
+                  <div className="section-title">Contenido</div>
                   <p className="helper-text">
-                    Add a header, body and footer for your template. Cloud API hosted by Meta reviews template variables and content before approval.
+                    Agregue encabezado, cuerpo y pie de pagina para su plantilla. La Cloud API alojada por Meta revisa las variables y el contenido antes de aprobarla.
                     {' '}
                     <a
                       className="doc-link"
@@ -372,17 +372,17 @@ function WsTemplate() {
                       rel="noreferrer"
                       target="_blank"
                     >
-                      About templates
+                      Acerca de las plantillas
                     </a>
                   </p>
 
                   <Row>
                     <Col md="2">
                       <FormGroup>
-                        <label>Type of variable <i className="fa fa-info-circle" title="Variables are inserted as {{1}}, {{2}}, and so on." /></label>
+                        <label>Tipo de variable <i className="fa fa-info-circle" title="Las variables se insertan como {{1}}, {{2}}, etc." /></label>
                         <select className="form-control" name="variableType" value={wstemplate.variableType || 'NUMBER'} onChange={onHandleChange}>
-                          <option value="NUMBER">Number</option>
-                          <option value="NAME">Name</option>
+                          <option value="NUMBER">Numero</option>
+                          <option value="NAME">Nombre</option>
                         </select>
                       </FormGroup>
                     </Col>
@@ -391,12 +391,12 @@ function WsTemplate() {
                   <Row>
                     <Col md="2">
                       <FormGroup>
-                        <label>Media sample <span className="optional-label">- Optional</span></label>
+                        <label>Muestra multimedia <span className="optional-label">- Opcional</span></label>
                         <select className="form-control" name="mediaSample" value={wstemplate.mediaSample || 'NONE'} onChange={onHandleChange}>
-                          <option value="NONE">None</option>
-                          <option value="IMAGE">Image</option>
+                          <option value="NONE">Ninguna</option>
+                          <option value="IMAGE">Imagen</option>
                           <option value="VIDEO">Video</option>
-                          <option value="DOCUMENT">Document</option>
+                          <option value="DOCUMENT">Documento</option>
                         </select>
                       </FormGroup>
                     </Col>
@@ -406,11 +406,11 @@ function WsTemplate() {
                     <Row>
                       <Col md="12">
                         <FormGroup>
-                          <label>Sample media URL <span className="optional-label">- Required by Meta when using a media header</span></label>
+                          <label>URL de muestra multimedia <span className="optional-label">- Requerida por Meta cuando se usa un encabezado multimedia</span></label>
                           <Input
                             name="mediaSampleUrl"
                             onChange={onHandleChange}
-                            placeholder="https://example.com/sample-file"
+                            placeholder="https://ejemplo.com/archivo-de-muestra"
                             type="url"
                             value={wstemplate.mediaSampleUrl || ''}
                           />
@@ -422,7 +422,7 @@ function WsTemplate() {
                   <Row>
                     <Col md="12">
                       <FormGroup>
-                        <label>Header <span className="optional-label">- Optional</span></label>
+                        <label>Encabezado <span className="optional-label">- Opcional</span></label>
                         <div className="field-shell">
                           <Input
                             className="with-count"
@@ -430,7 +430,7 @@ function WsTemplate() {
                             maxLength={TEMPLATE_LIMITS.header}
                             name="header"
                             onChange={onHandleChange}
-                            placeholder={headerDisabled ? 'Text header is disabled when a media header is selected' : 'Add a short line of text to the header of your message in English'}
+                            placeholder={headerDisabled ? 'El encabezado de texto esta deshabilitado cuando se selecciona un encabezado multimedia' : 'Agregue una linea corta de texto al encabezado del mensaje'}
                             type="text"
                             value={wstemplate.header || ''}
                           />
@@ -438,9 +438,9 @@ function WsTemplate() {
                         </div>
                         <div className="field-actions">
                           <button className="text-button" disabled={headerDisabled || countVariables(wstemplate.header) >= 1} onClick={() => addVariable('header')} type="button">
-                            <i className="fa fa-plus" /> Add variable
+                            <i className="fa fa-plus" /> Agregar variable
                           </button>
-                          <i className="fa fa-info-circle" title="Meta allows one variable in a text header." />
+                          <i className="fa fa-info-circle" title="Meta permite una variable en el encabezado de texto." />
                         </div>
                       </FormGroup>
                     </Col>
@@ -449,28 +449,28 @@ function WsTemplate() {
                   <Row>
                     <Col md="12">
                       <FormGroup>
-                        <label>Body</label>
+                        <label>Cuerpo</label>
                         <div className="field-shell">
                           <textarea
                             className="form-control with-count"
                             maxLength={TEMPLATE_LIMITS.body}
                             name="body"
                             onChange={onHandleChange}
-                            placeholder="Write the message body. Variables can be added as {{1}}, {{2}}, etc."
+                            placeholder="Escriba el cuerpo del mensaje. Puede agregar variables como {{1}}, {{2}}, etc."
                             rows="6"
                             value={wstemplate.body || ''}
                           />
                           <span className="field-count">{(wstemplate.body || '').length}/{TEMPLATE_LIMITS.body}</span>
                         </div>
                         <div className="format-actions">
-                          <button className="format-button" onClick={() => applyBodyFormat('*')} title="Bold" type="button"><strong>B</strong></button>
-                          <button className="format-button" onClick={() => applyBodyFormat('_')} title="Italic" type="button"><em>I</em></button>
-                          <button className="format-button" onClick={() => applyBodyFormat('~')} title="Strikethrough" type="button"><s>S</s></button>
-                          <button className="format-button" onClick={() => applyBodyFormat('`')} title="Monospace" type="button"><code>&lt;/&gt;</code></button>
+                          <button className="format-button" onClick={() => applyBodyFormat('*')} title="Negrita" type="button"><strong>B</strong></button>
+                          <button className="format-button" onClick={() => applyBodyFormat('_')} title="Cursiva" type="button"><em>I</em></button>
+                          <button className="format-button" onClick={() => applyBodyFormat('~')} title="Tachado" type="button"><s>S</s></button>
+                          <button className="format-button" onClick={() => applyBodyFormat('`')} title="Monoespaciado" type="button"><code>&lt;/&gt;</code></button>
                           <button className="text-button" onClick={() => addVariable('body')} type="button">
-                            <i className="fa fa-plus" /> Add variable
+                            <i className="fa fa-plus" /> Agregar variable
                           </button>
-                          <i className="fa fa-info-circle" title="Body is required and supports variables, emojis, and WhatsApp text formatting." />
+                          <i className="fa fa-info-circle" title="El cuerpo es obligatorio y admite variables, emojis y formato de texto de WhatsApp." />
                         </div>
                       </FormGroup>
                     </Col>
@@ -479,14 +479,14 @@ function WsTemplate() {
                   <Row>
                     <Col md="12">
                       <FormGroup>
-                        <label>Footer <span className="optional-label">- Optional</span></label>
+                        <label>Pie de pagina <span className="optional-label">- Opcional</span></label>
                         <div className="field-shell">
                           <Input
                             className="with-count"
                             maxLength={TEMPLATE_LIMITS.footer}
                             name="footer"
                             onChange={onHandleChange}
-                            placeholder="Add a short line of text to the bottom of your message in English"
+                            placeholder="Agregue una linea corta de texto al final del mensaje"
                             type="text"
                             value={wstemplate.footer || ''}
                           />
@@ -502,11 +502,11 @@ function WsTemplate() {
             <Card className="template-panel">
               <CardBody>
                 <div className="section-title">
-                  Buttons <span className="optional-label">- Optional</span>
+                  Botones <span className="optional-label">- Opcional</span>
                 </div>
                 <p className="helper-text">
-                  Create buttons that let customers respond to your message or take action. You can add up to 10 buttons.
-                  {buttons.length > 3 && <span className="meta-pill">More than 3 buttons will appear in a list.</span>}
+                  Cree botones para que los clientes respondan a su mensaje o realicen una accion. Puede agregar hasta 10 botones.
+                  {buttons.length > 3 && <span className="meta-pill">Mas de 3 botones apareceran en una lista.</span>}
                 </p>
 
                 <div className="d-flex align-items-center">
@@ -526,7 +526,7 @@ function WsTemplate() {
                     size="sm"
                     type="button"
                   >
-                    <i className="fa fa-plus mr-1" /> Add button
+                    <i className="fa fa-plus mr-1" /> Agregar boton
                   </Button>
                 </div>
 
@@ -535,7 +535,7 @@ function WsTemplate() {
                     <Row>
                       <Col md="3">
                         <FormGroup>
-                          <label>Button type</label>
+                          <label>Tipo de boton</label>
                           <select className="form-control" value={button.type} onChange={(e) => updateButton(index, 'type', e.target.value)}>
                             {buttonTypes.map(type =>
                               <option key={type.value} value={type.value}>{type.label}</option>
@@ -545,13 +545,13 @@ function WsTemplate() {
                       </Col>
                       <Col md="4">
                         <FormGroup>
-                          <label>Button text</label>
+                          <label>Texto del boton</label>
                           <div className="field-shell">
                             <Input
                               className="with-count"
                               maxLength={TEMPLATE_LIMITS.buttonText}
                               onChange={(e) => updateButton(index, 'text', e.target.value)}
-                              placeholder="Button label"
+                              placeholder="Etiqueta del boton"
                               type="text"
                               value={button.text || ''}
                             />
@@ -562,10 +562,10 @@ function WsTemplate() {
                       {button.type === 'URL' && (
                         <Col md="4">
                           <FormGroup>
-                            <label>Website URL</label>
+                            <label>URL del sitio web</label>
                             <Input
                               onChange={(e) => updateButton(index, 'url', e.target.value)}
-                              placeholder="https://example.com"
+                              placeholder="https://ejemplo.com"
                               type="url"
                               value={button.url || ''}
                             />
@@ -575,7 +575,7 @@ function WsTemplate() {
                       {button.type === 'PHONE_NUMBER' && (
                         <Col md="4">
                           <FormGroup>
-                            <label>Phone number</label>
+                            <label>Numero de telefono</label>
                             <Input
                               onChange={(e) => updateButton(index, 'phoneNumber', e.target.value)}
                               placeholder="+15551234567"
