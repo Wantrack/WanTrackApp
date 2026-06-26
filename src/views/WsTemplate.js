@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
+import NotificationAlert from "react-notification-alert";
 import {
   Button,
   Card,
@@ -38,9 +39,20 @@ const buttonTypes = [
   { value: 'PHONE_NUMBER', label: 'Llamar por telefono' },
 ];
 
+function normalizeTemplateName(value = '') {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '');
+}
+
 function countVariables(value = '') {
   const matches = value.match(/{{\d+}}/g);
   return matches ? matches.length : 0;
+}
+
+function countNonVariableCharacters(value = '') {
+  return value.replace(/{{\d+}}/g, '').replace(/\s+/g, '').length;
 }
 
 function nextVariable(value = '') {
@@ -66,7 +78,7 @@ function normalizeTemplate(data = {}) {
     mediaSample: 'NONE',
     header: '',
     footer: '',
-    category: 'UTILITY',
+    category: 'MARKETING',
     ...data,
     body: data.body || data.text || '',
     buttons,
@@ -75,15 +87,33 @@ function normalizeTemplate(data = {}) {
 
 function WsTemplate() {
   const navigate = useNavigate();
+  const notificationAlertRef = useRef(null);
   const [wstemplate, setWsTemplate] = useState(normalizeTemplate());
   const [companies, setCompanies] = useState([]);
   const [buttonTypeToAdd, setButtonTypeToAdd] = useState('QUICK_REPLY');
 
+  function sendNotification(message, type = 'success') {
+    notificationAlertRef.current.notificationAlert({
+      place: 'tr',
+      message: (
+        <div>
+          <div>{message}</div>
+        </div>
+      ),
+      type,
+      icon: "tim-icons icon-bell-55",
+      autoDismiss: 7,
+    });
+  }
+
   const updateTemplate = (name, value) => {
+    const normalizedValue = name === 'name' ? normalizeTemplateName(value) : value;
+
     setWsTemplate(pre => ({
       ...pre,
-      [name]: value,
-      text: name === 'body' ? value : pre.text,
+      [name]: normalizedValue,
+      header: name === 'mediaSample' && normalizedValue !== 'NONE' ? '' : pre.header,
+      text: name === 'body' ? normalizedValue : pre.text,
     }));
   };
 
@@ -155,18 +185,49 @@ function WsTemplate() {
     load();
   }, []);
 
-  function saveChanges(close = true) {
+  async function saveChanges(close = true) {
+    const validationError = getTemplateValidationError();
+    if (validationError) {
+      sendNotification(validationError, 'danger');
+      return;
+    }
+
     const payload = {
       ...wstemplate,
+      category: wstemplate.category || 'MARKETING',
       text: wstemplate.body || '',
       buttons: JSON.stringify(wstemplate.buttons || []),
     };
 
-    axios.post(`${constants.apiurl}/api/wstemplate`, payload).then(async () => {
+    try {
+      await axios.post(`${constants.apiurl}/api/wstemplate`, payload);
+      sendNotification('Plantilla creada en Meta y guardada en WanTrack.');
       if (close) {
         navigate('/admin/wstemplates');
       }
-    });
+    } catch (error) {
+      const message = error?.response?.data?.error || error?.response?.data?.meta?.message || 'No fue posible crear la plantilla en Meta.';
+      sendNotification(message, 'danger');
+    }
+  }
+
+  function getTemplateValidationError() {
+    const body = wstemplate.body || '';
+    const bodyVariables = countVariables(body);
+
+    if (!wstemplate.name || /\s/.test(wstemplate.name)) {
+      return 'El nombre de la plantilla no puede tener espacios.';
+    }
+
+    if (body.trim().match(/{{\d+}}$/)) {
+      return 'El cuerpo del mensaje no puede terminar con una variable.';
+    }
+
+    if (bodyVariables > 0 && countNonVariableCharacters(body) < bodyVariables * 11) {
+      return `El cuerpo debe tener al menos ${bodyVariables * 11} caracteres de texto por ${bodyVariables} variable(s).`;
+    }
+
+    return '';
   }
 
   const headerDisabled = wstemplate.mediaSample !== 'NONE';
@@ -174,6 +235,9 @@ function WsTemplate() {
 
   return (
     <>
+      <div className="react-notification-alert-container">
+        <NotificationAlert ref={notificationAlertRef} />
+      </div>
       <div className="content ws-template-builder">
         <style>
           {`
@@ -406,12 +470,12 @@ function WsTemplate() {
                     <Row>
                       <Col md="12">
                         <FormGroup>
-                          <label>URL de muestra multimedia <span className="optional-label">- Requerida por Meta cuando se usa un encabezado multimedia</span></label>
+                          <label>Handle o URL de muestra multimedia <span className="optional-label">- Requerido por Meta cuando se usa un encabezado multimedia</span></label>
                           <Input
                             name="mediaSampleUrl"
                             onChange={onHandleChange}
-                            placeholder="https://ejemplo.com/archivo-de-muestra"
-                            type="url"
+                            placeholder="header_handle de Meta o https://ejemplo.com/archivo-de-muestra"
+                            type="text"
                             value={wstemplate.mediaSampleUrl || ''}
                           />
                         </FormGroup>
