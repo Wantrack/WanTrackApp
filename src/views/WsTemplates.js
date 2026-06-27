@@ -6,6 +6,7 @@ import { axios } from '../config/https';
 import constants from '../util/constans';
 
 import {
+    Button,
     CardHeader,
     CardBody,
     Card
@@ -23,6 +24,26 @@ function WsTemplates (props) {
             setWsTemplates(result.data);
         });       
     }, []);
+
+    async function refreshStatus(wstemplate) {
+        setLoaderActive(true);
+        try {
+            const result = await axios.post(`${constants.apiurl}/api/wstemplate/${wstemplate.idwstemplate}/status`);
+            setWsTemplates(pre => pre.map(template => (
+                template.idwstemplate === wstemplate.idwstemplate
+                    ? {
+                        ...template,
+                        metaStatus: result.data.meta?.status || template.metaStatus,
+                        metaCategory: result.data.meta?.category || template.metaCategory
+                    }
+                    : template
+            )));
+        } catch (error) {
+            alert(error?.response?.data?.error || 'No fue posible consultar el estado en Meta.');
+        } finally {
+            setLoaderActive(false);
+        }
+    }
     
     const filteredWsTemplates = Array.isArray(wsTemplates) ? wsTemplates.filter(wsTemplate => String(wsTemplate.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
     
@@ -48,7 +69,10 @@ function WsTemplates (props) {
                                 <thead>
                                     <tr>       
                                         <th>#</th>                           
-                                        <th>Nombre</th>                           
+                                        <th>Nombre</th>
+                                        <th>Estado Meta</th>
+                                        <th>Categoria</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -56,6 +80,13 @@ function WsTemplates (props) {
                                         <tr key={wstemplate.idwstemplate}>
                                             <td> <Link to="/admin/wstemplate" onClick={() => goToWsTemplateOnClick(wstemplate.idwstemplate)}>{index+ 1}</Link></td>
                                             <td> <Link to="/admin/wstemplate" onClick={() => goToWsTemplateOnClick(wstemplate.idwstemplate)}>{wstemplate.name}</Link></td>
+                                            <td>{wstemplate.metaStatus || '-'}</td>
+                                            <td>{wstemplate.metaCategory || wstemplate.category || '-'}</td>
+                                            <td>
+                                                <Button color="info" size="sm" type="button" disabled={!wstemplate.metaTemplateId} onClick={() => refreshStatus(wstemplate)}>
+                                                    <i className="fa fa-rotate mr-1"></i> Estado
+                                                </Button>
+                                            </td>
                                         </tr>
                                     )}                   
                                 </tbody>          
