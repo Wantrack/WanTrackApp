@@ -1,11 +1,20 @@
-// Descripción:
+// Descripcion:
+// Rutas iniciales para las peticiones HTTP y Socket.IO de la aplicacion.
 
-// Se basa en las rutas iniciales a las cuales se realizan las diferentes peticiones HTTP relacionadas con la aplicación
+const normalizeUrl = (url) => url.trim().replace(/\/$/, '');
+
+const apiUrl = normalizeUrl(
+    process.env.REACT_APP_API_URL || 'https://wantrackapi.com'
+);
+
+const socketUrl = normalizeUrl(
+    process.env.REACT_APP_SOCKET_URL || process.env.REACT_APP_API_URL || 'https://wantrackapi.com'
+);
 
 const constants = {
-    apiurl:  process.env.REACT_APP_API_URL || 'https://wantrackapi.com',//'https://wantrackapi.com',//'http://localhost:8080'
-    urlIO: 'https://wantrackapi.com',//'https://wantrackapi.com', //'http://localhost:8080'
-    scatterListImagesBucket: process.env.REACT_APP_SCATTER_LIST_IMAGES_BUCKET || 'publicwt ',
+    apiurl: apiUrl,
+    urlIO: socketUrl,
+    scatterListImagesBucket: process.env.REACT_APP_SCATTER_LIST_IMAGES_BUCKET || 'publicwt',
     token: 'dG9rZW4=',
     userinfo: 'dXNlcmluZm8='
 };

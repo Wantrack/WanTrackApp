@@ -102,14 +102,24 @@ function WhatsAppAccount() {
   function renderTokenInput() {
     const userInfo = getUserInfo();
     if(userInfo.idroles === 1) {
-      return  <Col md="12">
-      <FormGroup>
-        <label htmlFor="exampleInputEmail1">
-          Token
-        </label>
-        <Input placeholder="******" type="text" autoComplete="off" name='wstoken' defaultValue={whatsAppAccount.wstoken} onChange={onHandleChange}/>
-      </FormGroup>
-    </Col>
+      return  <>
+        <Col md="12">
+          <FormGroup>
+            <label htmlFor="exampleInputEmail1">
+              Token
+            </label>
+            <Input placeholder="******" type="text" autoComplete="off" name='wstoken' defaultValue={whatsAppAccount.wstoken} onChange={onHandleChange}/>
+          </FormGroup>
+        </Col>
+        <Col md="12">
+          <FormGroup>
+            <label>
+              WABA ID
+            </label>
+            <Input placeholder="29799199XXXXXXX" type="text" autoComplete="off" name='wabaid' defaultValue={whatsAppAccount.wabaid} onChange={onHandleChange}/>
+          </FormGroup>
+        </Col>
+      </>
     } else {
       return  <div></div>
     }
