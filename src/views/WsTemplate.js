@@ -88,9 +88,12 @@ function normalizeTemplate(data = {}) {
 function WsTemplate() {
   const navigate = useNavigate();
   const notificationAlertRef = useRef(null);
+  const mediaInputRef = useRef(null);
   const [wstemplate, setWsTemplate] = useState(normalizeTemplate());
   const [companies, setCompanies] = useState([]);
   const [buttonTypeToAdd, setButtonTypeToAdd] = useState('QUICK_REPLY');
+  const [mediaFile, setMediaFile] = useState(null);
+  const [mediaUploading, setMediaUploading] = useState(false);
 
   function sendNotification(message, type = 'success') {
     notificationAlertRef.current.notificationAlert({
@@ -119,8 +122,57 @@ function WsTemplate() {
 
   const onHandleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'mediaSample') {
+      removeMediaFile();
+    }
     updateTemplate(name, value);
   };
+
+  const onMediaFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    setMediaFile(file || null);
+  };
+
+  const openMediaFilePicker = () => {
+    if (mediaInputRef.current) {
+      mediaInputRef.current.click();
+    }
+  };
+
+  const removeMediaFile = () => {
+    setMediaFile(null);
+    if (mediaInputRef.current) {
+      mediaInputRef.current.value = '';
+    }
+  };
+
+  async function uploadMediaFile() {
+    if (!mediaFile) {
+      sendNotification('Seleccione un archivo para subir.', 'danger');
+      return;
+    }
+
+    if (!wstemplate.idcompany || Number(wstemplate.idcompany) <= 0) {
+      sendNotification('Seleccione una empresa antes de subir el archivo.', 'danger');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', mediaFile);
+    setMediaUploading(true);
+
+    try {
+      const result = await axios.post(`${constants.apiurl}/api/aws/uploadtemplatemedia/${wstemplate.idcompany}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      updateTemplate('mediaSampleUrl', result.data.url);
+      sendNotification('Archivo subido correctamente.');
+    } catch (error) {
+      sendNotification(error?.response?.data || 'No fue posible subir el archivo.', 'danger');
+    } finally {
+      setMediaUploading(false);
+    }
+  }
 
   const cmbCompanyOnChange = async (e) => {
     onHandleChange(e);
@@ -232,6 +284,11 @@ function WsTemplate() {
 
   const headerDisabled = wstemplate.mediaSample !== 'NONE';
   const buttons = wstemplate.buttons || [];
+  const acceptedMediaTypes = wstemplate.mediaSample === 'IMAGE'
+    ? 'image/*'
+    : wstemplate.mediaSample === 'VIDEO'
+      ? 'video/*'
+      : '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
   return (
     <>
@@ -373,6 +430,66 @@ function WsTemplate() {
               font-size: 12px;
               margin-left: 6px;
             }
+
+            .ws-template-builder .media-upload {
+              align-items: center;
+              background: #f7f9fb;
+              border: 1px dashed #aeb9c6;
+              border-radius: 3px;
+              display: flex;
+              gap: 12px;
+              justify-content: space-between;
+              margin-bottom: 10px;
+              min-height: 74px;
+              padding: 12px;
+            }
+
+            .ws-template-builder .media-upload-info {
+              align-items: center;
+              display: flex;
+              gap: 10px;
+              min-width: 0;
+            }
+
+            .ws-template-builder .media-upload-icon {
+              align-items: center;
+              background: #e9eef4;
+              border: 1px solid #d3dce6;
+              border-radius: 3px;
+              color: #1d2a36;
+              display: flex;
+              flex: 0 0 42px;
+              height: 42px;
+              justify-content: center;
+            }
+
+            .ws-template-builder .media-upload-title {
+              color: #1d2a36;
+              font-size: 13px;
+              font-weight: 700;
+              margin: 0;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+
+            .ws-template-builder .media-upload-meta {
+              color: #647386;
+              font-size: 12px;
+              margin: 2px 0 0;
+            }
+
+            .ws-template-builder .media-upload-actions {
+              align-items: center;
+              display: flex;
+              flex-wrap: wrap;
+              gap: 8px;
+              justify-content: flex-end;
+            }
+
+            .ws-template-builder .min-width-0 {
+              min-width: 0;
+            }
           `}
         </style>
 
@@ -470,7 +587,39 @@ function WsTemplate() {
                     <Row>
                       <Col md="12">
                         <FormGroup>
-                          <label>Handle o URL de muestra multimedia <span className="optional-label">- Requerido por Meta cuando se usa un encabezado multimedia</span></label>
+                          <label>Archivo de muestra multimedia <span className="optional-label">- Imagen, video o documento segun el tipo seleccionado</span></label>
+                          <div className="media-upload">
+                            <div className="media-upload-info">
+                              <div className="media-upload-icon">
+                                <i className={wstemplate.mediaSample === 'IMAGE' ? 'fa fa-image' : wstemplate.mediaSample === 'VIDEO' ? 'fa fa-video' : 'fa fa-file'} />
+                              </div>
+                              <div className="min-width-0">
+                                <p className="media-upload-title">{mediaFile ? mediaFile.name : `Seleccione un archivo ${wstemplate.mediaSample.toLowerCase()}`}</p>
+                                <p className="media-upload-meta">{mediaFile ? `${Math.ceil(mediaFile.size / 1024)} KB` : 'El archivo se usara como muestra para revision de Meta.'}</p>
+                              </div>
+                            </div>
+                            <div className="media-upload-actions">
+                              <input
+                                accept={acceptedMediaTypes}
+                                className="hide"
+                                onChange={onMediaFileChange}
+                                ref={mediaInputRef}
+                                type="file"
+                              />
+                              <Button color="secondary" disabled={mediaUploading} onClick={openMediaFilePicker} size="sm" type="button">
+                                <i className="fa fa-folder-open mr-1" /> Seleccionar
+                              </Button>
+                              <Button color="primary" disabled={!mediaFile || mediaUploading} onClick={uploadMediaFile} size="sm" type="button">
+                                <i className="fa fa-upload mr-1" /> {mediaUploading ? 'Subiendo' : 'Subir'}
+                              </Button>
+                              {mediaFile && (
+                                <Button color="danger" disabled={mediaUploading} onClick={removeMediaFile} size="sm" type="button">
+                                  <i className="fa fa-trash" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          <label>Handle o URL de muestra multimedia <span className="optional-label">- Se completa al subir archivo o puede pegarlo manualmente</span></label>
                           <Input
                             name="mediaSampleUrl"
                             onChange={onHandleChange}

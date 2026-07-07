@@ -58,6 +58,7 @@ function ScatterList() {
 
   const notificationAlertRef = useRef(null);
   const inputFileref = useRef();
+  const headerMediaInputRef = useRef(null);
 
   const onHandleChange = (e) => {
     const { name, value } = e.target;
@@ -117,14 +118,15 @@ function ScatterList() {
 
   const onHandleChangeHeaderImage = async (event) => {
     const imageFile = event.target.files[0];
+    const headerType = headerp.type || 'image';
     setHeaderImageFile(imageFile);
 
     if(!imageFile) {
       return;
     }
 
-    if(!imageFile.type || !imageFile.type.startsWith('image/')) {
-      sendNotification('El archivo seleccionado debe ser una imagen.', 'danger');
+    if(!isValidHeaderMediaFile(imageFile, headerType)) {
+      sendNotification(getHeaderMediaValidationMessage(headerType), 'danger');
       event.target.value = '';
       setHeaderImageFile(undefined);
       return;
@@ -143,10 +145,9 @@ function ScatterList() {
 
     try {
       setLoaderActive(true);
-      setLoaderText('Subiendo imagen...');
-      const bucketName = encodeURIComponent(constants.scatterListImagesBucket);
+      setLoaderText('Subiendo archivo...');
       const uploadResult = await axios.post(
-        `${constants.apiurl}/api/aws/uploadscatterlistimage/${bucketName}/${companyId}`,
+        `${constants.apiurl}/api/aws/uploadtemplatemedia/${companyId}`,
         formData,
         { headers: {"Content-Type": "multipart/form-data"}}
       );
@@ -154,21 +155,68 @@ function ScatterList() {
       if(uploadResult?.data?.url) {
         setHeaderP(pre => ({
           ...pre,
-          type: 'image',
+          type: headerType,
           link: uploadResult.data.url
         }));
-        sendNotification('Imagen subida correctamente.');
+        sendNotification('Archivo subido correctamente.');
       } else {
-        sendNotification('La imagen se subio, pero el servidor no devolvio una URL.', 'danger');
+        sendNotification('El archivo se subio, pero el servidor no devolvio una URL.', 'danger');
       }
     } catch (error) {
-      sendNotification(error?.response?.data || 'No se pudo subir la imagen.', 'danger');
+      sendNotification(error?.response?.data || 'No se pudo subir el archivo.', 'danger');
       event.target.value = '';
       setHeaderImageFile(undefined);
     } finally {
       setLoaderActive(false);
       setLoaderText('');
     }
+  }
+
+  const openHeaderMediaInput = () => {
+    if(headerMediaInputRef.current) {
+      headerMediaInputRef.current.click();
+    }
+  }
+
+  const clearHeaderMediaFile = () => {
+    setHeaderImageFile(undefined);
+    if(headerMediaInputRef.current) {
+      headerMediaInputRef.current.value = '';
+    }
+  }
+
+  const isValidHeaderMediaFile = (fileToValidate, headerType) => {
+    if(headerType === 'image') {
+      return fileToValidate.type?.startsWith('image/');
+    }
+
+    if(headerType === 'video') {
+      return fileToValidate.type?.startsWith('video/');
+    }
+
+    return [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ].includes(fileToValidate.type);
+  }
+
+  const getHeaderMediaValidationMessage = (headerType) => {
+    if(headerType === 'image') return 'El archivo seleccionado debe ser una imagen.';
+    if(headerType === 'video') return 'El archivo seleccionado debe ser un video.';
+    return 'El archivo seleccionado debe ser un documento PDF, DOC o DOCX.';
+  }
+
+  const getHeaderMediaAccept = () => {
+    if((headerp.type || 'image') === 'image') return 'image/*';
+    if(headerp.type === 'video') return 'video/*';
+    return '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  }
+
+  const getHeaderMediaLabel = () => {
+    if((headerp.type || 'image') === 'image') return 'imagen';
+    if(headerp.type === 'video') return 'video';
+    return 'documento';
   }
 
   const onHandleChangeBodyP = index => e => {
@@ -658,6 +706,70 @@ function ScatterList() {
             <h2 style={{color: '#000', marginBottom: '0px'}}>Parametos</h2>
           </ModalHeader>
           <ModalBody>
+            <style>
+              {`
+                .parameter-upload {
+                  align-items: center;
+                  background: #f7f9fb;
+                  border: 1px dashed #9aa8bd;
+                  border-radius: 4px;
+                  display: flex;
+                  gap: 12px;
+                  justify-content: space-between;
+                  margin-top: 10px;
+                  padding: 12px;
+                }
+
+                .parameter-upload-info {
+                  align-items: center;
+                  display: flex;
+                  gap: 10px;
+                  min-width: 0;
+                }
+
+                .parameter-upload-icon {
+                  align-items: center;
+                  background: #eef2f7;
+                  border: 1px solid #d5deea;
+                  border-radius: 4px;
+                  color: #23334d;
+                  display: flex;
+                  flex: 0 0 40px;
+                  height: 40px;
+                  justify-content: center;
+                }
+
+                .parameter-upload-title {
+                  color: #23334d;
+                  font-size: 13px;
+                  font-weight: 700;
+                  margin: 0;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                }
+
+                .parameter-upload-meta {
+                  color: #63708a;
+                  font-size: 12px;
+                  margin: 2px 0 0;
+                }
+
+                .parameter-upload-actions {
+                  display: flex;
+                  flex-wrap: wrap;
+                  gap: 8px;
+                  justify-content: flex-end;
+                }
+
+                .parameter-link {
+                  color: #d64edc;
+                  display: inline-block;
+                  font-size: 13px;
+                  margin-top: 10px;
+                }
+              `}
+            </style>
             <FormGroup>
                 <label>Header</label>
                 <select className="form-control color_black" name='type' value={headerp.type || 'image'} onChange={onHandleChangeHeader}>
@@ -665,20 +777,40 @@ function ScatterList() {
                   <option value='video'>Video</option>
                   <option value='document'>Documento</option>
                 </select>
-                {(headerp.type || 'image') === 'image' ? (
+                {['image', 'video', 'document'].includes(headerp.type || 'image') ? (
                   <>
-                    <Input
-                      accept="image/*"
-                      className="form-control form-control-lg color_black"
-                      style={{marginTop: '10px'}}
-                      type="file"
-                      name="headerImage"
-                      onChange={onHandleChangeHeaderImage}
-                    />
-                    {headerImageFile && <Label style={{marginTop: '10px'}}>{headerImageFile.name}</Label>}
+                    <div className="parameter-upload">
+                      <div className="parameter-upload-info">
+                        <div className="parameter-upload-icon">
+                          <i className={(headerp.type || 'image') === 'image' ? 'fa fa-image' : headerp.type === 'video' ? 'fa fa-video' : 'fa fa-file'} />
+                        </div>
+                        <div style={{minWidth: 0}}>
+                          <p className="parameter-upload-title">{headerImageFile ? headerImageFile.name : `Seleccione un ${getHeaderMediaLabel()}`}</p>
+                          <p className="parameter-upload-meta">{headerImageFile ? `${Math.ceil(headerImageFile.size / 1024)} KB` : 'El archivo se usara como header de la plantilla.'}</p>
+                        </div>
+                      </div>
+                      <div className="parameter-upload-actions">
+                        <input
+                          accept={getHeaderMediaAccept()}
+                          className="hide"
+                          ref={headerMediaInputRef}
+                          type="file"
+                          name="headerImage"
+                          onChange={onHandleChangeHeaderImage}
+                        />
+                        <Button className="btn btn-primary" onClick={openHeaderMediaInput} size="sm" type="button">
+                          <i className="fa fa-folder-open mr-1"></i> Seleccionar
+                        </Button>
+                        {headerImageFile && (
+                          <Button className="btn btn-danger" onClick={clearHeaderMediaFile} size="sm" type="button">
+                            <i className="fa fa-trash"></i>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                     {headerp.link && (
-                      <a href={headerp.link} target="_blank" rel="noreferrer" style={{display: 'block', marginTop: '10px'}}>
-                        Ver imagen subida
+                      <a className="parameter-link" href={headerp.link} target="_blank" rel="noreferrer">
+                        Ver archivo subido
                       </a>
                     )}
                   </>
