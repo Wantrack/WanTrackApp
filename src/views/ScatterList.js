@@ -53,15 +53,22 @@ function ScatterList() {
   const [maxmessaelist, setMaxmessaelist] = useState(0);
   const [startMessageList, setStartMessageList] = useState(0);
   const [amountMessageList, setAmountMessageList] = useState([]);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [headerImageFile, setHeaderImageFile] = useState(undefined);
 
   const notificationAlertRef = useRef(null);
   const inputFileref = useRef();
+  const headerMediaInputRef = useRef(null);
 
   const onHandleChange = (e) => {
     const { name, value } = e.target;
     setScatterList(pre => ({
       ...pre,
       [name]: value 
+    }));
+    setValidationErrors(pre => ({
+      ...pre,
+      [name]: ''
     }));
   }
 
@@ -79,6 +86,12 @@ function ScatterList() {
     newArray[index] = { ...item, selected: item.selected === 1 ? 0 : 1 }
     item.selected = item.selected === 1 ? 0 : 1 
     setScatterListDetails(newArray);
+    if(newArray.some(detail => detail.selected === 1)) {
+      setValidationErrors(pre => ({
+        ...pre,
+        contacts: ''
+      }));
+    }
 
     axios.patch(`${constants.apiurl}/api/scatterlistdetailSelected`, item);
   }
@@ -97,6 +110,146 @@ function ScatterList() {
       ...pre,
       [name]: value 
     }));
+  }
+
+  const getScatterListImageCompanyId = () => {
+    return scatterList.idcompnay || scatterList.idcompany;
+  }
+
+  const onHandleChangeHeaderImage = async (event) => {
+    const imageFile = event.target.files[0];
+    const headerType = headerp.type || 'image';
+    setHeaderImageFile(imageFile);
+
+    if(!imageFile) {
+      return;
+    }
+
+    if(!isValidHeaderMediaFile(imageFile, headerType)) {
+      sendNotification(getHeaderMediaValidationMessage(headerType), 'danger');
+      event.target.value = '';
+      setHeaderImageFile(undefined);
+      return;
+    }
+
+    const companyId = getScatterListImageCompanyId();
+    if(!hasValidSelection(companyId)) {
+      sendNotification('Seleccione una empresa antes de subir la imagen.', 'danger');
+      event.target.value = '';
+      setHeaderImageFile(undefined);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', imageFile);
+
+    try {
+      setLoaderActive(true);
+      setLoaderText('Subiendo archivo...');
+      const uploadResult = await axios.post(
+        `${constants.apiurl}/api/aws/uploadtemplatemedia/${companyId}`,
+        formData,
+        { headers: {"Content-Type": "multipart/form-data"}}
+      );
+
+      if(uploadResult?.data?.url) {
+        setHeaderP(pre => ({
+          ...pre,
+          type: headerType,
+          link: uploadResult.data.url
+        }));
+        sendNotification('Archivo subido correctamente.');
+      } else {
+        sendNotification('El archivo se subio, pero el servidor no devolvio una URL.', 'danger');
+      }
+    } catch (error) {
+      sendNotification(error?.response?.data || 'No se pudo subir el archivo.', 'danger');
+      event.target.value = '';
+      setHeaderImageFile(undefined);
+    } finally {
+      setLoaderActive(false);
+      setLoaderText('');
+    }
+  }
+
+  const openHeaderMediaInput = () => {
+    if(headerMediaInputRef.current) {
+      headerMediaInputRef.current.click();
+    }
+  }
+
+  const clearHeaderMediaFile = () => {
+    setHeaderImageFile(undefined);
+    if(headerMediaInputRef.current) {
+      headerMediaInputRef.current.value = '';
+    }
+  }
+
+  const removeHeaderMediaFile = () => {
+    clearHeaderMediaFile();
+    setHeaderP(pre => ({
+      ...pre,
+      link: ''
+    }));
+  }
+
+  const getFileNameFromUrl = (url) => {
+    if(!url) return '';
+
+    try {
+      const path = new URL(url).pathname;
+      const fileName = path.split('/').filter(Boolean).pop();
+      return fileName ? decodeURIComponent(fileName) : url;
+    } catch (error) {
+      const fileName = url.split('?')[0].split('/').filter(Boolean).pop();
+      return fileName ? decodeURIComponent(fileName) : url;
+    }
+  }
+
+  const getHeaderMediaTitle = () => {
+    if(headerImageFile) return headerImageFile.name;
+    if(headerp.link) return getFileNameFromUrl(headerp.link);
+    return `Seleccione un ${getHeaderMediaLabel()}`;
+  }
+
+  const getHeaderMediaMeta = () => {
+    if(headerImageFile) return `${Math.ceil(headerImageFile.size / 1024)} KB`;
+    if(headerp.link) return 'Archivo guardado en la lista.';
+    return 'El archivo se usara como header de la plantilla.';
+  }
+
+  const isValidHeaderMediaFile = (fileToValidate, headerType) => {
+    if(headerType === 'image') {
+      return fileToValidate.type?.startsWith('image/');
+    }
+
+    if(headerType === 'video') {
+      return fileToValidate.type?.startsWith('video/');
+    }
+
+    return [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ].includes(fileToValidate.type);
+  }
+
+  const getHeaderMediaValidationMessage = (headerType) => {
+    if(headerType === 'image') return 'El archivo seleccionado debe ser una imagen.';
+    if(headerType === 'video') return 'El archivo seleccionado debe ser un video.';
+    return 'El archivo seleccionado debe ser un documento PDF, DOC o DOCX.';
+  }
+
+  const getHeaderMediaAccept = () => {
+    if((headerp.type || 'image') === 'image') return 'image/*';
+    if(headerp.type === 'video') return 'video/*';
+    return '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  }
+
+  const getHeaderMediaLabel = () => {
+    if((headerp.type || 'image') === 'image') return 'imagen';
+    if(headerp.type === 'video') return 'video';
+    return 'documento';
   }
 
   const onHandleChangeBodyP = index => e => {
@@ -167,8 +320,17 @@ function ScatterList() {
 
   async function saveChanges(event, close = true) {
     event.preventDefault();
-    scatterList.json = pObjectToJson();
-    await axios.post(`${constants.apiurl}/api/scatterList`, scatterList);
+    if(!validateScatterList()) {
+      return;
+    }
+
+    const currentScatterListId = Number(currentSL || localStorage.getItem('currentScatterListID'));
+    const scatterListPayload = {
+      ...scatterList,
+      ...(currentScatterListId > 0 ? { idscatterlist: scatterList.idscatterlist || currentScatterListId } : {}),
+      json: pObjectToJson()
+    };
+    await axios.post(`${constants.apiurl}/api/scatterList`, scatterListPayload);
     if(close) {
       navigate('/admin/lists');
     }   
@@ -224,6 +386,46 @@ function ScatterList() {
     notificationAlertRef.current.notificationAlert(options);
   }
 
+  const hasValidSelection = (value) => {
+    return value !== undefined && value !== null && String(value) !== '' && Number(value) > 0;
+  }
+
+  const validateScatterList = (requireContacts = false) => {
+    const errors = {};
+    const selectedContacts = Array.isArray(scatterListDetails)
+      ? scatterListDetails.filter(detail => detail.selected === 1)
+      : [];
+
+    if(!scatterList.name || !scatterList.name.trim()) {
+      errors.name = 'El nombre de la lista es obligatorio.';
+    }
+
+    if(!hasValidSelection(scatterList.idcompnay)) {
+      errors.idcompnay = 'Seleccione una empresa.';
+    }
+
+    if(!hasValidSelection(scatterList.idwstemplate)) {
+      errors.idwstemplate = 'Seleccione una plantilla.';
+    }
+
+    if(!hasValidSelection(scatterList.idwhatsapp_accounts)) {
+      errors.idwhatsapp_accounts = 'Seleccione una cuenta de WhatsApp.';
+    }
+
+    if(requireContacts && selectedContacts.length === 0) {
+      errors.contacts = 'Agregue al menos un contacto seleccionado a la lista.';
+    }
+
+    setValidationErrors(errors);
+
+    if(Object.keys(errors).length > 0) {
+      sendNotification('Completa los campos obligatorios antes de continuar.', 'danger');
+      return false;
+    }
+
+    return true;
+  }
+
   async function getScatterlistdetailbyScatterlist(pstart = 0) {
     setStartMessageList(pstart > 0 ? pstart : 0)
     const currentScatterListID = localStorage.getItem('currentScatterListID');
@@ -235,6 +437,9 @@ function ScatterList() {
 
   async function sendMessage(event) {
     event.preventDefault();
+    if(!validateScatterList(true)) {
+      return;
+    }
     if (window.confirm('¿Estas seguro que deseas enviar la difusión con esta lista?')) {
         await saveChanges(event, false);
         await axios.post(`${constants.apiurl}/api/sendscatterlist`, {id: scatterList.idscatterlist}).then(async (result) => {
@@ -256,6 +461,12 @@ function ScatterList() {
     setCheckAll(_checkAll);
     const _selectedInt = _checkAll ? 1 : 0;
     const newList = scatterListDetails.map(sld =>{ return {...sld, selected: _selectedInt}});
+    if(_selectedInt === 1 && newList.length > 0) {
+      setValidationErrors(pre => ({
+        ...pre,
+        contacts: ''
+      }));
+    }
     console.log(newList);
     axios.patch(`${constants.apiurl}/api/scatterlistdetailSelectedAll`, {selected: _selectedInt, idscatterlist:currentScatterListID});
     setScatterListDetails([...newList]);
@@ -281,10 +492,21 @@ function ScatterList() {
   };
 
   const jsonToPObject = (_scatterList) => {
+    setHeaderP({});
+    setBodyParameters([]);
+    setButtonsParameters([]);
+
     if(_scatterList.json) {
-      const json =  JSON.parse(_scatterList.json);
+      let json = [];
+      try {
+        json = JSON.parse(_scatterList.json);
+      } catch (error) {
+        sendNotification('No fue posible leer los parametros guardados de la lista.', 'danger');
+        return;
+      }
+
       const header = json.find(element => element.type === 'header');
-      if(header) {
+      if(header && header.parameters && header.parameters[0]) {
         setHeaderP({
           type: header.parameters[0].type,
           link: header.parameters[0].link,
@@ -293,7 +515,7 @@ function ScatterList() {
       }
 
       const body = json.find(element => element.type === 'body');
-      if(body) {
+      if(body && Array.isArray(body.parameters)) {
         const _bodyparameters = [];
         for (const parameter of body.parameters) {
           _bodyparameters.push(parameter);
@@ -305,7 +527,12 @@ function ScatterList() {
       if(buttons && Array.isArray(buttons) && buttons.length > 0) {
         const _buttonsparameters = [];
         for (const button of buttons) {
-          _buttonsparameters.push(button);
+          if(button.parameters && button.parameters.length > 0) {
+            _buttonsparameters.push({
+              sub_type: button.sub_type || '',
+              ...button
+            });
+          }
         }
         setButtonsParameters(_buttonsparameters);
         
@@ -528,15 +755,118 @@ function ScatterList() {
             <h2 style={{color: '#000', marginBottom: '0px'}}>Parametos</h2>
           </ModalHeader>
           <ModalBody>
+            <style>
+              {`
+                .parameter-upload {
+                  align-items: center;
+                  background: #f7f9fb;
+                  border: 1px dashed #9aa8bd;
+                  border-radius: 4px;
+                  display: flex;
+                  gap: 12px;
+                  justify-content: space-between;
+                  margin-top: 10px;
+                  padding: 12px;
+                }
+
+                .parameter-upload-info {
+                  align-items: center;
+                  display: flex;
+                  gap: 10px;
+                  min-width: 0;
+                }
+
+                .parameter-upload-icon {
+                  align-items: center;
+                  background: #eef2f7;
+                  border: 1px solid #d5deea;
+                  border-radius: 4px;
+                  color: #23334d;
+                  display: flex;
+                  flex: 0 0 40px;
+                  height: 40px;
+                  justify-content: center;
+                }
+
+                .parameter-upload-title {
+                  color: #23334d;
+                  font-size: 13px;
+                  font-weight: 700;
+                  margin: 0;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                }
+
+                .parameter-upload-meta {
+                  color: #63708a;
+                  font-size: 12px;
+                  margin: 2px 0 0;
+                }
+
+                .parameter-upload-actions {
+                  display: flex;
+                  flex-wrap: wrap;
+                  gap: 8px;
+                  justify-content: flex-end;
+                }
+
+                .parameter-link {
+                  color: #d64edc;
+                  display: inline-block;
+                  font-size: 13px;
+                  margin-top: 10px;
+                }
+              `}
+            </style>
             <FormGroup>
                 <label>Header</label>
-                <select className="form-control color_black" name='type' value={headerp.type} onChange={onHandleChangeHeader}>
-                  <option selected value='image'>Imagen</option>
+                <select className="form-control color_black" name='type' value={headerp.type || 'image'} onChange={onHandleChangeHeader}>
+                  <option value='image'>Imagen</option>
                   <option value='video'>Video</option>
                   <option value='document'>Documento</option>
                 </select>
-                <Input placeholder="Link" className="form-control form-control-lg color_black" style={{marginTop: '10px'}}  type="text" name='link' defaultValue={headerp.link} onChange={onHandleChangeHeader}/>
-                <Input placeholder="Texto" className="form-control form-control-lg color_black" style={{marginTop: '10px'}} type="text" name='text' defaultValue={headerp.text} onChange={onHandleChangeHeader}/>
+                {['image', 'video', 'document'].includes(headerp.type || 'image') ? (
+                  <>
+                    <div className="parameter-upload">
+                      <div className="parameter-upload-info">
+                        <div className="parameter-upload-icon">
+                          <i className={(headerp.type || 'image') === 'image' ? 'fa fa-image' : headerp.type === 'video' ? 'fa fa-video' : 'fa fa-file'} />
+                        </div>
+                        <div style={{minWidth: 0}}>
+                          <p className="parameter-upload-title">{getHeaderMediaTitle()}</p>
+                          <p className="parameter-upload-meta">{getHeaderMediaMeta()}</p>
+                        </div>
+                      </div>
+                      <div className="parameter-upload-actions">
+                        <input
+                          accept={getHeaderMediaAccept()}
+                          className="hide"
+                          ref={headerMediaInputRef}
+                          type="file"
+                          name="headerImage"
+                          onChange={onHandleChangeHeaderImage}
+                        />
+                        <Button className="btn btn-primary" onClick={openHeaderMediaInput} size="sm" type="button">
+                          <i className="fa fa-folder-open mr-1"></i> {headerp.link || headerImageFile ? 'Reemplazar' : 'Seleccionar'}
+                        </Button>
+                        {(headerImageFile || headerp.link) && (
+                          <Button className="btn btn-danger" onClick={removeHeaderMediaFile} size="sm" type="button">
+                            <i className="fa fa-trash"></i>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    {headerp.link && (
+                      <a className="parameter-link" href={headerp.link} target="_blank" rel="noreferrer">
+                        Ver archivo subido
+                      </a>
+                    )}
+                  </>
+                ) : (
+                  <Input placeholder="Link" className="form-control form-control-lg color_black" style={{marginTop: '10px'}} type="text" name='link' value={headerp.link || ''} onChange={onHandleChangeHeader}/>
+                )}
+                <Input placeholder="Texto" className="form-control form-control-lg color_black" style={{marginTop: '10px'}} type="text" name='text' value={headerp.text || ''} onChange={onHandleChangeHeader}/>
             </FormGroup>
             <hr></hr>       
             <FormGroup>
@@ -549,7 +879,7 @@ function ScatterList() {
                 <hr></hr>                
                 {
                   bodyparameters?.map((parameter, index) => 
-                    <textarea key={index} className="form-control form-control-lg color_black" style={{marginTop: '10px'}} placeholder="Texto" cols="30" rows="10" defaultValue={parameter.text} name={`body${index}`} onChange={onHandleChangeBodyP(index)}></textarea>
+                    <textarea key={index} className="form-control form-control-lg color_black" style={{marginTop: '10px'}} placeholder="Texto" cols="30" rows="10" value={parameter.text || ''} name={`body${index}`} onChange={onHandleChangeBodyP(index)}></textarea>
                    
                 )}                  
             </FormGroup>
@@ -564,7 +894,7 @@ function ScatterList() {
                 <hr></hr>       
                 {
                   buttonsparameters?.map((parameter, index) => 
-                    <Input key={index} className="form-control form-control-lg color_black" placeholder="Escribe el subtipo" style={{marginTop: '10px'}} type="text" name={`button${index}`} defaultValue={parameter.sub_type} onChange={onHandleChangeBodyB(index)}/>
+                    <Input key={index} className="form-control form-control-lg color_black" placeholder="Escribe el subtipo" style={{marginTop: '10px'}} type="text" name={`button${index}`} value={parameter.sub_type || ''} onChange={onHandleChangeBodyB(index)}/>
                 )}
                 <hr></hr>
             </FormGroup>
@@ -588,40 +918,44 @@ function ScatterList() {
                         <Col className="pr-md-1" md="6">
                             <FormGroup>
                                 <label>Nombre</label>
-                                <Input placeholder="Nombre de la lista aqui" type="text" name='name' defaultValue={scatterList.name} onChange={onHandleChange}/>
+                                <Input invalid={!!validationErrors.name} placeholder="Nombre de la lista aqui" type="text" name='name' value={scatterList.name || ''} onChange={onHandleChange}/>
+                                {validationErrors.name && <small className="text-danger">{validationErrors.name}</small>}
                             </FormGroup>
                         </Col>
                         <Col md="6">
                             <FormGroup>
                                 <label>Empresa</label>
-                                <select className="form-control" name="idcompnay" value={scatterList.idcompnay} onChange={cmbCompanyOnChange}>
+                                <select className={`form-control ${validationErrors.idcompnay ? 'is-invalid' : ''}`} name="idcompnay" value={scatterList.idcompnay || -1} onChange={cmbCompanyOnChange}>
                                 {
                                     companies?.map((company, index) => 
                                     <option key={index} value={company.idcompany}>{company.name}</option>
                                 )} 
                                 </select>
+                                {validationErrors.idcompnay && <small className="text-danger">{validationErrors.idcompnay}</small>}
                             </FormGroup>
                         </Col>
                         <Col md="6">
                             <FormGroup>
                                 <label>Plantilla</label>
-                                <select className="form-control" name="idwstemplate" value={scatterList.idwstemplate} onChange={cmbOnChange}>
+                                <select className={`form-control ${validationErrors.idwstemplate ? 'is-invalid' : ''}`} name="idwstemplate" value={scatterList.idwstemplate || -1} onChange={cmbOnChange}>
                                 {
                                     wsTemplates?.map((wstemplate, index) => 
                                     <option key={index} value={wstemplate.idwstemplate}>{wstemplate.name}</option>
                                 )} 
                                 </select>
+                                {validationErrors.idwstemplate && <small className="text-danger">{validationErrors.idwstemplate}</small>}
                             </FormGroup>
                         </Col>
                         <Col md="6">
                             <FormGroup>
                                 <label>WhatsApp Account</label>
-                                <select className="form-control" name="idwhatsapp_accounts" value={scatterList.idwhatsapp_accounts} onChange={cmbOnChange}>
+                                <select className={`form-control ${validationErrors.idwhatsapp_accounts ? 'is-invalid' : ''}`} name="idwhatsapp_accounts" value={scatterList.idwhatsapp_accounts || -1} onChange={cmbOnChange}>
                                 {
                                     wsaccounts?.map((wsaccount, index) => 
                                     <option key={index} value={wsaccount.idwhatsapp_accounts}>{wsaccount.displayname}</option>
                                 )} 
                                 </select>
+                                {validationErrors.idwhatsapp_accounts && <small className="text-danger">{validationErrors.idwhatsapp_accounts}</small>}
                             </FormGroup>
                         </Col>
                   </Row>
@@ -642,6 +976,7 @@ function ScatterList() {
                       </Button>
                     </Col>
                     <Col md="12">
+                        {validationErrors.contacts && <small className="text-danger">{validationErrors.contacts}</small>}
                         <div className="table-responsive">
                             <table className="table table-hover">
                                 <thead>
