@@ -185,6 +185,39 @@ function ScatterList() {
     }
   }
 
+  const removeHeaderMediaFile = () => {
+    clearHeaderMediaFile();
+    setHeaderP(pre => ({
+      ...pre,
+      link: ''
+    }));
+  }
+
+  const getFileNameFromUrl = (url) => {
+    if(!url) return '';
+
+    try {
+      const path = new URL(url).pathname;
+      const fileName = path.split('/').filter(Boolean).pop();
+      return fileName ? decodeURIComponent(fileName) : url;
+    } catch (error) {
+      const fileName = url.split('?')[0].split('/').filter(Boolean).pop();
+      return fileName ? decodeURIComponent(fileName) : url;
+    }
+  }
+
+  const getHeaderMediaTitle = () => {
+    if(headerImageFile) return headerImageFile.name;
+    if(headerp.link) return getFileNameFromUrl(headerp.link);
+    return `Seleccione un ${getHeaderMediaLabel()}`;
+  }
+
+  const getHeaderMediaMeta = () => {
+    if(headerImageFile) return `${Math.ceil(headerImageFile.size / 1024)} KB`;
+    if(headerp.link) return 'Archivo guardado en la lista.';
+    return 'El archivo se usara como header de la plantilla.';
+  }
+
   const isValidHeaderMediaFile = (fileToValidate, headerType) => {
     if(headerType === 'image') {
       return fileToValidate.type?.startsWith('image/');
@@ -459,10 +492,21 @@ function ScatterList() {
   };
 
   const jsonToPObject = (_scatterList) => {
+    setHeaderP({});
+    setBodyParameters([]);
+    setButtonsParameters([]);
+
     if(_scatterList.json) {
-      const json =  JSON.parse(_scatterList.json);
+      let json = [];
+      try {
+        json = JSON.parse(_scatterList.json);
+      } catch (error) {
+        sendNotification('No fue posible leer los parametros guardados de la lista.', 'danger');
+        return;
+      }
+
       const header = json.find(element => element.type === 'header');
-      if(header) {
+      if(header && header.parameters && header.parameters[0]) {
         setHeaderP({
           type: header.parameters[0].type,
           link: header.parameters[0].link,
@@ -471,7 +515,7 @@ function ScatterList() {
       }
 
       const body = json.find(element => element.type === 'body');
-      if(body) {
+      if(body && Array.isArray(body.parameters)) {
         const _bodyparameters = [];
         for (const parameter of body.parameters) {
           _bodyparameters.push(parameter);
@@ -483,7 +527,12 @@ function ScatterList() {
       if(buttons && Array.isArray(buttons) && buttons.length > 0) {
         const _buttonsparameters = [];
         for (const button of buttons) {
-          _buttonsparameters.push(button);
+          if(button.parameters && button.parameters.length > 0) {
+            _buttonsparameters.push({
+              sub_type: button.sub_type || '',
+              ...button
+            });
+          }
         }
         setButtonsParameters(_buttonsparameters);
         
@@ -785,8 +834,8 @@ function ScatterList() {
                           <i className={(headerp.type || 'image') === 'image' ? 'fa fa-image' : headerp.type === 'video' ? 'fa fa-video' : 'fa fa-file'} />
                         </div>
                         <div style={{minWidth: 0}}>
-                          <p className="parameter-upload-title">{headerImageFile ? headerImageFile.name : `Seleccione un ${getHeaderMediaLabel()}`}</p>
-                          <p className="parameter-upload-meta">{headerImageFile ? `${Math.ceil(headerImageFile.size / 1024)} KB` : 'El archivo se usara como header de la plantilla.'}</p>
+                          <p className="parameter-upload-title">{getHeaderMediaTitle()}</p>
+                          <p className="parameter-upload-meta">{getHeaderMediaMeta()}</p>
                         </div>
                       </div>
                       <div className="parameter-upload-actions">
@@ -799,10 +848,10 @@ function ScatterList() {
                           onChange={onHandleChangeHeaderImage}
                         />
                         <Button className="btn btn-primary" onClick={openHeaderMediaInput} size="sm" type="button">
-                          <i className="fa fa-folder-open mr-1"></i> Seleccionar
+                          <i className="fa fa-folder-open mr-1"></i> {headerp.link || headerImageFile ? 'Reemplazar' : 'Seleccionar'}
                         </Button>
-                        {headerImageFile && (
-                          <Button className="btn btn-danger" onClick={clearHeaderMediaFile} size="sm" type="button">
+                        {(headerImageFile || headerp.link) && (
+                          <Button className="btn btn-danger" onClick={removeHeaderMediaFile} size="sm" type="button">
                             <i className="fa fa-trash"></i>
                           </Button>
                         )}
@@ -830,7 +879,7 @@ function ScatterList() {
                 <hr></hr>                
                 {
                   bodyparameters?.map((parameter, index) => 
-                    <textarea key={index} className="form-control form-control-lg color_black" style={{marginTop: '10px'}} placeholder="Texto" cols="30" rows="10" defaultValue={parameter.text} name={`body${index}`} onChange={onHandleChangeBodyP(index)}></textarea>
+                    <textarea key={index} className="form-control form-control-lg color_black" style={{marginTop: '10px'}} placeholder="Texto" cols="30" rows="10" value={parameter.text || ''} name={`body${index}`} onChange={onHandleChangeBodyP(index)}></textarea>
                    
                 )}                  
             </FormGroup>
@@ -845,7 +894,7 @@ function ScatterList() {
                 <hr></hr>       
                 {
                   buttonsparameters?.map((parameter, index) => 
-                    <Input key={index} className="form-control form-control-lg color_black" placeholder="Escribe el subtipo" style={{marginTop: '10px'}} type="text" name={`button${index}`} defaultValue={parameter.sub_type} onChange={onHandleChangeBodyB(index)}/>
+                    <Input key={index} className="form-control form-control-lg color_black" placeholder="Escribe el subtipo" style={{marginTop: '10px'}} type="text" name={`button${index}`} value={parameter.sub_type || ''} onChange={onHandleChangeBodyB(index)}/>
                 )}
                 <hr></hr>
             </FormGroup>
