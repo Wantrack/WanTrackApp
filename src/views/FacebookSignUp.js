@@ -1,16 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from "react-router-dom";
-import Loader from '../components/Loader/Loader';
-
-import { axios } from '../config/https';
-import constants from '../util/constans';
+import React from 'react';
 import MetaFlow from "./MetaFlow";
-
-import {
-    CardHeader,
-    CardBody,
-    Card
-  } from "reactstrap";
 
 function FbScript() {
     const handleClick = () => {

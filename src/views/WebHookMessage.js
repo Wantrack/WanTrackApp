@@ -113,7 +113,6 @@ function WebHookMessage (props) {
     
     const onHandleChange = (e) => {
         const { name, value } = e.target;
-        console.log(value)
         setWebHook(pre => ({
         ...pre,
         [name]: value 

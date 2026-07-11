@@ -6,7 +6,7 @@ let pluginShadow = {
     ctx.save();
 
     const dataset = chart.data.datasets[args.index];
-    // const meta = chart.getDatasetMeta(args.index);
+    ctx.$wantrackOriginalStroke = ctx.stroke;
 
     const originalLineDraw = ctx.stroke;
     ctx.stroke = function () {
@@ -18,6 +18,14 @@ let pluginShadow = {
       originalLineDraw.apply(this, arguments);
       ctx.restore();
     };
+  },
+  afterDatasetDraw: (chart) => {
+    const ctx = chart.ctx;
+    if (ctx.$wantrackOriginalStroke) {
+      ctx.stroke = ctx.$wantrackOriginalStroke;
+      delete ctx.$wantrackOriginalStroke;
+    }
+    ctx.restore();
   }
 };
 

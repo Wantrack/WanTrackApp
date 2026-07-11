@@ -1,4 +1,3 @@
-/*eslint-disable*/
 import React, { useState, useEffect } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 // nodejs library to set properties for components
@@ -8,7 +7,7 @@ import { PropTypes } from "prop-types";
 import PerfectScrollbar from "perfect-scrollbar";
 
 // reactstrap components
-import { Nav, NavLink as ReactstrapNavLink } from "reactstrap";
+import { Nav } from "reactstrap";
 import {
   BackgroundColorContext,
 } from "contexts/BackgroundColorContext";
@@ -52,9 +51,23 @@ function Sidebar(props) {
         ps.destroy();
       }
     };
-  });
+  }, []);
 
-  let { routes, rtlActive, logo } = props;
+  let { routes, logo } = props;
+  const visibleRoutes = routes.filter((prop) => {
+    if (prop.redirect) return false;
+    if (prop.invisible) return false;
+    if (prop.idText && !modules.includes(prop.idText)) return false;
+    if (prop.idSep && !modules.includes(prop.idSep)) return false;
+    return true;
+  }).filter((prop, index, filteredRoutes) => {
+    if (prop.type !== 'separator') return true;
+
+    const previousRoute = filteredRoutes[index - 1];
+    const nextRoute = filteredRoutes[index + 1];
+
+    return previousRoute?.type !== 'separator' && nextRoute && nextRoute.type !== 'separator';
+  });
   let logoImg = null;
   let logoText = null;
   if (logo !== undefined) {
@@ -64,6 +77,7 @@ function Sidebar(props) {
           href={logo.outterLink}
           className="simple-text logo-mini"
           target="_blank"
+          rel="noreferrer"
           onClick={props.toggleSidebar}
         >
           <div className="logo-img">
@@ -76,6 +90,7 @@ function Sidebar(props) {
           href={logo.outterLink}
           className="simple-text logo-normal"
           target="_blank"
+          rel="noreferrer"
           onClick={props.toggleSidebar}
         >
           {logo.text}
@@ -116,17 +131,13 @@ function Sidebar(props) {
               </div>
             ) : null}
             <Nav>
-              {routes.map((prop, key) => {
-                if (prop.redirect) return null;
-                if (prop.invisible) return null;
-                if (prop.idText && !modules.includes(prop.idText)) return null;
-                if (prop.idSep && !modules.includes(prop.idSep)) return null;
-                return prop.type == 'separator' ? (<li><hr className="separator"></hr></li>) :  (
+              {visibleRoutes.map((prop, key) => {
+                return prop.type == 'separator' ? (<li key={`separator-${key}`}><hr className="separator"></hr></li>) :  (
                   <li
                     className={
-                      activeRoute(prop.path) + (prop.pro ? " active-pro" : "")
+                      activeRoute(prop.layout + prop.path) + (prop.pro ? " active-pro" : "")
                     }
-                    key={key}
+                    key={prop.layout + prop.path}
                   >
                     <NavLink
                       to={prop.layout + prop.path}

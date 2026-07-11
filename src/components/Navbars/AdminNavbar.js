@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 // nodejs library that concatenates classes
 import classNames from "classnames";
 import { axios } from "../../config/https";
-import SocketService  from "../../socket";
+import SocketService from "../../socket";
 // reactstrap components
 import {
   Collapse,
@@ -24,41 +24,51 @@ import {
 import constants from "util/constans";
 
 function AdminNavbar(props) {
-  const navigate = useNavigate ();
+  const navigate = useNavigate();
 
   const [collapseOpen, setcollapseOpen] = React.useState(false);
   const [modalSearch, setmodalSearch] = React.useState(false);
   const [notifications, setNotifications] = React.useState([]);
   const [color, setcolor] = React.useState("navbar-transparent");
 
-  
+  const loadNotifications = React.useCallback(() => {
+    axios.get(`${constants.apiurl}/api/notifications`).then((result) => {
+      if (result && result.data) {
+        setNotifications(result.data);
+      }
+    });
+  }, []);
 
-  React.useEffect(() => {
-    window.addEventListener("resize", updateColor);
-    
-    const socket = new SocketService();
-    socket.getSocket().on('notificationrefresh', notificationrefresh);
-    
-    // Specify how to clean up after this effect:
-    return function cleanup() {      
-      window.removeEventListener("resize", updateColor);
-      console.log('El componente AdminNavbar se desmontó');
-      socket.disconnect();
-    };
-  });
-  // function that adds color white/transparent to the navbar on resize (this is for the collapse)
-  const logout = () => {
-    localStorage.clear();
-    navigate('/login');
-  }
+  const notificationrefresh = React.useCallback(() => {
+    loadNotifications();
+  }, [loadNotifications]);
 
-  const updateColor = () => {
+  const updateColor = React.useCallback(() => {
     if (window.innerWidth < 993 && collapseOpen) {
       setcolor("bg-white");
     } else {
       setcolor("navbar-transparent");
     }
+  }, [collapseOpen]);
+
+  React.useEffect(() => {
+    window.addEventListener("resize", updateColor);
+
+    const socket = new SocketService();
+    socket.getSocket().on("notificationrefresh", notificationrefresh);
+
+    return function cleanup() {
+      window.removeEventListener("resize", updateColor);
+      socket.disconnect();
+    };
+  }, [notificationrefresh, updateColor]);
+
+  // function that adds color white/transparent to the navbar on resize (this is for the collapse)
+  const logout = () => {
+    localStorage.clear();
+    navigate("/login");
   };
+
   // this function opens and closes the collapse on small devices
   const toggleCollapse = () => {
     if (collapseOpen) {
@@ -73,16 +83,6 @@ function AdminNavbar(props) {
     setmodalSearch(!modalSearch);
   };
 
-  
-  function loadNotifications() {
-    axios.get(`${constants.apiurl}/api/notifications`).then((result) => {
-      if(result && result.data) {
-        setNotifications(result.data);
-      }
-     
-    });
-  }
-
   function notificationsOnclick() {
     setTimeout(() => {
       deleteNotifications();
@@ -90,15 +90,10 @@ function AdminNavbar(props) {
   }
 
   function deleteNotifications() {
-    axios.delete(`${constants.apiurl}/api/notification`).then((result) => {
+    axios.delete(`${constants.apiurl}/api/notification`).then(() => {
       setNotifications([]);
     });
   }
-
-  function notificationrefresh(value) {
-    console.log(value);
-    loadNotifications();
-  }  
 
   return (
     <>
@@ -117,7 +112,7 @@ function AdminNavbar(props) {
               </NavbarToggler>
             </div>
             <NavbarBrand href="#" onClick={(e) => e.preventDefault()}>
-              <img style={{height: '5rem'}} alt="WANTRACK" src={require("assets/img/logo3.png")} />
+              <img style={{ height: "5rem" }} alt="WANTRACK" src={require("assets/img/logo3.png")} />
             </NavbarBrand>
           </div>
           <NavbarToggler onClick={toggleCollapse}>
@@ -141,23 +136,19 @@ function AdminNavbar(props) {
                   data-toggle="dropdown"
                   nav
                 >
-                  {
-                    (notifications.length > 0 ? <div className="notification d-none d-lg-block d-xl-block" /> : <div/>)
-                  }
-                  
+                  {notifications.length > 0 ? <div className="notification d-none d-lg-block d-xl-block" /> : <div />}
+
                   <i className="tim-icons icon-sound-wave" />
                   <p className="d-lg-none">Notifications</p>
                 </DropdownToggle>
                 <DropdownMenu className="dropdown-navbar" right tag="ul">
                   <NavLink tag="li">
-                    {
-                        notifications?.map((notification, index) => 
-                          <DropdownItem key={index} className="nav-item">
-                            {notification.text}
-                          </DropdownItem>
-                    )}  
-                   
-                  </NavLink>                  
+                    {notifications?.map((notification, index) => (
+                      <DropdownItem key={notification.idnotification || notification.id || `${notification.text}-${index}`} className="nav-item">
+                        {notification.text}
+                      </DropdownItem>
+                    ))}
+                  </NavLink>
                 </DropdownMenu>
               </UncontrolledDropdown>
               <UncontrolledDropdown nav>

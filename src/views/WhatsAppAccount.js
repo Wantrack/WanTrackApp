@@ -22,11 +22,13 @@ import constants from '../util/constans';
 import { getUserInfo } from 'util/localStorageInfo';
 import { analizePdf } from 'util/files';
 import { analizeExcel } from 'util/files';
+import TablePagination, { useClientPagination } from '../components/Pagination/TablePagination';
 
 function WhatsAppAccount() {
   const navigate = useNavigate ();
   const [whatsAppAccount, setWhatsAppAccount] = useState({});
   const [documents, setDocuments] = useState([]); 
+  const documentsPagination = useClientPagination(documents);
   const [modalVisible, setModalVisible] = useState(false);
   const [inputKey, setInputKey] = useState(Date.now());
   const [file, setFile] = useState(undefined);
@@ -70,14 +72,12 @@ function WhatsAppAccount() {
   }, []);
 
   function saveChanges() {
-    console.log(whatsAppAccount)
     axios.post(`${constants.apiurl}/api/wsaccounts`, whatsAppAccount).then(async (result) => {
         navigate('/admin/company');
     });
   }
 
   function saveDocuments(document) {
-    console.log(document)
     axios.post(`${constants.apiurl}/api/documentstrain`, document).then(async (result) => {
         getDocuments(document.idwhatsapp_accounts);
     });
@@ -149,7 +149,6 @@ function WhatsAppAccount() {
     const file = event.target.files[0];
 
     if (file) {
-        console.log(file)
         setFile(file);        
     }        
   }
@@ -170,10 +169,8 @@ function WhatsAppAccount() {
       let result = '';
       if(extension === 'pdf') {
         result = await analizePdf(file);
-        console.log(result);
       } else {
         result = await analizeExcel(file);
-        console.log(result);
       }
       documentImport.text = result;
       documentImport.idwhatsapp_accounts = currentWhatsAppAccountID;
@@ -312,10 +309,10 @@ function WhatsAppAccount() {
                             </tr>
                         </thead>
                         <tbody>
-                            {documents?.map((document, index) => 
+                            {documentsPagination.paginatedItems?.map((document, index) => 
                                 <tr key={index}>
                                     <td>    
-                                      <Link to="#">{index + 1}</Link>                     
+                                      <Link to="#">{documentsPagination.startIndex + index + 1}</Link>                     
                                     </td>
                                     <td> <Link to="#">{document.name}</Link></td>
                                     <td> <Link to="#">{document.description}</Link></td>
@@ -325,6 +322,7 @@ function WhatsAppAccount() {
                         </tbody>          
                     </table>
                 </div> 
+                <TablePagination {...documentsPagination} />
               </CardBody>
             </Card>
           </Col>

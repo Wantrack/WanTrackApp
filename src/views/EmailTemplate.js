@@ -154,7 +154,7 @@ function EmailTemplate() {
                             {/* <div style={{width:'100%', height:'400px', maxHeight:'400px',  overflow: 'auto', border:'1px solid #1e1e2e'}} 
                             dangerouslySetInnerHTML={{ __html: emailContent }}>
                             </div> */}
-                            <iframe style={{width:'100%', height:'400px', maxHeight:'400px',  overflow: 'auto', border:'1px solid #1e1e2e'}}  id={1} srcDoc={emailContent}>                                
+                            <iframe title="Vista previa de plantilla de email" style={{width:'100%', height:'400px', maxHeight:'400px',  overflow: 'auto', border:'1px solid #1e1e2e'}}  id={1} srcDoc={emailContent}>                                
                             </iframe>
                         </FormGroup>
                     </Col>

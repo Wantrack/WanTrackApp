@@ -2,6 +2,7 @@ import { Bar, Pie, Radar, Line } from "react-chartjs-2";
 import React, { useState, useEffect } from "react";
 import { decode } from "util/base64";
 import { Row, Col, Card, CardBody, CardTitle, CardHeader, Table } from "reactstrap";
+import TablePagination, { useClientPagination } from '../components/Pagination/TablePagination';
 
 import { axios } from "../config/https";
 import constants from "../util/constans";
@@ -17,6 +18,28 @@ import {
   pluginShadow
 } from "variables/charts.js";
 
+const buildLineChartData = (labels, data, label) => ({
+  labels,
+  datasets: [
+    {
+      label,
+      fill: true,
+      borderColor: "#1f8ef1",
+      borderWidth: 2,
+      borderDash: [],
+      borderDashOffset: 0.0,
+      pointBackgroundColor: "#1f8ef1",
+      pointBorderColor: "rgba(255,255,255,0)",
+      pointHoverBackgroundColor: "#1f8ef1",
+      pointBorderWidth: 20,
+      pointHoverRadius: 4,
+      pointHoverBorderWidth: 15,
+      pointRadius: 4,
+      data,
+    },
+  ],
+});
+
 function DashboardConversation(props) {
   const [satisfaction, setSatisfaction] = useState(0);
   const [satisfactionColor, setSatisfactionColor] = useState('#bc8034');
@@ -26,7 +49,7 @@ function DashboardConversation(props) {
   const [dataChart3, setDataChart3] = useState([]);
   const [dataChart3Labels, setDataChart3Labels] = useState([]);
   const [dataChart3Colorss, setDataChart3Colors] = useState([]);
-  const [dataChart4Labels, setDataChart4Labels] = useState([
+  const [dataChart4Labels] = useState([
     "Saludo",
     "Escucha",
     "Comunicación clara",
@@ -35,7 +58,7 @@ function DashboardConversation(props) {
     "Eficiencia",
   ]);
   const [dataChart4, setDataChart4] = useState([0, 0, 0, 0, 0, 0]);
-  const [dataChart4Colorss, setDataChart4Colors] = useState(["#0AA3BB90"]);
+  const [dataChart4Colorss] = useState(["#0AA3BB90"]);
   const [dataChart5, setDataChart5] = useState([]);
   const [dataChart5Labels, setDataChart5Labels] = useState([]);
   const [callduration, setCallDuration] = useState(0);
@@ -47,6 +70,7 @@ function DashboardConversation(props) {
   const [informationCompany, setInformationCompany] = useState([]);
   const [lastSatisfaction, setLastSatisfaction] = useState(0);
   const [dataChartRead, setDataChartRead] = useState(chartExampleR.data);
+  const informationPagination = useClientPagination(informationCompany);
 
   const data2 = {
     labels: dataChart2Labels,
@@ -381,26 +405,8 @@ function DashboardConversation(props) {
               const labels = result.data.map(m => { return m.month});
               const data = result.data.map(m => { return m.avg_satisfaction });
 
-              chartExampleR.data.labels = labels;
-              chartExampleR.data.datasets = []
-              chartExampleR.data.datasets.push({
-                label: "Satisfaccion",
-                fill: true,
-                borderColor: "#1f8ef1",
-                borderWidth: 2,
-                borderDash: [],
-                borderDashOffset: 0.0,
-                pointBackgroundColor: "#1f8ef1",
-                pointBorderColor: "rgba(255,255,255,0)",
-                pointHoverBackgroundColor: "#1f8ef1",
-                pointBorderWidth: 20,
-                pointHoverRadius: 4,
-                pointHoverBorderWidth: 15,
-                pointRadius: 4,
-                data: data,
-              });
               setLastSatisfaction(data[data.length - 1])
-              setDataChartRead(chartExampleR.data);
+              setDataChartRead(buildLineChartData(labels, data, "Satisfaccion"));
             }           
           });
       }
@@ -539,9 +545,9 @@ function DashboardConversation(props) {
                     </thead>  
                     <tbody>
                    
-                        {informationCompany.map((info, index) => 
+                        {informationPagination.paginatedItems.map((info, index) => 
                         <tr key={index}>
-                            <td>{(index + 1) }</td>
+                            <td>{informationPagination.startIndex + index + 1}</td>
                             <td>{info.name} {info.lastName}</td>
                             <td>{info.avgsatisfaction} %</td>
                             <td>{info.avgscorenps}</td>                          
@@ -549,8 +555,9 @@ function DashboardConversation(props) {
                         )}   
                              
                     </tbody>         
-                    </Table>
+                  </Table>
                 </div>           
+                <TablePagination {...informationPagination} />
                 
               </CardBody>
             </Card> 

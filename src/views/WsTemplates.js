@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
+import TablePagination from '../components/Pagination/TablePagination';
 
 import { axios } from '../config/https';
 import constants from '../util/constans';
+import useServerPagination from '../components/Pagination/useServerPagination';
 
 import {
     Button,
@@ -13,31 +15,19 @@ import {
   } from "reactstrap";
 
 function WsTemplates (props) {
-    const [wsTemplates, setWsTemplates] = useState([]);
     const [loaderActive, setLoaderActive] = useState(false);
     const [searchValue, setSearchValue] = useState('');
-    
-    useEffect(() => { 
-        setLoaderActive(true)
-        axios.get(`${constants.apiurl}/api/wstemplates`).then(result => {
-            setLoaderActive(false)
-            setWsTemplates(result.data);
-        });       
-    }, []);
+    const [refreshKey, setRefreshKey] = useState(0);
+    const buildUrl = React.useCallback(({ page, pageSize }) => (
+        `${constants.apiurl}/api/wstemplates?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(searchValue)}`
+    ), [searchValue, refreshKey]);
+    const pagination = useServerPagination(buildUrl, [searchValue, refreshKey]);
 
     async function refreshStatus(wstemplate) {
         setLoaderActive(true);
         try {
-            const result = await axios.post(`${constants.apiurl}/api/wstemplate/${wstemplate.idwstemplate}/status`);
-            setWsTemplates(pre => pre.map(template => (
-                template.idwstemplate === wstemplate.idwstemplate
-                    ? {
-                        ...template,
-                        metaStatus: result.data.meta?.status || template.metaStatus,
-                        metaCategory: result.data.meta?.category || template.metaCategory
-                    }
-                    : template
-            )));
+            await axios.post(`${constants.apiurl}/api/wstemplate/${wstemplate.idwstemplate}/status`);
+            setRefreshKey(value => value + 1);
         } catch (error) {
             alert(error?.response?.data?.error || 'No fue posible consultar el estado en Meta.');
         } finally {
@@ -45,10 +35,8 @@ function WsTemplates (props) {
         }
     }
     
-    const filteredWsTemplates = Array.isArray(wsTemplates) ? wsTemplates.filter(wsTemplate => String(wsTemplate.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
-    
     return <div className="content">
-                <Loader active={loaderActive} />
+                <Loader active={loaderActive || pagination.loading} />
                 <Card>
                     <CardHeader>
                         <h5 className="title">Plantillas de Whatsapp</h5>
@@ -76,9 +64,9 @@ function WsTemplates (props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredWsTemplates.map((wstemplate, index) => 
+                                    {pagination.paginatedItems.map((wstemplate, index) => 
                                         <tr key={wstemplate.idwstemplate}>
-                                            <td> <Link to="/admin/wstemplate" onClick={() => goToWsTemplateOnClick(wstemplate.idwstemplate)}>{index+ 1}</Link></td>
+                                            <td> <Link to="/admin/wstemplate" onClick={() => goToWsTemplateOnClick(wstemplate.idwstemplate)}>{pagination.startIndex + index + 1}</Link></td>
                                             <td> <Link to="/admin/wstemplate" onClick={() => goToWsTemplateOnClick(wstemplate.idwstemplate)}>{wstemplate.name}</Link></td>
                                             <td>{wstemplate.metaStatus || '-'}</td>
                                             <td>{wstemplate.metaCategory || wstemplate.category || '-'}</td>
@@ -92,6 +80,7 @@ function WsTemplates (props) {
                                 </tbody>          
                             </table>
                         </div> 
+                        <TablePagination {...pagination} />
                     </CardBody>
                 </Card>
     </div>;

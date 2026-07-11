@@ -21,7 +21,7 @@ function Template (props) {
     const [types, setTypes] = useState([]);
     const [headerTypes, setheaderTypes] = useState([]);
     const [clientAnswerType, setclientAnswerType] = useState([]);
-    const [buttonTypes, setbuttonTypes] = useState([]);
+    const [, setbuttonTypes] = useState([]);
     const [answerTemplateTypes, setAnswerTemplateTypes] = useState([]);
     const [newButtons, setnewButtons] = useState([]);
     const [messages, setMessages] = useState([]);

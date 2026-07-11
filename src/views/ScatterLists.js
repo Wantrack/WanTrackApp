@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
+import TablePagination from '../components/Pagination/TablePagination';
 import { decode } from "../util/base64";
 import { axios } from '../config/https';
 import constants from '../util/constans';
+import useServerPagination from '../components/Pagination/useServerPagination';
 import {
     CardHeader,
     CardBody,
@@ -11,15 +13,10 @@ import {
   } from "reactstrap";
 
 function ScatterLists (props) {
-    const [scatterLists, setScatterLists] = useState([]);
-    const [loaderActive, setLoaderActive] = useState(false);
     const [searchValue, setSearchValue] = useState('');
-    
-    useEffect(() => {
-        getScatterLists()
-    }, []);
+    const [refreshKey, setRefreshKey] = useState(0);
 
-    async function getScatterLists() {
+    function getCompanyQuery() {
         let idCompany = undefined;
         const _userinfoEncoded = localStorage.getItem(constants.userinfo);
         if(_userinfoEncoded) {
@@ -28,23 +25,21 @@ function ScatterLists (props) {
                 idCompany =_userinfo.idCompany
             }
         }
-
-        setLoaderActive(true)
-        axios.get(`${constants.apiurl}/api/scatterlists${idCompany ? `?idcompany=${idCompany}` : ''}`).then(result => {
-            setLoaderActive(false)
-            setScatterLists(result.data);
-        });
+        return idCompany ? `&idcompany=${idCompany}` : '';
     }
+
+    const buildUrl = React.useCallback(({ page, pageSize }) => (
+        `${constants.apiurl}/api/scatterlists?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(searchValue)}${getCompanyQuery()}`
+    ), [searchValue, refreshKey]);
+    const pagination = useServerPagination(buildUrl, [searchValue, refreshKey]);
 
     async function copyScatterList(idscatterlist) {
         await axios.post(`${constants.apiurl}/api/scatterlistscopy`, {idscatterlist});
-        await getScatterLists();
+        setRefreshKey(value => value + 1);
     }
     
-    const filteredScatterList = Array.isArray(scatterLists) ? scatterLists.filter(wsTemplate => String(wsTemplate.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
-    
     return <div className="content">
-                <Loader active={loaderActive} />
+                <Loader active={pagination.loading} />
                 <Card>
                     <CardHeader>
                         <h5 className="title">Listas de difusión</h5>
@@ -70,9 +65,9 @@ function ScatterLists (props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredScatterList.map((scatterList, index) => 
+                                    {pagination.paginatedItems.map((scatterList, index) => 
                                         <tr key={scatterList.idscatterlist}>
-                                            <td> <Link to="/admin/list" onClick={() => goToScatterLists(scatterList.idscatterlist)}>{index + 1}</Link></td>
+                                            <td> <Link to="/admin/list" onClick={() => goToScatterLists(scatterList.idscatterlist)}>{pagination.startIndex + index + 1}</Link></td>
                                             <td> <Link to="/admin/list" onClick={() => goToScatterLists(scatterList.idscatterlist)}>{scatterList.name}</Link></td>
                                             <td> <Link to="javascript:void(0)" onClick={() => copyScatterList(scatterList.idscatterlist)}><i title='Copiar campaña' className="fa-solid fa-copy"></i></Link></td>
                                         </tr>
@@ -80,6 +75,7 @@ function ScatterLists (props) {
                                 </tbody>          
                             </table>
                         </div> 
+                        <TablePagination {...pagination} />
                     </CardBody>
                 </Card>
     </div>;

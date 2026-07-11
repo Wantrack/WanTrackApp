@@ -2,7 +2,6 @@ import React, { useCallback, useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
 import ReactFlow, {
-    MiniMap,
     ReactFlowProvider,
     Controls,
     Background,
@@ -156,8 +155,8 @@ const CustomNode = ({ data, selected }) => (
     },
   ];
 
-    const [nodes, setNodes, onNodesChange] = useNodesState(_nodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(_edges);
+    const [nodes, , onNodesChange] = useNodesState(_nodes);
+    const [edges, , onEdgesChange] = useEdgesState(_edges);
     
     useEffect(() => { 
          
