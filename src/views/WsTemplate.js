@@ -26,8 +26,8 @@ const TEMPLATE_LIMITS = {
 };
 
 const languages = [
-  { value: 'en_US', label: 'Ingles' },
-  { value: 'es', label: 'Espanol' },
+  { value: 'es_MX', label: 'Espanol' },
+  { value: 'en_US', label: 'Ingles' },  
   { value: 'pt_BR', label: 'Portugues (Brasil)' },
   { value: 'fr', label: 'Frances' },
   { value: 'de', label: 'Aleman' },
@@ -47,8 +47,11 @@ function normalizeTemplateName(value = '') {
 }
 
 function countVariables(value = '') {
-  const matches = value.match(/{{\d+}}/g);
-  return matches ? matches.length : 0;
+  if(value){
+    const matches = value.match(/{{\d+}}/g);
+    return matches ? matches.length : 0;
+  }  
+  return 0;
 }
 
 function countNonVariableCharacters(value = '') {
@@ -89,8 +92,10 @@ function WsTemplate() {
   const navigate = useNavigate();
   const notificationAlertRef = useRef(null);
   const mediaInputRef = useRef(null);
+  const isCreatingTemplate = Number(localStorage.getItem('currentWsTemplateID')) <= 0;
   const [wstemplate, setWsTemplate] = useState(normalizeTemplate());
   const [companies, setCompanies] = useState([]);
+  const [wsAccounts, setWsAccounts] = useState([]);
   const [buttonTypeToAdd, setButtonTypeToAdd] = useState('QUICK_REPLY');
   const [mediaFile, setMediaFile] = useState(null);
   const [mediaUploading, setMediaUploading] = useState(false);
@@ -174,8 +179,24 @@ function WsTemplate() {
     }
   }
 
+  const loadWsAccounts = async (companyID) => {
+    if (!companyID || Number(companyID) <= 0) {
+      setWsAccounts([{ idwhatsapp_accounts: -1, displayname: 'Sin Cuenta' }]);
+      return;
+    }
+
+    const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccountsbyCompany/${companyID}`);
+    setWsAccounts([{ idwhatsapp_accounts: -1, displayname: 'Sin Cuenta' }, ..._wsaccounts.data]);
+  };
+
   const cmbCompanyOnChange = async (e) => {
-    onHandleChange(e);
+    const { value } = e.target;
+    setWsTemplate(pre => ({
+      ...pre,
+      idcompany: value,
+      idwhatsapp_accounts: -1,
+    }));
+    await loadWsAccounts(value);
   };
 
   const addVariable = (field) => {
@@ -230,7 +251,17 @@ function WsTemplate() {
       const currentWsTemplateID = localStorage.getItem('currentWsTemplateID');
       const _wstemplate = await axios.get(`${constants.apiurl}/api/wstemplate/${currentWsTemplateID}`);
       if (_wstemplate.data) {
-        setWsTemplate(normalizeTemplate(_wstemplate.data));
+        const currentCompanyID = _wstemplate.data.idcompany || localStorage.getItem('currentCompanyID');
+        await loadWsAccounts(currentCompanyID);
+        setWsTemplate(normalizeTemplate({
+          ..._wstemplate.data,
+          idcompany: currentCompanyID || -1,
+          idwhatsapp_accounts: _wstemplate.data.idwhatsapp_accounts || -1,
+        }));
+      } else {
+        const currentCompanyID = localStorage.getItem('currentCompanyID');
+        setWsTemplate(pre => ({ ...pre, idcompany: currentCompanyID || -1 }));
+        await loadWsAccounts(currentCompanyID);
       }
     }
 
@@ -499,12 +530,13 @@ function WsTemplate() {
               <CardBody>
                 <div className="section-title">Nombre de la plantilla e idioma</div>
                 <Row>
-                  <Col className="pr-md-1" md="8">
+                  <Col className="pr-md-1" md="6">
                     <FormGroup>
                       <label>Nombre de la plantilla</label>
                       <div className="field-shell">
                         <Input
                           className="with-count"
+                          disabled={!isCreatingTemplate}
                           maxLength={TEMPLATE_LIMITS.name}
                           name="name"
                           onChange={onHandleChange}
@@ -516,26 +548,36 @@ function WsTemplate() {
                       </div>
                     </FormGroup>
                   </Col>
-                  <Col className="px-md-1" md="2">
-                    <FormGroup>
-                      <label>Empresa</label>
-                      <select className="form-control" name="idcompany" value={wstemplate.idcompany || -1} onChange={cmbCompanyOnChange}>
-                        {companies?.map((company, index) =>
-                          <option key={index} value={company.idcompany}>{company.name}</option>
-                        )}
-                      </select>
-                    </FormGroup>
-                  </Col>
-                  <Col className="pl-md-1" md="2">
+                  <Col className="pl-md-1" md="6">
                     <FormGroup>
                       <label>Seleccione el idioma</label>
-                      <select className="form-control" name="language" value={wstemplate.language || 'en_US'} onChange={onHandleChange}>
+                      <select className="form-control" disabled={!isCreatingTemplate} name="language" value={wstemplate.language || 'es_MX'} onChange={onHandleChange}>
                         {languages.map(language =>
                           <option key={language.value} value={language.value}>{language.label}</option>
                         )}
                       </select>
                     </FormGroup>
                   </Col>
+                  <Col className="pr-md-1" md="6">
+                    <FormGroup>
+                      <label>Empresa</label>
+                      <select className="form-control" disabled={!isCreatingTemplate} name="idcompany" value={wstemplate.idcompany || -1} onChange={cmbCompanyOnChange}>
+                        {companies?.map((company) =>
+                          <option key={company.idcompany} value={company.idcompany}>{company.name}</option>
+                        )}
+                      </select>
+                    </FormGroup>
+                  </Col>
+                  <Col className="pl-md-1" md="6">
+                    <FormGroup>
+                      <label>WhatsApp</label>
+                      <select className="form-control" disabled={!isCreatingTemplate} name="idwhatsapp_accounts" value={wstemplate.idwhatsapp_accounts || -1} onChange={onHandleChange}>
+                        {wsAccounts?.map((wsaccount) =>
+                          <option key={wsaccount.idwhatsapp_accounts} value={wsaccount.idwhatsapp_accounts}>{wsaccount.displayname}</option>
+                        )}
+                      </select>
+                    </FormGroup>
+                  </Col>                  
                 </Row>
               </CardBody>
             </Card>
