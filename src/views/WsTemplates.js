@@ -81,10 +81,11 @@ function WsTemplates (props) {
                                             <td> <Link to="/admin/wstemplate" onClick={() => goToWsTemplateOnClick(wstemplate.idwstemplate)}>{index+ 1}</Link></td>
                                             <td> <Link to="/admin/wstemplate" onClick={() => goToWsTemplateOnClick(wstemplate.idwstemplate)}>{wstemplate.name}</Link></td>
                                             <td>{wstemplate.metaStatus || '-'}</td>
+                                            <td>{wstemplate.metaCategory || wstemplate.category || '-'}</td>                                                                                         
                                             <td>{wstemplate.metaCategory || wstemplate.category || '-'}</td>
-                                            <td>
-                                                <Button color="info" size="sm" type="button" disabled={!wstemplate.metaTemplateId} onClick={() => refreshStatus(wstemplate)}>
-                                                    <i className="fa fa-rotate mr-1"></i> Estado
+                                            <td>   
+                                            <Button color="info" size="sm" type="button" disabled={!wstemplate.metaTemplateId} onClick={() => refreshStatus(wstemplate)}>
+                                                    <i className="fa fa-rotate mr-1"></i> {wstemplate.metaStatus}
                                                 </Button>
                                             </td>
                                         </tr>

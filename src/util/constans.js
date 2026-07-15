@@ -3,12 +3,16 @@
 
 const normalizeUrl = (url) => url.trim().replace(/\/$/, '');
 
+const defaultApiUrl = process.env.NODE_ENV === 'development'
+    ? 'http://localhost:80'
+    : 'https://wantrackapi.com';
+
 const apiUrl = normalizeUrl(
-    process.env.REACT_APP_API_URL || 'https://wantrackapi.com'
+    process.env.REACT_APP_API_URL || defaultApiUrl
 );
 
 const socketUrl = normalizeUrl(
-    process.env.REACT_APP_SOCKET_URL || process.env.REACT_APP_API_URL || 'https://wantrackapi.com'
+    process.env.REACT_APP_SOCKET_URL || process.env.REACT_APP_API_URL || defaultApiUrl
 );
 
 const constants = {
