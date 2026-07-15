@@ -92,6 +92,7 @@ function WsTemplate() {
   const navigate = useNavigate();
   const notificationAlertRef = useRef(null);
   const mediaInputRef = useRef(null);
+  const savingRef = useRef(false);
   const isCreatingTemplate = Number(localStorage.getItem('currentWsTemplateID')) <= 0;
   const [wstemplate, setWsTemplate] = useState(normalizeTemplate());
   const [companies, setCompanies] = useState([]);
@@ -99,6 +100,7 @@ function WsTemplate() {
   const [buttonTypeToAdd, setButtonTypeToAdd] = useState('QUICK_REPLY');
   const [mediaFile, setMediaFile] = useState(null);
   const [mediaUploading, setMediaUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   function sendNotification(message, type = 'success') {
     notificationAlertRef.current.notificationAlert({
@@ -269,6 +271,8 @@ function WsTemplate() {
   }, []);
 
   async function saveChanges(close = true) {
+    if (savingRef.current) return;
+
     const validationError = getTemplateValidationError();
     if (validationError) {
       sendNotification(validationError, 'danger');
@@ -282,6 +286,9 @@ function WsTemplate() {
       buttons: JSON.stringify(wstemplate.buttons || []),
     };
 
+    savingRef.current = true;
+    setIsSaving(true);
+
     try {
       await axios.post(`${constants.apiurl}/api/wstemplate`, payload);
       sendNotification('Plantilla creada en Meta y guardada en WanTrack.');
@@ -291,6 +298,9 @@ function WsTemplate() {
     } catch (error) {
       const message = error?.response?.data?.error || error?.response?.data?.meta?.message || 'No fue posible crear la plantilla en Meta.';
       sendNotification(message, 'danger');
+    } finally {
+      savingRef.current = false;
+      setIsSaving(false);
     }
   }
 
@@ -853,11 +863,11 @@ function WsTemplate() {
 
             <Card className="template-panel">
               <CardFooter>
-                <Button className="btn-fill" color="primary" type="button" onClick={() => saveChanges(true)}>
-                  Guardar
+                <Button className="btn-fill" color="primary" disabled={isSaving} type="button" onClick={() => saveChanges(true)}>
+                  {isSaving ? 'Guardando...' : 'Guardar'}
                 </Button>
 
-                <Button className="btn-fill" color="primary" type="button" onClick={() => saveChanges(false)}>
+                <Button className="btn-fill" color="primary" disabled={isSaving} type="button" onClick={() => saveChanges(false)}>
                   Correr Prueba
                 </Button>
               </CardFooter>
