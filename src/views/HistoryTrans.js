@@ -78,7 +78,7 @@ function HistoryTrans (props) {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {messagesSent.map((messageSent, index) => 
+                                                {messagesSent?.map((messageSent, index) => 
                                                 <tr key={index}>
                                                     <td>{(index + 1) + startMessagesSent }</td>
                                                     <td>{messageSent.phone}</td>
