@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
-
-import { axios } from '../config/https';
+import TablePagination from '../components/Pagination/TablePagination';
 import constants from '../util/constans';
+import useServerPagination from '../components/Pagination/useServerPagination';
 
 import {
     CardHeader,
@@ -12,22 +12,14 @@ import {
   } from "reactstrap";
 
 function EmailTemplates (props) {
-    const [emailTemplates, setEmailTemplates] = useState([]);
-    const [loaderActive, setLoaderActive] = useState(false);
     const [searchValue, setSearchValue] = useState('');
-    
-    useEffect(() => { 
-        setLoaderActive(true)
-        axios.get(`${constants.apiurl}/api/emailtemplates`).then(result => {
-            setLoaderActive(false)
-            setEmailTemplates(result.data);
-        });       
-    }, []);
-    
-    const filteredEmailTemplates = Array.isArray(emailTemplates) ? emailTemplates.filter(wsTemplate => String(wsTemplate.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
+    const buildUrl = React.useCallback(({ page, pageSize }) => (
+        `${constants.apiurl}/api/emailtemplates?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(searchValue)}`
+    ), [searchValue]);
+    const pagination = useServerPagination(buildUrl, [searchValue]);
     
     return <div className="content">
-                <Loader active={loaderActive} />
+                <Loader active={pagination.loading} />
                 <Card>
                     <CardHeader>
                         <h5 className="title">Plantillas de Email</h5>
@@ -52,15 +44,16 @@ function EmailTemplates (props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredEmailTemplates.map((emailtemplate, index) => 
+                                    {pagination.paginatedItems.map((emailtemplate, index) => 
                                         <tr key={emailtemplate.idemailtemplate}>
-                                            <td> <Link to="/admin/emailtemplate" onClick={() => goToWsTemplateOnClick(emailtemplate.idemailtemplate)}>{index+ 1}</Link></td>
+                                            <td> <Link to="/admin/emailtemplate" onClick={() => goToWsTemplateOnClick(emailtemplate.idemailtemplate)}>{pagination.startIndex + index + 1}</Link></td>
                                             <td> <Link to="/admin/emailtemplate" onClick={() => goToWsTemplateOnClick(emailtemplate.idemailtemplate)}>{emailtemplate.name}</Link></td>
                                         </tr>
                                     )}                   
                                 </tbody>          
                             </table>
                         </div> 
+                        <TablePagination {...pagination} />
                     </CardBody>
                 </Card>
     </div>;

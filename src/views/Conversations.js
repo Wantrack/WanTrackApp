@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { axios } from '../config/https';
 import constants from '../util/constans';
 import { getUserInfo } from 'util/localStorageInfo';
+import TablePagination, { useClientPagination } from '../components/Pagination/TablePagination';
 
 import { CardHeader, CardBody, Card } from "reactstrap";
 
@@ -27,14 +28,13 @@ function Conversations (props) {
     }, []);
 
     const filteredGroups = groups.filter(user => String(user.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase()))
+    const pagination = useClientPagination(filteredGroups);
 
-    const delete_item = (index)=>{
-        if(window.confirm(`Estas seguro de que quieres borrar '${filteredGroups[index].name}' ?`)){
-            axios.delete(`${constants.apiurl}/api/conversation/${filteredGroups[index].idgroup_message}`)
+    const delete_item = (group)=>{
+        if(window.confirm(`Estas seguro de que quieres borrar '${group.name}' ?`)){
+            axios.delete(`${constants.apiurl}/api/conversation/${group.idgroup_message}`)
             .then(() => {
-                const updateGroups = [...groups]
-                updateGroups.splice(index, 1)
-                setGroups(updateGroups)
+                setGroups(groups.filter(item => item.idgroup_message !== group.idgroup_message))
             })
             .catch((error) => {
                 console.error('Error al eliminar la conversación', error)
@@ -74,7 +74,7 @@ function Conversations (props) {
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredGroups.map((group, index) => 
+                    {pagination.paginatedItems.map((group) => 
                         <tr  key={group.idgroup_message}>
                             { 
                                 userInfo && userInfo.idroles == 1 ?  
@@ -106,7 +106,7 @@ function Conversations (props) {
                             { 
                                 userInfo && userInfo.idroles == 1 ?  
                                 <td style={{textAlign: 'center'}}>
-                                    <Link to="javascript:void()" className='w-10 mx-auto cursor-pointer' onClick={() => delete_item(index)}><i className="fa fa-trash"></i></Link>
+                                    <Link to="javascript:void()" className='w-10 mx-auto cursor-pointer' onClick={() => delete_item(group)}><i className="fa fa-trash"></i></Link>
                                 </td> : '' 
                             }
                             
@@ -115,6 +115,7 @@ function Conversations (props) {
                 </tbody>          
             </table>
         </div>    
+        <TablePagination {...pagination} />
         </CardBody>
                 </Card>    
     </div>;

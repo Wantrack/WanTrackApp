@@ -1,32 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 
 import { axios } from '../config/https';
 import constants from '../util/constans';
+import TablePagination from '../components/Pagination/TablePagination';
+import useServerPagination from '../components/Pagination/useServerPagination';
 
 import { CardHeader, CardBody, Card } from "reactstrap";
 
 function Templates (props) { 
 
-    const [templates, setTemplates] = useState([]);
     const [searchValue, setSearchValue] = useState("");
-    
-    
-    useEffect(() => { 
-        axios.get(`${constants.apiurl}/api/templates`).then(result => {
-            setTemplates(result.data);
-        }); 
-    }, []);
+    const [refreshKey, setRefreshKey] = useState(0);
+    const buildUrl = React.useCallback(({ page, pageSize }) => (
+        `${constants.apiurl}/api/templates?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(searchValue)}`
+    ), [searchValue, refreshKey]);
+    const pagination = useServerPagination(buildUrl, [searchValue, refreshKey]);
 
-    const filteredTemplates = templates.filter(user => String(user.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase()))
-
-    const delete_item= (index)=>{
-        if(window.confirm(`Estas seguro de que quieres borrar '${filteredTemplates[index].name}' ?`)){
-            axios.delete(`${constants.apiurl}/api/template/${filteredTemplates[index].idtemplate}`)
+    const delete_item= (template)=>{
+        if(window.confirm(`Estas seguro de que quieres borrar '${template.name}' ?`)){
+            axios.delete(`${constants.apiurl}/api/template/${template.idtemplate}`)
             .then(() => {
-                const updatedTemplates = [...templates]
-                updatedTemplates.splice(index, 1)
-                setTemplates(updatedTemplates)
+                setRefreshKey(value => value + 1)
             })
             .catch((error) => {
                 console.error('Error el borrar el paso', error)
@@ -63,19 +58,20 @@ function Templates (props) {
                 </thead>
                 <tbody>
                     {
-                    filteredTemplates.map((template, index) => 
+                    pagination.paginatedItems.map((template) => 
                          <tr key={template.idtemplate}>
                             <td> <Link to="/admin/step"> {template.idtemplate} </Link></td>
                             <td className='text-aling-left'> <Link to="/admin/step" onClick={ () => goToTemplateOnClick(template.idtemplate)} > {template.name} </Link></td>
                             <td> <Link to="/admin/step"> {template.typeName} </Link></td>
                             <td style={{textAlign: 'center'}}>
-                            <Link to="javascript:void()" className='w-10 mx-auto cursor-pointer' onClick={() => delete_item(index)}><i className="fa fa-trash"></i></Link>
+                            <Link to="javascript:void()" className='w-10 mx-auto cursor-pointer' onClick={() => delete_item(template)}><i className="fa fa-trash"></i></Link>
                             </td>
                          </tr>
                     )}        
                 </tbody>          
             </table>
-        </div>   
+        </div>
+        <TablePagination {...pagination} />
         </CardBody>
                 </Card>    
     </div>;

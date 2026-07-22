@@ -13,7 +13,6 @@ import {
   Row,
   Col,
   FormGroup,
-  Form,
   Input,
   Button
 } from "reactstrap";
@@ -61,7 +60,7 @@ function Feelings(props) {
   }
 
   const onHandleChange = (e) => {
-    const { name, value } = e.target;
+    const { value } = e.target;
     setUrl(value);
   }
 
@@ -119,9 +118,6 @@ function Feelings(props) {
 
               const avgnegative = negative.length;
               const avgpositive = positve.length;
-
-              console.log(avgnegative)
-              console.log(avgpositive)
 
               const negativereal = avgnegative < 0 ? avgnegative* -1 : avgnegative
 

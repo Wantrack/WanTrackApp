@@ -26,10 +26,10 @@ function Admin(props) {
   const [pathMain, setPathMain] = React.useState(
     ''
   );
-  React.useEffect(() => {    
+  React.useEffect(() => {
     const token = localStorage.getItem(constants.token);
     if(token) {
-      axios.get(`${constants.apiurl}/api/validate/${token}`).then(async (result) => {})
+      axios.get(`${constants.apiurl}/api/validate/${token}`).then(() => {})
       .catch(error => {
         navigate('/login');
       });
@@ -57,7 +57,7 @@ function Admin(props) {
         console.error('Error parsing user info:', error);
       }
     }
-  });
+  }, [navigate]);
   React.useEffect(() => {
     if (navigator.platform.indexOf("Win") > -1) {
       document.documentElement.className += " perfect-scrollbar-on";
@@ -78,7 +78,7 @@ function Admin(props) {
         document.documentElement.classList.remove("perfect-scrollbar-on");
       }
     };
-  });
+  }, []);
   React.useEffect(() => {
     if (navigator.platform.indexOf("Win") > -1) {
       let tables = document.querySelectorAll(".table-responsive");

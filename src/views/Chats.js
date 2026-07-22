@@ -1,65 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
-import { axios } from '../config/https';
+import TablePagination from '../components/Pagination/TablePagination';
+import useServerPagination from '../components/Pagination/useServerPagination';
 import constants from '../util/constans';
-import SocketService  from "../socket";
+import SocketService from "../socket";
 
 import {
     CardHeader,
     CardBody,
     Card,
     CardFooter,
-    Pagination,
-    PaginationItem,
-    PaginationLink
-  } from "reactstrap";
+} from "reactstrap";
 
-function Chats (props) {
-    const [chats, setChats] = useState([]);
-    const [loaderActive, setLoaderActive] = useState(false);
-    const [searchValue, setSearchValue] = useState('');
-    const [rows, setRows] = useState([]);
-    const [max, setMax] = useState(0);
-    
-    useEffect(() => { 
-        loadChats(0);
-        const socket = new SocketService();
-        socket.getSocket().on('notificationrefresh', notificationrefresh);
-        console.log('Entro');
-        
-        return () => {
-            console.log('El componente Chats se desmontó');
-            socket.disconnect();
+function Chats() {
+    const [searchValue, setSearchValue] = React.useState('');
+    const [debouncedSearch, setDebouncedSearch] = React.useState('');
+    const [refreshKey, setRefreshKey] = React.useState(0);
+
+    React.useEffect(() => {
+        const timeout = setTimeout(() => setDebouncedSearch(searchValue.trim()), 350);
+        return () => clearTimeout(timeout);
+    }, [searchValue]);
+
+    const buildUrl = React.useCallback(({ page, pageSize }) => {
+        const params = new URLSearchParams({
+            page,
+            pageSize,
+        });
+
+        if (debouncedSearch) {
+            params.set('search', debouncedSearch);
         }
+
+        return `${constants.apiurl}/api/chats?${params.toString()}`;
+    }, [debouncedSearch, refreshKey]);
+
+    const pagination = useServerPagination(buildUrl, [debouncedSearch, refreshKey], 25);
+
+    React.useEffect(() => {
+        const socket = new SocketService();
+        socket.getSocket().on('notificationrefresh', () => {
+            setRefreshKey(value => value + 1);
+        });
+
+        return () => {
+            socket.disconnect();
+        };
     }, []);
 
-    function loadChats(from) {        
-        setLoaderActive(true)
-        axios.get(`${constants.apiurl}/api/chats?start=${from}`).then(result => {
-            setLoaderActive(false)
-            setChats(result.data);
-        });
-
-        axios.get(`${constants.apiurl}/api/chatsCount`).then(result => {
-            const amount = result.data.count;
-            const max = Math.ceil(amount/25);
-            var rows = [], i = 0, len = max
-            while (++i <= len) rows.push(i);
-            setRows(rows);
-            setMax(max);
-        });
-    }
-
-    function notificationrefresh(value) {
-        console.log(value);
-        loadChats();       
-    }
-    
-    const filteredChats = Array.isArray(chats) ? chats.filter(chat => String(chat.phone).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
-    
     return <div className="content">
-                <Loader active={loaderActive} />
+                <Loader active={pagination.loading} />
                 <Card>
                     <CardHeader>
                         <h5 className="title">Chats</h5>
@@ -68,8 +59,12 @@ function Chats (props) {
                         <div className="margin-bottom-2vh flex-left">
                             <div className="input-group flex-nowrap w-full">
                                 <span className="input-group-text z-0" id="addon-wrapping"><i className="fa fa-search"></i></span>
-                                <input type="text" className="form-control px-2" placeholder="Escriba el nombre del contacto"
-                                onChange={(e) => setSearchValue(e.target.value)}
+                                <input
+                                    type="text"
+                                    className="form-control px-2"
+                                    placeholder="Escriba el nombre o telefono del contacto"
+                                    value={searchValue}
+                                    onChange={(event) => setSearchValue(event.target.value)}
                                 />
                             </div>
                         </div>
@@ -77,7 +72,7 @@ function Chats (props) {
                         <div className="table-responsive">
                             <table className="table table-hover">
                                 <thead>
-                                    <tr>       
+                                    <tr>
                                         <th>#</th>
                                         <th>Telefono</th>
                                         <th>Nombre</th>
@@ -86,51 +81,21 @@ function Chats (props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {
-                                    filteredChats.map((chat, index) => 
-                                        <tr key={index}>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{index + 1}</Link></td>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.phone}</Link></td>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.name}</Link></td>
-                                            <td> <Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.last_creationdate}</Link></td>
-                                            <td>{ chat.isalert ?  <i title='No haz leido los mensajes' style={{color:'#f5365c'}} className="fa-solid fa-circle-exclamation"></i>: <></>}</td>
+                                    {pagination.paginatedItems.map((chat, index) =>
+                                        <tr key={`${chat.phone}-${chat.phoneNumberId}`}>
+                                            <td><Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{pagination.startIndex + index + 1}</Link></td>
+                                            <td><Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.phone}</Link></td>
+                                            <td><Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.name}</Link></td>
+                                            <td><Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.last_creationdate}</Link></td>
+                                            <td>{chat.isalert ? <i title='No haz leido los mensajes' style={{ color: '#f5365c' }} className="fa-solid fa-circle-exclamation"></i> : null}</td>
                                         </tr>
                                     )}
-                                </tbody>          
+                                </tbody>
                             </table>
-                        </div> 
+                        </div>
                     </CardBody>
-                    <CardFooter style={{display:'flex', justifyContent:'center'}}>
-                        <div style={{width:'90%', overflowX:'auto', display: 'flex', justifyContent: 'center'}}>
-                            <Pagination>
-                                <PaginationItem>
-                                    <PaginationLink
-                                    onClick={() => {loadChats(0, 25)}}
-                                    first
-                                    href="javascript:void(0)"
-                                    />
-                                </PaginationItem>
-                                {
-                                    rows.map((item, index) => 
-                                        <PaginationItem  key={index}>
-                                            <PaginationLink 
-                                            href="javascript:void(0)"
-                                            onClick={() => {loadChats(index + 1, 25)}}
-                                            >
-                                            {index + 1}
-                                            </PaginationLink>
-                                    </PaginationItem> 
-                                    )
-                                }                    
-                                <PaginationItem>
-                                    <PaginationLink
-                                    onClick={() => {loadChats(max, 25)}}
-                                    href="javascript:void(0)"
-                                    last
-                                    />
-                                </PaginationItem>
-                            </Pagination>
-                        </div>                                        
+                    <CardFooter>
+                        <TablePagination {...pagination} />
                     </CardFooter>
                 </Card>
     </div>;
@@ -138,7 +103,7 @@ function Chats (props) {
 
 function goToChat(phone, phoneNumberId, name) {
     localStorage.setItem('currentPhone', phone);
-    localStorage.setItem('currentName', name);
+    localStorage.setItem('currentName', name || '');
     localStorage.setItem('currentphoneNumberID', phoneNumberId);
 }
 

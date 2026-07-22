@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
-import { axios } from '../config/https';
+import TablePagination from '../components/Pagination/TablePagination';
 import constants from '../util/constans';
 import { clockformat } from 'util/time';
 import { decode } from "../util/base64";
+import useServerPagination from '../components/Pagination/useServerPagination';
 
 import {
     CardHeader,
@@ -13,12 +14,8 @@ import {
   } from "reactstrap";
 
 function Advisors (props) {
-    const [advisors, setAdvisors] = useState([]);
-    const [loaderActive, setLoaderActive] = useState(false);
     const [searchValue, setSearchValue] = useState("");
-    
-    useEffect(() => { 
-        setLoaderActive(true);
+    function getCompanyId() {
         let idCompany = undefined;
         const _userinfoEncoded = localStorage.getItem(constants.userinfo);
         if(_userinfoEncoded) {
@@ -27,16 +24,15 @@ function Advisors (props) {
                 idCompany =_userinfo.idCompany
             }
         }
-        axios.get(`${constants.apiurl}/api/adviserByCompany/${idCompany}`).then(result => {
-            setLoaderActive(false);
-            setAdvisors(result.data);
-        });       
-    }, []);
-    
-    const filteredUsers = Array.isArray(advisors) ? advisors.filter(advisor => String(advisor.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
+        return idCompany;
+    }
+    const buildUrl = React.useCallback(({ page, pageSize }) => (
+        `${constants.apiurl}/api/adviserByCompany/${getCompanyId()}?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(searchValue)}`
+    ), [searchValue]);
+    const pagination = useServerPagination(buildUrl, [searchValue]);
     
     return <div className="content">
-                <Loader active={loaderActive} />
+                <Loader active={pagination.loading} />
                 <Card>
                     <CardHeader>
                         <h5 className="title">Agentes</h5>
@@ -61,8 +57,8 @@ function Advisors (props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredUsers.map((advisor, index) => 
-                                        <tr key={index}>
+                                    {pagination.paginatedItems.map((advisor) => 
+                                        <tr key={advisor.idadviser}>
                                             <td> <Link to="/admin/advisor" onClick={() => goToAdvisorOnClick(advisor.idadviser)}>{advisor.name} {advisor.lastName}</Link></td>
                                             <td> <Link to="/admin/advisor" onClick={() => goToAdvisorOnClick(advisor.idadviser)}>{ clockformat(advisor.audioDuration || 0)}</Link></td>
                                         </tr>
@@ -70,6 +66,7 @@ function Advisors (props) {
                                 </tbody>          
                             </table>
                         </div> 
+                        <TablePagination {...pagination} />
                     </CardBody>
                 </Card>
     </div>;

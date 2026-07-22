@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
-
-import { axios } from '../config/https';
-import constants from '../util/constans';
+import TablePagination, { useClientPagination } from '../components/Pagination/TablePagination';
 
 import {
     CardHeader,
@@ -33,6 +31,7 @@ function Automatizations (props) {
     }, []);
     
     const filteredAutomatizations = Array.isArray(automatizations) ? automatizations.filter(automatization => String(automatization.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
+    const pagination = useClientPagination(filteredAutomatizations);
     
     return <div className="content">
                 <Loader active={loaderActive} />
@@ -59,7 +58,7 @@ function Automatizations (props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredAutomatizations.map((automatization, index) => 
+                                    {pagination.paginatedItems.map((automatization) =>
                                         <tr key={automatization.id}>
                                             <td> <Link to="/admin/automatization" onClick={() => goToCompanyOnClick(automatization.id)}>{automatization.name}</Link></td>
                                         </tr>
@@ -67,6 +66,7 @@ function Automatizations (props) {
                                 </tbody>          
                             </table>
                         </div> 
+                        <TablePagination {...pagination} />
                     </CardBody>
                 </Card>
     </div>;

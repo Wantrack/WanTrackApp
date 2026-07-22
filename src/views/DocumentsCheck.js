@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
+import TablePagination, { useClientPagination } from '../components/Pagination/TablePagination';
 
 import { axios } from '../config/https';
 import constants from '../util/constans';
@@ -27,6 +28,7 @@ function DocumentsCheck (props) {
     }, []);
     
     const filteredDocuments = Array.isArray(documents) ? documents.filter(document => String(document.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
+    const pagination = useClientPagination(filteredDocuments);
     
     return <div className="content">
                 <Loader active={loaderActive} />
@@ -53,7 +55,7 @@ function DocumentsCheck (props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredDocuments.map((document, index) => 
+                                    {pagination.paginatedItems.map((document) => 
                                         <tr key={document.id}>
                                             <td> <Link to="/admin/documentCheck" onClick={() => goToDocumentCheckOnClick(document.idverificator)}>{document.name}</Link></td>
                                         </tr>
@@ -61,6 +63,7 @@ function DocumentsCheck (props) {
                                 </tbody>          
                             </table>
                         </div> 
+                        <TablePagination {...pagination} />
                     </CardBody>
                 </Card>
     </div>;

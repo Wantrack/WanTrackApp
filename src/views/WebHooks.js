@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
-import { axios } from '../config/https';
+import TablePagination from '../components/Pagination/TablePagination';
 import constants from '../util/constans';
+import useServerPagination from '../components/Pagination/useServerPagination';
 import {
     CardHeader,
     CardBody,
@@ -10,22 +11,14 @@ import {
   } from "reactstrap";
 
 function WebHooks (props) {
-    const [webHooks, setWebHooks] = useState([]);
-    const [loaderActive, setLoaderActive] = useState(false);
     const [searchValue, setSearchValue] = useState('');
-    
-    useEffect(() => { 
-        setLoaderActive(true)
-        axios.get(`${constants.apiurl}/api/webhook/webhooks`).then(result => {
-            setLoaderActive(false)
-            setWebHooks(result.data);
-        });
-    }, []);
-    
-    const filteredWebHook = Array.isArray(webHooks) ? webHooks.filter(wsTemplate => String(wsTemplate.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
+    const buildUrl = React.useCallback(({ page, pageSize }) => (
+        `${constants.apiurl}/api/webhook/webhooks?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(searchValue)}`
+    ), [searchValue]);
+    const pagination = useServerPagination(buildUrl, [searchValue]);
     
     return <div className="content">
-                <Loader active={loaderActive} />
+                <Loader active={pagination.loading} />
                 <Card>
                     <CardHeader>
                         <h5 className="title">Listas de Webhooks</h5>
@@ -51,9 +44,9 @@ function WebHooks (props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredWebHook.map((webHook, index) => 
+                                    {pagination.paginatedItems.map((webHook, index) => 
                                         <tr key={webHook.idwebhookmessages}>
-                                            <td> <Link to="/admin/webhook" onClick={() => goToWebHooks(webHook.idwebhookmessages)}>{index + 1}</Link></td>
+                                            <td> <Link to="/admin/webhook" onClick={() => goToWebHooks(webHook.idwebhookmessages)}>{pagination.startIndex + index + 1}</Link></td>
                                             <td> <Link to="/admin/webhook" onClick={() => goToWebHooks(webHook.idwebhookmessages)}>{webHook.name}</Link></td>
                                             <td> <Link to="/admin/webhook" onClick={() => goToWebHooks(webHook.idwebhookmessages)}>{webHook.url}</Link></td>                                          
                                         </tr>
@@ -61,6 +54,7 @@ function WebHooks (props) {
                                 </tbody>          
                             </table>
                         </div> 
+                        <TablePagination {...pagination} />
                     </CardBody>
                 </Card>
     </div>;
