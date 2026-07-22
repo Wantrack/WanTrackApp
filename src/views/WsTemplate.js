@@ -33,6 +33,11 @@ const languages = [
   { value: 'de', label: 'Aleman' },
 ];
 
+const categories = [
+  { value: 'MARKETING', label: 'Marketing' },
+  { value: 'UTILITY', label: 'Utilidad' },
+];
+
 const buttonTypes = [
   { value: 'QUICK_REPLY', label: 'Respuesta rapida' },
   { value: 'URL', label: 'Visitar sitio web' },
@@ -76,7 +81,7 @@ function normalizeTemplate(data = {}) {
   }
 
   return {
-    language: 'en_US',
+    language: 'es_MX',
     variableType: 'NUMBER',
     mediaSample: 'NONE',
     header: '',
@@ -587,7 +592,17 @@ function WsTemplate() {
                         )}
                       </select>
                     </FormGroup>
-                  </Col>                  
+                  </Col>
+                  <Col className="pr-md-1" md="6">
+                    <FormGroup>
+                      <label>Categoria de la plantilla</label>
+                      <select className="form-control" disabled={!isCreatingTemplate} name="category" value={wstemplate.category || 'MARKETING'} onChange={onHandleChange}>
+                        {categories.map(category =>
+                          <option key={category.value} value={category.value}>{category.label}</option>
+                        )}
+                      </select>
+                    </FormGroup>
+                  </Col>
                 </Row>
               </CardBody>
             </Card>
