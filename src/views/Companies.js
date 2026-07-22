@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
+import TablePagination from '../components/Pagination/TablePagination';
 
-import { axios } from '../config/https';
 import constants from '../util/constans';
+import useServerPagination from '../components/Pagination/useServerPagination';
 
 import {
     CardHeader,
@@ -12,22 +13,14 @@ import {
   } from "reactstrap";
 
 function Companies (props) {
-    const [companies, setCompanies] = useState([]);
-    const [loaderActive, setLoaderActive] = useState(false);
     const [searchValue, setSearchValue] = useState('');
-    
-    useEffect(() => { 
-        setLoaderActive(true)
-        axios.get(`${constants.apiurl}/api/companies`).then(result => {
-            setLoaderActive(false)
-            setCompanies(result.data);
-        });       
-    }, []);
-    
-    const filteredCompanies = Array.isArray(companies) ? companies.filter(company => String(company.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
+    const buildUrl = React.useCallback(({ page, pageSize }) => (
+        `${constants.apiurl}/api/companies?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(searchValue)}`
+    ), [searchValue]);
+    const pagination = useServerPagination(buildUrl, [searchValue]);
     
     return <div className="content">
-                <Loader active={loaderActive} />
+                <Loader active={pagination.loading} />
                 <Card>
                     <CardHeader>
                         <h5 className="title">Empresas</h5>
@@ -54,7 +47,7 @@ function Companies (props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredCompanies.map((company, index) => 
+                                    {pagination.paginatedItems.map((company) => 
                                         <tr key={company.idcompany}>
                                             <td> <Link to="/admin/company" onClick={() => goToCompanyOnClick(company.idcompany)}>{company.name}</Link></td>
                                             <td> <Link to="/admin/company" onClick={() => goToCompanyOnClick(company.idcompany)}>{company.address}</Link></td>
@@ -65,6 +58,7 @@ function Companies (props) {
                                 </tbody>          
                             </table>
                         </div> 
+                        <TablePagination {...pagination} />
                     </CardBody>
                 </Card>
     </div>;

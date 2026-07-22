@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Doughnut, Pie, Radar } from "react-chartjs-2";
+import TablePagination, { useClientPagination } from '../components/Pagination/TablePagination';
 import {
   Button,
   Card,
@@ -32,6 +33,7 @@ function Advisor() {
   const [advisor, setAdvisor] = useState({});
   const [companies, setCompanies] = useState([]); 
   const [calls, setCalls] = useState([]);
+  const callsPagination = useClientPagination(calls);
   const [textModal, settextModal] = useState('');
   const [textModalAdvice, settextModalAdvice] = useState('');
   const [showAdvice, setShowAdvice] = useState(false);
@@ -44,9 +46,9 @@ function Advisor() {
   const [dataChart3, setDataChart3] = useState([]);
   const [dataChart3Labels, setDataChart3Labels] = useState([]);
   const [dataChart3Colorss, setDataChart3Colors] = useState([]);
-  const [dataChart4Labels, setDataChart4Labels] = useState(['Saludo', 'Escucha', 'Comunicación clara', 'Comunicación precisa', 'Ofertas relevantes', 'Eficiencia' ]);
+  const [dataChart4Labels] = useState(['Saludo', 'Escucha', 'Comunicación clara', 'Comunicación precisa', 'Ofertas relevantes', 'Eficiencia' ]);
   const [dataChart4, setDataChart4] = useState([0,0,0,0,0,0]);
-  const [dataChart4Colorss, setDataChart4Colors] = useState(['#29344099']);
+  const [dataChart4Colorss] = useState(['#29344099']);
   const [callduration, setCallDuration] = useState(0);
   const [npstotal, setNpsTotal] = useState(0);
   const [chatstotal, setChatTotal] = useState(0);
@@ -394,6 +396,8 @@ function Advisor() {
     return resultadoArray;
   }
 
+  void contarEmociones;
+
   function saveChanges() {
     axios.post(`${constants.apiurl}/api/adviser`, advisor).then(async (result) => {
         navigate('/admin/advisors');
@@ -596,8 +600,8 @@ function Advisor() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {calls.map((call, index) => 
-                                        <tr key={index}>
+                                    {callsPagination.paginatedItems.map((call, index) => 
+                                        <tr key={call.id || call.idcall || `${call.creationdate}-${index}`}>
                                             <td> {call.satisfaction}%</td>
                                             <td className='m_title'> {call.mainEmotion || '-'} </td>
                                             <td className='m_title'> {call.feeling || '-'} </td>
@@ -626,7 +630,8 @@ function Advisor() {
                                 </tbody>          
                             </table>
                         </div> 
-                    </Col>
+                        <TablePagination {...callsPagination} />
+                      </Col>                      
                   </Row>
                 </Form>
               </CardBody>

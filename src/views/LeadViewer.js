@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
-import { decode } from "../util/base64";
+import TablePagination, { useClientPagination } from '../components/Pagination/TablePagination';
 import { axios } from '../config/https';
 import constants from '../util/constans';
 import {
@@ -15,6 +14,7 @@ function LeadViewer (props) {
     const [header, setHeader] = useState([]);
     const [loaderActive, setLoaderActive] = useState(false);
     const [currentleadName, setCurrentleadName] = useState('');
+    const pagination = useClientPagination(body);
     
     useEffect(() => {  
         setLoaderActive(true);
@@ -62,7 +62,7 @@ function LeadViewer (props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {body.map((item, index) => 
+                                    {pagination.paginatedItems.map((item, index) => 
                                         <tr key={index}>
                                              {                                                
                                                 item.map((i, index2) => 
@@ -73,6 +73,7 @@ function LeadViewer (props) {
                                 </tbody>          
                             </table>
                         </div> 
+                        <TablePagination {...pagination} />
                     </CardBody>
                 </Card>
     </div>;

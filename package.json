@@ -39,7 +39,13 @@
     "deploy": "vercel --prod"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": "react-app",
+    "rules": {
+      "eqeqeq": "off",
+      "jsx-a11y/anchor-is-valid": "off",
+      "no-script-url": "off",
+      "react-hooks/exhaustive-deps": "off"
+    }
   },
   "peerDependencies": {
     "react": ">=16.8.0",

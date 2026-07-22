@@ -17,12 +17,14 @@ import {
 import { axios } from '../config/https';
 import constants from '../util/constans';
 import { getUserInfo } from 'util/localStorageInfo';
+import TablePagination, { useClientPagination } from '../components/Pagination/TablePagination';
 
 function Company() {
   const navigate = useNavigate ();
   const [company, setCompany] = useState({});
   const [countries, setCountries] = useState([]);
   const [wsaccounts, setWsAccounts] = useState([]); 
+  const wsAccountsPagination = useClientPagination(wsaccounts);
 
   const onHandleChange = (e) => {
     const { name, value } = e.target;
@@ -56,7 +58,6 @@ function Company() {
   }, []);
 
   function saveChanges() {
-    console.log(company)
     axios.post(`${constants.apiurl}/api/company`, company).then(async (result) => {
         navigate('/admin/companies');
     });
@@ -183,10 +184,10 @@ function Company() {
                             </tr>
                         </thead>
                         <tbody>
-                            {wsaccounts?.map((wsaccount, index) => 
+                            {wsAccountsPagination.paginatedItems?.map((wsaccount, index) => 
                                 <tr key={index}>
                                     <td>    
-                                      <Link to="/admin/whatsappaccount" onClick={() => goToWhatsAppAccountOnClick(wsaccount.idwhatsapp_accounts)}>{index + 1}</Link>                     
+                                      <Link to="/admin/whatsappaccount" onClick={() => goToWhatsAppAccountOnClick(wsaccount.idwhatsapp_accounts)}>{wsAccountsPagination.startIndex + index + 1}</Link>                     
                                     </td>
                                     <td> <Link to="/admin/whatsappaccount" onClick={() => goToWhatsAppAccountOnClick(wsaccount.idwhatsapp_accounts)}>{wsaccount.displayname}</Link></td>
                                     <td> <Link to="/admin/whatsappaccount" onClick={() => goToWhatsAppAccountOnClick(wsaccount.idwhatsapp_accounts)}>{wsaccount.phone}</Link></td>
@@ -195,6 +196,7 @@ function Company() {
                         </tbody>          
                     </table>
                 </div> 
+                <TablePagination {...wsAccountsPagination} />
               </CardBody>
             </Card>
           </Col>

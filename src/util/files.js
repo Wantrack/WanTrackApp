@@ -11,7 +11,6 @@ function analizeExcel(file) {
                 const workbook = XLSX.read(data, { type: 'array' });
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
-                console.log(worksheet['!ref']);
                 let jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                 jsonData = jsonData.filter(array => array.length > 0);
                 resolve(JSON.stringify(jsonData));  // Resolve the Promise with the jsonData

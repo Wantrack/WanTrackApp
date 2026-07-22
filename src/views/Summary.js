@@ -9,13 +9,11 @@ import {
     Col
   } from "reactstrap";
 import HistoryTrans from './HistoryTrans';
-import { func } from 'prop-types';
 
 function Summary (props) {
     const [loaderActive, setLoaderActive] = useState(false);
     const [amountMessagesSent, setAmountMessagesSent] = useState(0);
     const [months] = useState(["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]);
-    const [monthsIndex] = useState([1,2,3,4,5,6,7,8,9,10,11,12]);
     const [selectedIndexMonth, setSelectedIndexMonth] = useState(new Date().getMonth()+1);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -44,7 +42,6 @@ function Summary (props) {
                 resultMonth = 12;
                 setSelectedYear(prey => {
                     let resultYear = prey - 1;
-                    console.log(resultYear)
                     loadData(prey, resultMonth);
                     return resultYear;
                 })

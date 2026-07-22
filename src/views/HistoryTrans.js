@@ -24,35 +24,39 @@ function HistoryTrans (props) {
     const [amountMessagesSentArray, setAmountMessagesSentArray] = useState([]);
     const [loaderActive, setLoaderActive] = useState(false);     
 
-    function getMessageSent(from, to) {
+    async function getMessageSent(from, to) {
         setLoaderActive(true);
-        const start = (25 * (from > 0 ? from  - 1: from));
-        setStartMessagesSent(start);
-        axios.get(`${constants.apiurl}/api/messagesent?start=${start}&end=${to}${props.year ? `&year=${props.year}`: ''} ${props.month ? `&month=${props.month}` : ''}`).then(result => {
-            setMessagesSent(result.data);
-            setLoaderActive(false);
-        });
+        try {
+            const start = (25 * (from > 0 ? from  - 1: from));
+            setStartMessagesSent(start);
+            const filterParams = new URLSearchParams();
+            if (props.year) filterParams.append('year', props.year);
+            if (props.month) filterParams.append('month', props.month);
+            const filterQuery = filterParams.toString();
+            const messagesUrl = `${constants.apiurl}/api/messagesent?start=${start}&end=${to}${filterQuery ? `&${filterQuery}` : ''}`;
+            const countUrl = `${constants.apiurl}/api/messagesentCount${filterQuery ? `?${filterQuery}` : ''}`;
 
-        setLoaderActive(true);
-        axios.get(`${constants.apiurl}/api/messagesentCount${props.year ? `?year=${props.year}`: ''} ${props.month ? `&month=${props.month}` : ''}`).then(result => {
+            const [messagesResult, countResult] = await Promise.all([
+                axios.get(messagesUrl),
+                axios.get(countUrl),
+            ]);
+
+            setMessagesSent(messagesResult.data);
+            const result = countResult;
             const amount = result.data.count;
             const max = Math.ceil(amount/25);
-            setLoaderActive(false);
             var rows = [], i = 0, len = max
             while (++i <= len) rows.push(i);
             setAmountMessagesSentArray(rows);
             setMaxMessagesSent(max);
+        } finally {
             setLoaderActive(false);
-        });
+        }
     }
     
     useEffect(() => {
         getMessageSent(0 , 25);
-    }, []);
-
-    useEffect(()=>{
-        getMessageSent(0 , 25);
-    },[props.month]);
+    }, [props.month, props.year]);
     
     
     return <div className="content">

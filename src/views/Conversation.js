@@ -13,8 +13,6 @@ let listFreeOptions = [];
 let _messages = []
 let _group = {};
 let __idGroup = 0;
-let _templates = [];
-let metadataBd = [];
 
 function Conversation(props) {
     const navigate = useNavigate();
@@ -31,6 +29,7 @@ function Conversation(props) {
     const hasEmptyFields = () => {
         const emptyMessages = freeOptions?.some(freeOption => freeOption.answer.trim() === '');
         const emptyGroup = group.name === "";
+        return emptyMessages || emptyGroup;
     };
 
     const onHandleChange = (e) => {
@@ -150,7 +149,6 @@ function Conversation(props) {
     }, []);
 
     const cmbOptionAnswerOnChange = async (e, indexMessage, indexOption) => {
-        console.log('----------')
         if (indexMessage !== undefined && indexOption !== undefined) {
             onHandleChangeOptionMessage(indexMessage, indexOption, e);
         } else {
@@ -228,7 +226,6 @@ function Conversation(props) {
         }
 
         axios.get(`${constants.apiurl}/api/templates`).then(result => {
-            _templates = result.data;
             setTemplates(result.data);
         });
 
@@ -246,7 +243,6 @@ function Conversation(props) {
         listFreeOptions = [];
         _messages = [];
         _group = {};
-        metadataBd = [];
     }, [])
 
     useEffect(() => {

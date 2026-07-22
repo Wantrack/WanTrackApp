@@ -5,10 +5,7 @@ import { decode } from "../util/base64";
 // react plugin used to create charts
 import { Line, Bar } from "react-chartjs-2";
 import HistoryTrans from './HistoryTrans';
-
-import {
-  useNavigate  
-} from "react-router-dom";
+import TablePagination, { useClientPagination } from '../components/Pagination/TablePagination';
 
 // reactstrap components
 import {
@@ -31,9 +28,31 @@ import {
   pluginShadow
 } from "variables/charts.js";
 
-function Dashboard(props) {
-  const navigate = useNavigate ();
+const buildChartData = (labels, data, label, borderColor = "#1f8ef1") => ({
+  labels,
+  datasets: [
+    {
+      label,
+      fill: true,
+      borderColor,
+      borderWidth: 2,
+      borderDash: [],
+      borderDashOffset: 0.0,
+      pointBackgroundColor: borderColor,
+      pointBorderColor: "rgba(255,255,255,0)",
+      pointHoverBackgroundColor: borderColor,
+      pointBorderWidth: 20,
+      pointHoverRadius: 4,
+      pointHoverBorderWidth: 15,
+      pointRadius: 4,
+      data,
+    },
+  ],
+});
 
+const getLastValue = (data) => Array.isArray(data) && data.length > 0 ? data[data.length - 1] : 0;
+
+function Dashboard(props) {
   const [dataChartSent, setDataChartSent] = useState(chartExample2.data);
   const [dataChartDelivered, setDataChartDelivered] = useState(chartExampleD.data);
   const [dataChartRead, setDataChartRead] = useState(chartExampleR.data);
@@ -45,6 +64,8 @@ function Dashboard(props) {
   const [dataChartReceive, setDataChartReceive] = useState(chartExample3.data);
   const [messageReceive, setMessageReceive] = useState(0);
   const [completeReportScatterlist, setCompleteReportScatterlist] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const campaignsPagination = useClientPagination(completeReportScatterlist);
 
     useEffect(() => {
       let idCompany = undefined;
@@ -89,119 +110,36 @@ function Dashboard(props) {
 
     axios.get(buildDashboardUrl('MessageSendChart')).then(result => {  
       if(result.data && result.data.data && result.data.data.length > 0) {
-        chartExample2.data.labels = result.data.labels;
-        chartExample2.data.datasets = [] 
-        chartExample2.data.datasets.push({
-          label: "Mensajes enviados",
-          fill: true,
-          borderColor: "#1f8ef1",
-          borderWidth: 2,
-          borderDash: [],
-          borderDashOffset: 0.0,
-          pointBackgroundColor: "#1f8ef1",
-          pointBorderColor: "rgba(255,255,255,0)",
-          pointHoverBackgroundColor: "#1f8ef1",
-          pointBorderWidth: 20,
-          pointHoverRadius: 4,
-          pointHoverBorderWidth: 15,
-          pointRadius: 4,
-          data: result.data.data,
-        });
-        setDataChartSent(chartExample2.data);
-        setMessageSent(result.data.data.slice(-1) || 0);
+        setDataChartSent(buildChartData(result.data.labels, result.data.data, "Mensajes enviados"));
+        setMessageSent(getLastValue(result.data.data));
       }      
     });
 
     axios.get(buildDashboardUrl('MessageDeliveredChart')).then(result => {  
       if(result.data && result.data.data && result.data.data.length > 0) {
-        chartExampleD.data.labels = result.data.labels;
-        chartExampleD.data.datasets = []
-        chartExampleD.data.datasets.push({
-          label: "Mensajes Entregados",
-          fill: true,
-          borderColor: "#1f8ef1",
-          borderWidth: 2,
-          borderDash: [],
-          borderDashOffset: 0.0,
-          pointBackgroundColor: "#1f8ef1",
-          pointBorderColor: "rgba(255,255,255,0)",
-          pointHoverBackgroundColor: "#1f8ef1",
-          pointBorderWidth: 20,
-          pointHoverRadius: 4,
-          pointHoverBorderWidth: 15,
-          pointRadius: 4,
-          data: result.data.data,
-        });
-        setDataChartDelivered(chartExampleD.data);
-        setMessageDelivered(result.data.data.slice(-1) || 0);
+        setDataChartDelivered(buildChartData(result.data.labels, result.data.data, "Mensajes Entregados"));
+        setMessageDelivered(getLastValue(result.data.data));
       }      
     });
 
     axios.get(buildDashboardUrl('MessageReadChart')).then(result => {  
       if(result.data && result.data.data && result.data.data.length > 0) {
-        chartExampleR.data.labels = result.data.labels;
-        chartExampleR.data.datasets = []
-        chartExampleR.data.datasets.push({
-          label: "Mensajes Leidos",
-          fill: true,
-          borderColor: "#1f8ef1",
-          borderWidth: 2,
-          borderDash: [],
-          borderDashOffset: 0.0,
-          pointBackgroundColor: "#1f8ef1",
-          pointBorderColor: "rgba(255,255,255,0)",
-          pointHoverBackgroundColor: "#1f8ef1",
-          pointBorderWidth: 20,
-          pointHoverRadius: 4,
-          pointHoverBorderWidth: 15,
-          pointRadius: 4,
-          data: result.data.data,
-        });
-        setDataChartRead(chartExampleR.data);
-        setMessageRead(result.data.data.slice(-1) || 0);
+        setDataChartRead(buildChartData(result.data.labels, result.data.data, "Mensajes Leidos"));
+        setMessageRead(getLastValue(result.data.data));
       }      
     });
 
     axios.get(buildDashboardUrl('MessageFailedChart')).then(result => {  
       if(result.data && result.data.data && result.data.data.length > 0) {
-        chartExampleF.data.labels = result.data.labels;
-        chartExampleF.data.datasets = []
-        chartExampleF.data.datasets.push({
-          label: "Mensajes fallidos",
-          fill: true,
-          borderColor: "#1f8ef1",
-          borderWidth: 2,
-          borderDash: [],
-          borderDashOffset: 0.0,
-          pointBackgroundColor: "#1f8ef1",
-          pointBorderColor: "rgba(255,255,255,0)",
-          pointHoverBackgroundColor: "#1f8ef1",
-          pointBorderWidth: 20,
-          pointHoverRadius: 4,
-          pointHoverBorderWidth: 15,
-          pointRadius: 4,
-          data: result.data.data,
-        });
-        setDataChartFailed(chartExampleF.data);
-        setMessageFailed(result.data.data.slice(-1) || 0);
+        setDataChartFailed(buildChartData(result.data.labels, result.data.data, "Mensajes fallidos"));
+        setMessageFailed(getLastValue(result.data.data));
       }      
     });
 
     axios.get(buildDashboardUrl('MessageReceiveChart')).then(result => {
       if(result.data && result.data.data && result.data.data.length > 0) {
-        chartExample3.data.labels = result.data.labels;
-        chartExample3.data.datasets = [];
-        chartExample3.data.datasets.push( {
-          label: "Mensajes recibidos",
-          fill: true,
-          borderColor: "#d048b6",
-          borderWidth: 2,
-          borderDash: [],
-          borderDashOffset: 0.0,
-          data: result.data.data,
-        });
-        setDataChartReceive(chartExample3.data);
-        setMessageReceive(result.data.data.slice(-1) || 0);
+        setDataChartReceive(buildChartData(result.data.labels, result.data.data, "Mensajes recibidos", "#d048b6"));
+        setMessageReceive(getLastValue(result.data.data));
       }      
     });
 
@@ -211,6 +149,11 @@ function Dashboard(props) {
         setCompleteReportScatterlist(result.data)
       }      
     });
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowHistory(true), 350);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -336,9 +279,9 @@ function Dashboard(props) {
                     </thead>  
                     <tbody>
                    
-                        {completeReportScatterlist.map((crsl, index) => 
+                        {campaignsPagination.paginatedItems.map((crsl, index) => 
                         <tr key={index}>
-                            <td>{(index + 1) }</td>
+                            <td>{campaignsPagination.startIndex + index + 1}</td>
                             <td>{crsl.name}</td>
                             <td>{crsl.delivered}</td>
                             <td>{crsl.read}</td>
@@ -348,8 +291,9 @@ function Dashboard(props) {
                         )}   
                              
                     </tbody>         
-                    </Table>
-                </div>           
+                  </Table>
+                </div>
+                <TablePagination {...campaignsPagination} />
                 
               </CardBody>
             </Card> 
@@ -357,7 +301,7 @@ function Dashboard(props) {
         </Row>
         <Row>
           <Col lg="12" md="12">
-            <HistoryTrans></HistoryTrans>
+            {showHistory ? <HistoryTrans /> : null}
           </Col>
         </Row>
       </div>

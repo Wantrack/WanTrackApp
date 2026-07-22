@@ -3,6 +3,7 @@ import NotificationAlert from "react-notification-alert";
 import { useNavigate, Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
 import { getCompanyId } from 'util/localStorageInfo';
+import TablePagination, { useClientPagination } from '../components/Pagination/TablePagination';
 import {
   Button,
   Card,
@@ -30,12 +31,11 @@ function DocumentCheck() {
    const [inputKey, setInputKey] = useState(Date.now());
    const [document, setDocument] = useState({});
    const [loaderActive, setLoaderActive] = useState(false);
-   const [loaderText, setLoaderText] = useState('');
+   const [loaderText] = useState('');
    const [documents, setDocuments] = useState([]);
+   const documentsPagination = useClientPagination(documents);
    const [companies, setCompanies] = useState([]);
    const [rules, setRules] = useState([]);
-   const [currentSL, setCurrentSL] = useState(0);
-   const [token, setToken] = useState('');
    const [files, setFiles] = useState([]);
    const [modalVisible, setModalVisible] = useState(false);
    const [modalVisibleRules, setModalVisibleRules] = useState(false);
@@ -56,16 +56,12 @@ function DocumentCheck() {
 
   const cmbCompanyOnChange = async (e) => { 
     onHandleChange(e);   
-    const { value } = e.target;
   } 
 
   useEffect(() => { 
     async function load() {
         setLoaderActive(true)
         const currentVerificatorID = localStorage.getItem('currentVerificatorID');
-        const token = localStorage.getItem(constants.token);
-        setToken(token);
-        setCurrentSL(currentVerificatorID);
         const _document =  await axios.get(`${constants.apiurl}/api/verificators/${currentVerificatorID}`);
         if(_document && _document.data) {
             setDocument(_document.data);
@@ -135,7 +131,6 @@ function DocumentCheck() {
 
   const openFile = () => {
     if (inputFileref.current) {
-      console.log(inputFileref.current)
       inputFileref.current.click();
     }
   };
@@ -159,7 +154,6 @@ function DocumentCheck() {
 
   const removeFileFromArray = (indexToRemove) => {   
     setFiles(prevItems => prevItems.filter((_, index) => index !== indexToRemove));
-    console.log(files)
   }
 
   const addRule = () => {
@@ -382,9 +376,9 @@ function DocumentCheck() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {documents?.map((document, index) => 
+                                    {documentsPagination.paginatedItems?.map((document, index) => 
                                         <tr key={index}>
-                                            <td> <Link to="#" >{(index + 1)}</Link></td>
+                                            <td> <Link to="#" >{documentsPagination.startIndex + index + 1}</Link></td>
                                             <td> <Link to="#" >{document.name}</Link></td>
                                             <td> <Link target='_blank' to={document.url}><i title='Ver documento' className="fa-solid fa-file"></i></Link></td>
                                             <td> <Link to="#" onClick={()=> {opendocumentinfo(document)}} >{getIcon(document.status)}</Link></td>                                            
@@ -393,6 +387,7 @@ function DocumentCheck() {
                                 </tbody>          
                             </table>
                         </div> 
+                        <TablePagination {...documentsPagination} />
                     </Col>
                   </Row>
                 </Form>

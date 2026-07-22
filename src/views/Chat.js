@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import NotificationAlert from "react-notification-alert";
 import Loader from "../components/Loader/Loader";
 import { axios } from "../config/https";
@@ -6,194 +6,180 @@ import constants from "../util/constans";
 import ScrollArea from "react-scrollbar";
 import { Button, Card, Col, Input, Row } from "reactstrap";
 import { Tooltip as ReactTooltip } from "react-tooltip";
-import SocketService  from "../socket";
-import { Link } from "react-router-dom";
+import SocketService from "../socket";
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+const MESSAGE_LIMIT = 120;
 
-function Chat(props) {
+function Chat() {
   const scrollAreaRef = useRef(null);
+  const notificationAlertRef = useRef(null);
+  const refreshTimeoutRef = useRef(null);
   const [chats, setChats] = useState([]);
   const [message, setMessage] = useState('');
   const [phone, setPhone] = useState('');
+  const [phoneNumberId, setPhoneNumberId] = useState('');
   const [name, setName] = useState('');
   const [loaderActive, setLoaderActive] = useState(false);
   const [startchat, setStarChat] = useState(false);
 
-  async function toggleChat() {
-    const _startchat =!startchat;
-    setStarChat(!startchat)
-    const phone = localStorage.getItem("currentPhone");
-    const phoneNumberId = localStorage.getItem("currentphoneNumberID");
-    if(_startchat) {
-      await axios.post(`${constants.apiurl}/api/chatasesorstart`, {
-        phone: phone,
-        phoneNumberId: phoneNumberId
-    });
-    } else {
-      await axios.post(`${constants.apiurl}/api/chatasesorstop`, {
-        phone: phone,
-        phoneNumberId: phoneNumberId
-    });
-    }
-  }
+  const toBottom = useCallback(() => {
+    window.setTimeout(() => {
+      if (scrollAreaRef.current?.scrollArea) {
+        scrollAreaRef.current.scrollArea.scrollBottom();
+      }
+    }, 120);
+  }, []);
 
-  const notificationAlertRef = useRef(null); 
-
-  async function toBotton() {
-    await sleep(200);
-    if (
-      scrollAreaRef &&
-      scrollAreaRef.current &&
-      scrollAreaRef.current.scrollArea
-    ) {
-      scrollAreaRef.current.scrollArea.scrollBottom();
-    }
-  }
-
-  async function sendNotification(message, type = 'success') {    
-    var options = {};
-    options = {
+  const sendNotification = useCallback((notificationMessage, type = 'success') => {
+    notificationAlertRef.current?.notificationAlert({
       place: 'tr',
-      message: (
-        <div>
-          <div>
-            {message}
-          </div>
-        </div>
-      ),
-      type: type,
+      message: <div><div>{notificationMessage}</div></div>,
+      type,
       icon: "tim-icons icon-bell-55",
       autoDismiss: 7,
-    };
-    notificationAlertRef.current.notificationAlert(options);
-  }
+    });
+  }, []);
 
-  function genAI() {
-    //sendNotification('Esta opción está desactivada para tu usuario 🚫. Habla con tu asesor para solicitar una versión de prueba 📞✨', 'danger');
-    setLoaderActive(true);
-    axios.get(`${constants.apiurl}/api/suggestionText/${message}`).then((result) => {
-      setLoaderActive(false);
-      document.querySelector('#message').value = result.data.textosugerido;
-      setMessage(result.data.textosugerido);
+  const loadChats = useCallback(async ({ markRead = true, includeStatus = false, showLoader = false } = {}) => {
+    const currentPhone = localStorage.getItem("currentPhone");
+    const currentPhoneNumberId = localStorage.getItem("currentphoneNumberID");
+
+    if (!currentPhone || !currentPhoneNumberId) return;
+
+    if (showLoader) setLoaderActive(true);
+
+    const chatUrl = `${constants.apiurl}/api/chats/${encodeURIComponent(currentPhone)}/${encodeURIComponent(currentPhoneNumberId)}?limit=${MESSAGE_LIMIT}&markRead=${markRead}`;
+    const requests = [axios.get(chatUrl)];
+
+    if (includeStatus) {
+      requests.push(axios.get(`${constants.apiurl}/api/chatisstop/${encodeURIComponent(currentPhone)}/${encodeURIComponent(currentPhoneNumberId)}`));
+    }
+
+    try {
+      const [chatResult, statusResult] = await Promise.all(requests);
+      setChats(Array.isArray(chatResult.data) ? chatResult.data : []);
+      if (statusResult) {
+        setStarChat(statusResult.data.isStop);
+      }
+      toBottom();
+    } finally {
+      if (showLoader) setLoaderActive(false);
+    }
+  }, [toBottom]);
+
+  async function toggleChat() {
+    const nextStartChat = !startchat;
+    setStarChat(nextStartChat);
+    const url = nextStartChat ? '/api/chatasesorstart' : '/api/chatasesorstop';
+
+    await axios.post(`${constants.apiurl}${url}`, {
+      phone,
+      phoneNumberId,
     });
   }
 
-  const onHandleChange = (e) => {
-    const { name, value } = e.target;
-    setMessage(value);
+  async function genAI() {
+    if (!message.trim()) return;
+
+    setLoaderActive(true);
+    try {
+      const result = await axios.get(`${constants.apiurl}/api/suggestionText/${encodeURIComponent(message)}`);
+      setMessage(result.data.textosugerido);
+    } catch (error) {
+      sendNotification('No fue posible generar la sugerencia.', 'danger');
+    } finally {
+      setLoaderActive(false);
+    }
   }
 
-  const handleKeyPress = (event) => {
-    if (event.key === 'Enter') {
-        sendMessage();
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
     }
   };
 
   async function sendMessage() {
-    if(message) {
-        document.querySelector('#message').value = '';
-        const phone = localStorage.getItem("currentPhone");
-        const phoneNumberId = localStorage.getItem("currentphoneNumberID");
-        await axios.post(`${constants.apiurl}/api/chatssendmessage`, {
-            phone: phone,
-            phoneNumberId: phoneNumberId,
-            message: message
-        });
-        setMessage('');
-        
-        loadChats(phone, phoneNumberId);
-    }   
-  }
+    const text = message.trim();
+    if (!text) return;
 
-  function loadChats(phone, phoneNumberId) {
-    axios.get(`${constants.apiurl}/api/chats/${phone}/${phoneNumberId}`).then((result) => {
-        setLoaderActive(false);
-        setChats(result.data);
-        toBotton();
+    setMessage('');
+    await axios.post(`${constants.apiurl}/api/chatssendmessage`, {
+      phone,
+      phoneNumberId,
+      message: text,
     });
-
-    axios.get(`${constants.apiurl}/api/chatisstop/${phone}/${phoneNumberId}`).then((result) => {
-      setStarChat(result.data.isStop);
-  });
-  }
-
-  const elements = document.querySelectorAll('.ps__rail-y');
-  for (let index = 0; index < elements.length; index++) {
-    const element = elements[index];
-    console.log(element);
-    element.style.display = 'none';
+    loadChats({ markRead: false });
   }
 
   useEffect(() => {
-    setLoaderActive(true);
-    const phone = localStorage.getItem("currentPhone");
-    const name = localStorage.getItem("currentName");
-    const phoneNumberId = localStorage.getItem("currentphoneNumberID");
-    setPhone(phone);
-    setName(name);
-    loadChats(phone, phoneNumberId);
+    const currentPhone = localStorage.getItem("currentPhone");
+    const currentPhoneNumberId = localStorage.getItem("currentphoneNumberID");
+    const currentName = localStorage.getItem("currentName");
+
+    setPhone(currentPhone || '');
+    setPhoneNumberId(currentPhoneNumberId || '');
+    setName(currentName || '');
+    loadChats({ includeStatus: true, showLoader: true });
 
     const socket = new SocketService();
-    socket.getSocket().on('chatrefresh', chatrefresh);      
+    socket.getSocket().on('chatrefresh', () => {
+      window.clearTimeout(refreshTimeoutRef.current);
+      refreshTimeoutRef.current = window.setTimeout(() => {
+        loadChats({ markRead: false });
+      }, 350);
+    });
 
     return () => {
-      console.log('El componente Chat se desmontó');
+      window.clearTimeout(refreshTimeoutRef.current);
       socket.disconnect();
-    }
-  }, []);
+    };
+  }, [loadChats]);
 
-  function chatrefresh(value) {
-    console.log(value);
-    const phone = localStorage.getItem("currentPhone");
-    const phoneNumberId = localStorage.getItem("currentphoneNumberID");
-    loadChats(phone, phoneNumberId);
-  } 
-  
-  const showMeanMessageType = (messageType, message) => {
-    if(messageType == 'image') {
-      return <div style={{display: 'flex', flexDirection: 'column'}}>
-          <a target="link" href={`${constants.apiurl}/api/aws/getfileImage/imagesws2/${message}`}>Descarga Imagen</a>
+  const showMeanMessageType = (messageType, chatMessage) => {
+    if (messageType === 'image') {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <a target="_blank" rel="noreferrer" href={`${constants.apiurl}/api/aws/getfileImage/imagesws2/${chatMessage}`}>Descarga Imagen</a>
         </div>
-    } else {
-      return <p>{message}</p>
+      );
     }
-  }
+
+    return <p>{chatMessage}</p>;
+  };
 
   return (
     <div className="content">
       <NotificationAlert ref={notificationAlertRef} />
       <Loader active={loaderActive} />
-      <Card style={{marginBottom: '0px'}}>
-        <div style={{display: 'flex', alignItems: 'center'}} className="headerchat">
-            <div>
-              <i style={{fontSize:'2rem'}} className="fa-regular fa-circle-user"></i>
-            </div>
-            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'start'}} className="herderphone">
-              <h4 style={{marginBottom: '5px'}}>{name}</h4>
-              <span style={{fontSize: '11px'}}>{phone}</span>
-            </div>  
-            <div>
-              <Link style={{marginLeft: '35px'}} to="javascript:void(0)" onClick={()=>{toggleChat()}}>
-                <span  className={startchat ? 'gray' : ''}>{startchat ? 'Desactivar respuesta humana' : 'Activar respuesta humana'}</span> <br></br>
-                <i style={{fontSize:'2rem', marginLeft:'2rem'}} className={startchat ? 'fa-solid fa-toggle-on' : 'fa-solid fa-toggle-off gray'} title={startchat ? 'Chat con asesor activo' : 'Chat con asesor inactivo'}></i>
-              </Link>              
-            </div>          
+      <Card style={{ marginBottom: '0px' }}>
+        <div className="headerchat">
+          <div>
+            <i style={{ fontSize: '2rem' }} className="fa-regular fa-circle-user"></i>
+          </div>
+          <div className="herderphone">
+            <h4 style={{ marginBottom: '5px' }}>{name}</h4>
+            <span style={{ fontSize: '11px' }}>{phone}</span>
+          </div>
+          <div className="chat-human-toggle">
+            <Button color="link" onClick={toggleChat}>
+              <span className={startchat ? 'gray' : ''}>{startchat ? 'Desactivar respuesta humana' : 'Activar respuesta humana'}</span>
+              <i className={startchat ? 'fa-solid fa-toggle-on' : 'fa-solid fa-toggle-off gray'} title={startchat ? 'Chat con asesor activo' : 'Chat con asesor inactivo'}></i>
+            </Button>
+          </div>
         </div>
         <ScrollArea
           style={{ height: "70vh" }}
           speed={0.8}
-          className="area"
+          className="area chat-scroll-area"
           contentClassName="content chat-container"
           ref={scrollAreaRef}
-          vertical={true}
+          vertical
         >
-          {chats.map((chat, index) => (
+          {chats.map((chat) => (
             <div
-              key={index}
-              className={`${chat.type == 0 ? "message-left" : "message-right"}`}
+              key={chat.idauditTrail}
+              className={chat.type === 0 ? "message-left" : "message-right"}
             >
               <div>
                 {showMeanMessageType(chat.typeMessage, chat.message)}
@@ -202,30 +188,26 @@ function Chat(props) {
             </div>
           ))}
         </ScrollArea>
-        <div style={{ padding: "10px"}}>
+        <div style={{ padding: "10px" }}>
           <Row>
-            <Col lg="10" sm="8" style={{ padding: "0px 2px 0px 10px"}}>
-                <Input style={{marginTop: '5px'}} id="message" name="message" defaultValue={message} placeholder="Escribe un mensaje" onChange={onHandleChange} onKeyPress={handleKeyPress}></Input>
-            </Col>            
-            <Col lg="1" sm="2" style={{ padding: "0px 1px"}}>
-                <Button onClick={genAI} data-tooltip-id="genAITooltip" title="Sugiere respuesta con IA" style={{width: '100%'}}>                
-                    <svg fill="#FFDF00" width="14px" height="14px" viewBox="0 0 512 512" id="icons" xmlns="http://www.w3.org/2000/svg" >
-                        <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                        <g
-                            id="SVGRepo_tracerCarrier"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        ></g>
-                        <g id="SVGRepo_iconCarrier">
-                            <path d="M208,512a24.84,24.84,0,0,1-23.34-16l-39.84-103.6a16.06,16.06,0,0,0-9.19-9.19L32,343.34a25,25,0,0,1,0-46.68l103.6-39.84a16.06,16.06,0,0,0,9.19-9.19L184.66,144a25,25,0,0,1,46.68,0l39.84,103.6a16.06,16.06,0,0,0,9.19,9.19l103,39.63A25.49,25.49,0,0,1,400,320.52a24.82,24.82,0,0,1-16,22.82l-103.6,39.84a16.06,16.06,0,0,0-9.19,9.19L231.34,496A24.84,24.84,0,0,1,208,512Zm66.85-254.84h0Z"></path>
-                            <path d="M88,176a14.67,14.67,0,0,1-13.69-9.4L57.45,122.76a7.28,7.28,0,0,0-4.21-4.21L9.4,101.69a14.67,14.67,0,0,1,0-27.38L53.24,57.45a7.31,7.31,0,0,0,4.21-4.21L74.16,9.79A15,15,0,0,1,86.23.11,14.67,14.67,0,0,1,101.69,9.4l16.86,43.84a7.31,7.31,0,0,0,4.21,4.21L166.6,74.31a14.67,14.67,0,0,1,0,27.38l-43.84,16.86a7.28,7.28,0,0,0-4.21,4.21L101.69,166.6A14.67,14.67,0,0,1,88,176Z"></path>
-                            <path d="M400,256a16,16,0,0,1-14.93-10.26l-22.84-59.37a8,8,0,0,0-4.6-4.6l-59.37-22.84a16,16,0,0,1,0-29.86l59.37-22.84a8,8,0,0,0,4.6-4.6L384.9,42.68a16.45,16.45,0,0,1,13.17-10.57,16,16,0,0,1,16.86,10.15l22.84,59.37a8,8,0,0,0,4.6,4.6l59.37,22.84a16,16,0,0,1,0,29.86l-59.37,22.84a8,8,0,0,0-4.6,4.6l-22.84,59.37A16,16,0,0,1,400,256Z"></path>
-                        </g>
-                    </svg>
-                 </Button>
+            <Col lg="10" sm="8" style={{ padding: "0px 2px 0px 10px" }}>
+              <Input
+                style={{ marginTop: '5px' }}
+                id="message"
+                name="message"
+                value={message}
+                placeholder="Escribe un mensaje"
+                onChange={(event) => setMessage(event.target.value)}
+                onKeyDown={handleKeyDown}
+              />
             </Col>
-            <Col lg="1" sm="2" style={{ padding: "0px 10px 0px 0px"}}>
-                <Button onClick={sendMessage} title="Envia el mensaje" style={{width: '100%'}}><i className="fa-solid fa-paper-plane"></i></Button>
+            <Col lg="1" sm="2" style={{ padding: "0px 1px" }}>
+              <Button onClick={genAI} data-tooltip-id="genAITooltip" title="Sugiere respuesta con IA" style={{ width: '100%' }}>
+                <i className="fa-solid fa-wand-magic-sparkles"></i>
+              </Button>
+            </Col>
+            <Col lg="1" sm="2" style={{ padding: "0px 10px 0px 0px" }}>
+              <Button onClick={sendMessage} title="Envia el mensaje" style={{ width: '100%' }}><i className="fa-solid fa-paper-plane"></i></Button>
             </Col>
           </Row>
         </div>
@@ -234,7 +216,7 @@ function Chat(props) {
         id="genAITooltip"
         place="bottom"
         variant="info">
-            <p>Sugiere respuestas adecuadas según el contexto de la información con Inteligencia Artificial 🤖📊💬</p>
+          <p>Sugiere respuestas adecuadas segun el contexto de la conversacion.</p>
       </ReactTooltip>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import NotificationAlert from "react-notification-alert";
 import { useNavigate, Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
@@ -75,10 +75,6 @@ function ScatterList() {
   const toggleModalDocument = () => {
     setModalVisibleDocuemnt(!modalVisibleDocument);
   };
-
-  async function getExtension(filename) {
-    return filename.split('.').pop();
-  }
 
   const onHandleChangeCheckbox = index => e => {
     let newArray = [...scatterListDetails];
@@ -467,14 +463,12 @@ function ScatterList() {
         contacts: ''
       }));
     }
-    console.log(newList);
     axios.patch(`${constants.apiurl}/api/scatterlistdetailSelectedAll`, {selected: _selectedInt, idscatterlist:currentScatterListID});
     setScatterListDetails([...newList]);
   };
 
   const openFile = () => {
     if (inputFileref.current) {
-      console.log(inputFileref.current)
       inputFileref.current.click();
     }
   };
@@ -597,12 +591,9 @@ function ScatterList() {
             const sheetName = workbook.SheetNames[0]; // Assuming the first sheet
             const worksheet = workbook.Sheets[sheetName];
 
-            console.log(worksheet['!ref']);
-
             // Convert the worksheet into a JSON array
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
             setImportContacts(jsonData)
-            console.log(jsonData);
 
             //setImportContacts(processedData);
         };

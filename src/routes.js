@@ -127,7 +127,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idSep: '9'
+    idSep: '24'
   },
   {
     path: "/automatizations",
@@ -139,7 +139,7 @@ var routes = [
   },
   {  
     type: 'separator',
-    idSep: '9'
+    idSep: '25'
   },
   {
     path: "/wstemplates",

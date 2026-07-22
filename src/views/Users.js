@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
-
-import { axios } from '../config/https';
+import TablePagination from '../components/Pagination/TablePagination';
 import constants from '../util/constans';
+import useServerPagination from '../components/Pagination/useServerPagination';
 
 import {
     CardHeader,
@@ -12,22 +12,14 @@ import {
   } from "reactstrap";
 
 function Users (props) {
-    const [users, setUsers] = useState([]);
-    const [loaderActive, setLoaderActive] = useState(false);
     const [searchValue, setSearchValue] = useState("");
-    
-    useEffect(() => { 
-        setLoaderActive(true)
-        axios.get(`${constants.apiurl}/api/users`).then(result => {
-            setLoaderActive(false)
-            setUsers(result.data);
-        });       
-    }, []);
-    
-    const filteredUsers = Array.isArray(users) ? users.filter(user => String(user.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : []
+    const buildUrl = React.useCallback(({ page, pageSize }) => (
+        `${constants.apiurl}/api/users?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(searchValue)}`
+    ), [searchValue]);
+    const pagination = useServerPagination(buildUrl, [searchValue]);
     
     return <div className="content">
-                <Loader active={loaderActive} />
+                <Loader active={pagination.loading} />
                 <Card>
                     <CardHeader>
                         <h5 className="title">Usuarios</h5>
@@ -54,7 +46,7 @@ function Users (props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredUsers.map((user, index) => 
+                                    {pagination.paginatedItems.map((user) => 
                                         <tr key={user.iduser}>
                                             <td> <Link to="/admin/user" onClick={() => goToUserOnClick(user.iduser)}>{user.name}</Link></td>
                                             <td> <Link to="/admin/user" onClick={() => goToUserOnClick(user.iduser)}>{user.phone}</Link></td>
@@ -65,6 +57,7 @@ function Users (props) {
                                 </tbody>          
                             </table>
                         </div> 
+                        <TablePagination {...pagination} />
                     </CardBody>
                 </Card>
     </div>;

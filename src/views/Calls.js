@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import NotificationAlert from "react-notification-alert";
 import { Link } from "react-router-dom";
 import Loader from '../components/Loader/Loader';
+import TablePagination, { useClientPagination } from '../components/Pagination/TablePagination';
 import { decode } from "../util/base64";
 import { axios } from '../config/https';
 import constants from '../util/constans';
@@ -155,7 +156,6 @@ function Calls (props) {
                 Array.from(files).forEach(async file => {
                     setLoaderActive(true);
                     const extension = getExtension(file.name);
-                    console.log(extension)
                     if(extension == 'txt') {
                         let formData = new FormData();
                         formData.append("file", file);    
@@ -214,6 +214,7 @@ function Calls (props) {
     }
     
     const cafilteredCalls = Array.isArray(calls) ? calls.filter(call => String(call.name).toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())) : [];
+    const callsPagination = useClientPagination(cafilteredCalls);
 
     const setTranscription = (type) => {
         if(type == 1) {
@@ -239,7 +240,7 @@ function Calls (props) {
                         
         } else {
             if(textModal && (typeof textModal === 'string' || textModal instanceof String)) {
-                const text = textModal.replaceAll('\"', '').replaceAll(/\r/g, ' ').replaceAll('\\n', '\n');
+                const text = textModal.replaceAll('"', '').replaceAll(/\r/g, ' ').replaceAll('\\n', '\n');
                 return (<textarea disabled readOnly style={{color: '#000'}} className="form-control" placeholder="{ ... }" cols="30" rows="10" value={text} name='Trasncripcion'></textarea>);
             }           
         }
@@ -520,8 +521,8 @@ function Calls (props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {cafilteredCalls.map((call, index) => 
-                                        <tr key={index}>
+                                    {callsPagination.paginatedItems.map((call, index) => 
+                                        <tr key={call.id || call.idcall || `${call.creationdate}-${index}`}>
                                             <td> <Link to="/admin/advisor" onClick={() => goToAdvisorOnClick(call.idAdviser)}> {call.name}</Link> </td>
                                             <td> {call.satisfaction}%</td>
                                             <td className='m_title'> {call.mainEmotion || '-'} </td>
@@ -554,6 +555,7 @@ function Calls (props) {
                                 </tbody>          
                             </table>
                         </div> 
+                        <TablePagination {...callsPagination} />
                     </CardBody>
                 </Card>
     </div>;
