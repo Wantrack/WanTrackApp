@@ -68,19 +68,19 @@ function UserProfile() {
                     <Col className="pr-md-1" md="4">
                       <FormGroup>
                         <label>Nombres</label>
-                        <Input placeholder="Jhon Doe" type="text" name='name' defaultValue={user.name} onChange={onHandleChange}/>
+                        <Input placeholder="Jhon Doe" type="text" name='name' value={user.name || ''} onChange={onHandleChange}/>
                       </FormGroup>
                     </Col>
                     <Col className="pl-md-1" md="4">
                       <FormGroup>
                         <label>Numero de documento</label>
-                        <Input placeholder="00000000" type="number" name='dni' defaultValue={user.dni} onChange={onHandleChange}/>
+                        <Input placeholder="00000000" type="number" name='dni' value={user.dni || ''} onChange={onHandleChange}/>
                       </FormGroup>
                     </Col>
                     <Col md="4">
                       <FormGroup>
                         <label>Telefono</label>
-                        <Input placeholder="3000000000" type="tel" name='phone' defaultValue={user.phone} onChange={onHandleChange} />
+                        <Input placeholder="3000000000" type="tel" name='phone' value={user.phone || ''} onChange={onHandleChange} />
                       </FormGroup>
                     </Col>
                   </Row>
@@ -90,7 +90,7 @@ function UserProfile() {
                         <label htmlFor="exampleInputEmail1">
                           Email
                         </label>
-                        <Input placeholder="jhondoe@email.com" type="email" autoComplete="off" name='email' defaultValue={user.email} onChange={onHandleChange} />
+                        <Input placeholder="jhondoe@email.com" type="email" autoComplete="off" name='email' value={user.email || ''} onChange={onHandleChange} />
                       </FormGroup>
                     </Col>
                     <Col md="3">
@@ -98,13 +98,13 @@ function UserProfile() {
                         <label htmlFor="exampleInputEmail1">
                           Contraseña
                         </label>
-                        <Input placeholder="*****" type="password" autoComplete="off" name='password' defaultValue={user.password} onChange={onHandleChange}/>
+                        <Input placeholder="*****" type="password" autoComplete="new-password" name='password' value={user.password || ''} onChange={onHandleChange}/>
                       </FormGroup>
                     </Col>
                     <Col md="3">
                       <FormGroup>
                         <label>Empresa</label>
-                        <select className="form-control" name="idCompany" value={user.idCompany} onChange={cmbCompanyOnChange}>
+                        <select className="form-control" name="idCompany" value={user.idCompany || -1} onChange={cmbCompanyOnChange}>
                         {
                             companies?.map((company, index) => 
                             <option key={index} value={company.idcompany}>{company.name}</option>
@@ -115,7 +115,7 @@ function UserProfile() {
                     <Col md="3">
                       <FormGroup>
                         <label>Rol</label>
-                        <select className="form-control" name="idRol" value={user.idRol} onChange={onHandleChange}>
+                        <select className="form-control" name="idRol" value={user.idRol || -1} onChange={onHandleChange}>
                         {
                             roles?.map((rol, index) => 
                             <option key={index} value={rol.idroles}>{rol.name}</option>
