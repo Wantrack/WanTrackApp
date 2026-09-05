@@ -107,13 +107,20 @@ function Chat() {
     const text = message.trim();
     if (!text) return;
 
-    setMessage('');
-    await axios.post(`${constants.apiurl}/api/chatssendmessage`, {
-      phone,
-      phoneNumberId,
-      message: text,
-    });
-    loadChats({ markRead: false });
+    setLoaderActive(true);
+    try {
+      await axios.post(`${constants.apiurl}/api/chatssendmessage`, {
+        phone,
+        phoneNumberId,
+        message: text,
+      });
+      setMessage('');
+      loadChats({ markRead: false });
+    } catch (error) {
+      sendNotification(error.response?.data?.error || 'No fue posible enviar el mensaje.', 'danger');
+    } finally {
+      setLoaderActive(false);
+    }
   }
 
   useEffect(() => {
