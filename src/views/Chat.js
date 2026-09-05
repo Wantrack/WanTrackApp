@@ -21,6 +21,7 @@ function Chat() {
   const [name, setName] = useState('');
   const [loaderActive, setLoaderActive] = useState(false);
   const [startchat, setStarChat] = useState(false);
+  const [assignment, setAssignment] = useState(null);
 
   const toBottom = useCallback(() => {
     window.setTimeout(() => {
@@ -53,14 +54,16 @@ function Chat() {
 
     if (includeStatus) {
       requests.push(axios.get(`${constants.apiurl}/api/chatisstop/${encodeURIComponent(currentPhone)}/${encodeURIComponent(currentPhoneNumberId)}`));
+      requests.push(axios.get(`${constants.apiurl}/api/chatassignment/${encodeURIComponent(currentPhone)}/${encodeURIComponent(currentPhoneNumberId)}`));
     }
 
     try {
-      const [chatResult, statusResult] = await Promise.all(requests);
+      const [chatResult, statusResult, assignmentResult] = await Promise.all(requests);
       setChats(Array.isArray(chatResult.data) ? chatResult.data : []);
       if (statusResult) {
         setStarChat(statusResult.data.isStop);
       }
+      if (assignmentResult) setAssignment(assignmentResult.data || null);
       toBottom();
     } finally {
       if (showLoader) setLoaderActive(false);
@@ -76,6 +79,7 @@ function Chat() {
       phone,
       phoneNumberId,
     });
+    if (!nextStartChat) setAssignment(null);
   }
 
   async function genAI() {
@@ -160,6 +164,7 @@ function Chat() {
           <div className="herderphone">
             <h4 style={{ marginBottom: '5px' }}>{name}</h4>
             <span style={{ fontSize: '11px' }}>{phone}</span>
+            {assignment && <span style={{ fontSize: '11px', display: 'block' }}>{assignment.departmentName || 'General'} · {assignment.userName}</span>}
           </div>
           <div className="chat-human-toggle">
             <Button color="link" onClick={toggleChat}>

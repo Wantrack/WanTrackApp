@@ -21,6 +21,7 @@ function UserProfile() {
   const [user, setUser] = useState({});
   const [companies, setCompanies] = useState([]); 
   const [roles, setRoles] = useState([]); 
+  const [departments, setDepartments] = useState([]);
 
   const onHandleChange = (e) => {
     const { name, value } = e.target;
@@ -30,8 +31,31 @@ function UserProfile() {
     });
   }
 
-  const cmbCompanyOnChange = async (e) => { 
-    onHandleChange(e);        
+  const cmbCompanyOnChange = async (e) => {
+    const idCompany = Number(e.target.value);
+    setUser(previous => ({ ...previous, idCompany, departmentIds: [] }));
+    await loadDepartments(idCompany);
+  }
+
+  async function loadDepartments(idCompany) {
+    if (!idCompany || idCompany < 1) {
+      setDepartments([]);
+      return;
+    }
+    const result = await axios.get(`${constants.apiurl}/api/companies/${idCompany}/departments`);
+    setDepartments((result.data || []).filter(department => Number(department.active) === 1));
+  }
+
+  function toggleDepartment(iddepartment) {
+    setUser(previous => {
+      const selected = Array.isArray(previous.departmentIds) ? previous.departmentIds.map(Number) : [];
+      return {
+        ...previous,
+        departmentIds: selected.includes(iddepartment)
+          ? selected.filter(id => id !== iddepartment)
+          : [...selected, iddepartment],
+      };
+    });
   }
 
   useEffect(() => { 
@@ -42,7 +66,9 @@ function UserProfile() {
     const _roles = await axios.get(`${constants.apiurl}/api/roles`);
     setRoles([{idroles: -1, name: 'Sin Rol'}, ..._roles.data]);
     const _user =  await axios.get(`${constants.apiurl}/api/user/${currentUserID}`);
-      setUser(_user.data);
+      const userData = _user.data || {};
+      setUser({ ...userData, departmentIds: Array.isArray(userData.departmentIds) ? userData.departmentIds.map(Number) : [] });
+      if (userData.idCompany) await loadDepartments(userData.idCompany);
     }    
    load();
   }, []);
@@ -124,6 +150,31 @@ function UserProfile() {
                       </FormGroup>
                     </Col>
                   </Row>                 
+                  {departments.length > 0 && (
+                    <Row>
+                      <Col md="12">
+                        <FormGroup>
+                          <label>Departamentos de atención por WhatsApp</label>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '8px' }}>
+                            {departments.map((department) => (
+                              <FormGroup check key={department.iddepartment}>
+                                <label className="form-check-label">
+                                  <Input
+                                    type="checkbox"
+                                    checked={(user.departmentIds || []).map(Number).includes(Number(department.iddepartment))}
+                                    onChange={() => toggleDepartment(Number(department.iddepartment))}
+                                  />
+                                  <span className="form-check-sign"><span className="check" /></span>
+                                  {department.name}
+                                </label>
+                              </FormGroup>
+                            ))}
+                          </div>
+                          <small className="text-muted">Al seleccionar al menos uno, este usuario entra en el reparto automático de chats.</small>
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                  )}
                 </Form>
               </CardBody>
               <CardFooter>
