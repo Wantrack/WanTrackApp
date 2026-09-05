@@ -16,6 +16,27 @@ import { decode } from "util/base64";
 
 var ps;
 
+function getDefaultAdminPath() {
+  const encodedUserInfo = localStorage.getItem(constants.userinfo);
+  if (!encodedUserInfo) return '/admin/access-denied';
+
+  try {
+    const userInfo = JSON.parse(decode(encodedUserInfo));
+    const modules = userInfo.modules
+      ? String(userInfo.modules).replaceAll(' ', '').split(',').filter(Boolean)
+      : [];
+
+    if (modules.length === 1 && modules[0] === '21') return '/admin/documentsCheck';
+    if (modules.includes('11')) return '/admin/dashboardconversations';
+    if (modules.includes('1')) return '/admin/dashboard';
+    if (modules.includes('15')) return '/admin/chatsws';
+  } catch (error) {
+    console.error('Error parsing user info:', error);
+  }
+
+  return '/admin/access-denied';
+}
+
 function Admin(props) {
   const location = useLocation();
   const navigate = useNavigate ();
@@ -23,9 +44,7 @@ function Admin(props) {
   const [sidebarOpened, setsidebarOpened] = React.useState(
     document.documentElement.className.indexOf("nav-open") !== -1
   );
-  const [pathMain, setPathMain] = React.useState(
-    ''
-  );
+  const pathMain = React.useMemo(getDefaultAdminPath, []);
   React.useEffect(() => {
     const token = localStorage.getItem(constants.token);
     if(token) {
@@ -35,27 +54,6 @@ function Admin(props) {
       });
     }else {
       navigate('/login');
-    }
-
-    const _userinfoEncoded = localStorage.getItem(constants.userinfo);
-    if (_userinfoEncoded) {
-      try {
-        const _userinfo = JSON.parse(decode(_userinfoEncoded));
-
-        const _modules = _userinfo.modules?.replaceAll(' ', '').split(',') || [];
-        if (_modules.length === 1 && _modules[0] === '21') {
-          setPathMain('/admin/documentsCheck');
-        } else if (_modules.includes('11')) {
-          setPathMain('/admin/dashboardconversations');
-        }
-        if (_modules.includes('1')) {
-          setPathMain('/admin/dashboard');
-        } else {
-
-        }
-      } catch (error) {
-        console.error('Error parsing user info:', error);
-      }
     }
   }, [navigate]);
   React.useEffect(() => {
@@ -134,6 +132,21 @@ function Admin(props) {
               />
               <Routes>
                 {getRoutes(routes)}
+                <Route
+                  path="/access-denied"
+                  element={pathMain !== '/admin/access-denied' ? (
+                    <Navigate to={pathMain} replace />
+                  ) : (
+                    <div className="content">
+                      <div className="card">
+                        <div className="card-body">
+                          <h4>Usuario sin módulos asignados</h4>
+                          <p>Solicita a un administrador que asigne un rol con acceso a esta aplicación.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                />
                 <Route
                   path="/"
                   element={<Navigate to={pathMain} replace />}

@@ -31,7 +31,9 @@ function Sidebar(props) {
     const _userinfoEncoded = localStorage.getItem(constants.userinfo);
     if(_userinfoEncoded) {
     const _userinfo = JSON.parse(decode(_userinfoEncoded));
-      const _modules = _userinfo.modules.replaceAll(' ', '').split(',');
+      const _modules = _userinfo.modules
+        ? String(_userinfo.modules).replaceAll(' ', '').split(',').filter(Boolean)
+        : [];
       setModules(_modules);
     }
     

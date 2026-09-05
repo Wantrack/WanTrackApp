@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Button,
   Card,
@@ -14,7 +14,8 @@ import {
   Modal,
   ModalBody,
   ModalHeader,
-  Label
+  Label,
+  Alert
 } from "reactstrap";
 
 import { axios } from '../config/https';
@@ -25,8 +26,9 @@ import { analizeExcel } from 'util/files';
 import TablePagination, { useClientPagination } from '../components/Pagination/TablePagination';
 
 function WhatsAppAccount() {
-  const navigate = useNavigate ();
   const [whatsAppAccount, setWhatsAppAccount] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveFeedback, setSaveFeedback] = useState(null);
   const [documents, setDocuments] = useState([]); 
   const documentsPagination = useClientPagination(documents);
   const [modalVisible, setModalVisible] = useState(false);
@@ -36,12 +38,32 @@ function WhatsAppAccount() {
   const [currentWhatsAppAccountID, setCurrentWhatsAppAccountID] = useState(0);
   const inputFileref = useRef(null);
 
+  useEffect(() => {
+    if(saveFeedback?.color !== 'success') return undefined;
+    const timeout = window.setTimeout(() => setSaveFeedback(null), 4000);
+    return () => window.clearTimeout(timeout);
+  }, [saveFeedback]);
+
+  const normalizeAccount = (account = {}) => ({
+    ...account,
+    hasbot: Number(account.hasbot) === 1 ? 1 : 0,
+    hashuman: Number(account.hashuman) === 1 ? 1 : 0,
+  });
+
   const onHandleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    const nextValue = type === 'checkbox' ? Number(checked) : value;
+    const currentValue = type === 'checkbox'
+      ? (Number(whatsAppAccount[name]) === 1 ? 1 : 0)
+      : (whatsAppAccount[name] ?? '');
+
     setWhatsAppAccount(pre => ({
       ...pre,
-      [name]: value 
+      [name]: nextValue
     }));
+    if(currentValue !== nextValue) {
+      setSaveFeedback({ color: 'warning', text: 'Hay cambios sin guardar. Presiona Guardar antes de recargar.' });
+    }
   }
 
   const onHandleChangeDocument = (e) => {
@@ -63,7 +85,7 @@ function WhatsAppAccount() {
 
         const _whatsAppAccount =  await axios.get(`${constants.apiurl}/api/wsaccounts/${_currentWhatsAppAccountID}`);
         if(_whatsAppAccount.data) {
-            setWhatsAppAccount(_whatsAppAccount.data);
+            setWhatsAppAccount(normalizeAccount(_whatsAppAccount.data));
             getDocuments(_currentWhatsAppAccountID);
         } 
     }
@@ -71,10 +93,24 @@ function WhatsAppAccount() {
     load();
   }, []);
 
-  function saveChanges() {
-    axios.post(`${constants.apiurl}/api/wsaccounts`, whatsAppAccount).then(async (result) => {
-        navigate('/admin/company');
-    });
+  async function saveChanges(event) {
+    event?.preventDefault();
+    setIsSaving(true);
+    setSaveFeedback(null);
+    try {
+      const result = await axios.post(`${constants.apiurl}/api/wsaccounts`, {
+        ...whatsAppAccount,
+        hasbot: Number(whatsAppAccount.hasbot) === 1 ? 1 : 0,
+        hashuman: Number(whatsAppAccount.hashuman) === 1 ? 1 : 0,
+      });
+      setWhatsAppAccount(normalizeAccount(result.data));
+      setSaveFeedback({ color: 'success', text: 'La cuenta de WhatsApp se guardó correctamente.' });
+    } catch (error) {
+      const message = error.response?.data?.error || 'No fue posible guardar la cuenta de WhatsApp.';
+      setSaveFeedback({ color: 'danger', text: message });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function saveDocuments(document) {
@@ -90,9 +126,9 @@ function WhatsAppAccount() {
 
   function renderButton() {
     const userInfo = getUserInfo();
-    if(userInfo.idroles === 1) {
-      return  <Button className="btn-fill" color="primary" type="submit" onClick={saveChanges}>
-      Guardar
+    if(Number(userInfo?.idroles) === 1) {
+      return  <Button className="btn-fill" color="primary" type="button" disabled={isSaving} onClick={saveChanges}>
+      {isSaving ? 'Guardando…' : 'Guardar'}
     </Button>
     } else {
       return  <div></div>
@@ -101,7 +137,7 @@ function WhatsAppAccount() {
 
   function renderTokenInput() {
     const userInfo = getUserInfo();
-    if(userInfo.idroles === 1) {
+    if(Number(userInfo?.idroles) === 1) {
       return  <>
         <Col md="12">
           <FormGroup>
@@ -127,7 +163,7 @@ function WhatsAppAccount() {
 
   function renderInstructions() {
     const userInfo = getUserInfo();
-    if(userInfo.idroles === 1) {
+    if(Number(userInfo?.idroles) === 1) {
       return   <Col md="12">
       <FormGroup>
         <label>Instrucciones</label>
@@ -262,6 +298,26 @@ function WhatsAppAccount() {
                             </FormGroup>
                         </Col>
                     </Row>
+                  <Row>
+                    <Col md="4">
+                      <FormGroup check>
+                        <Label check>
+                          <Input type="checkbox" name="hasbot" checked={Number(whatsAppAccount.hasbot) === 1} onChange={onHandleChange}/>
+                          <span className="form-check-sign"><span className="check" /></span>
+                          Habilitar respuestas del bot
+                        </Label>
+                      </FormGroup>
+                    </Col>
+                    <Col md="4">
+                      <FormGroup check>
+                        <Label check>
+                          <Input type="checkbox" name="hashuman" checked={Number(whatsAppAccount.hashuman) === 1} onChange={onHandleChange}/>
+                          <span className="form-check-sign"><span className="check" /></span>
+                          Habilitar atención humana
+                        </Label>
+                      </FormGroup>
+                    </Col>
+                  </Row>
                   <Row>                    
                    {
                     renderTokenInput()
@@ -279,6 +335,7 @@ function WhatsAppAccount() {
                 </Form>
               </CardBody>
               <CardFooter>
+                {saveFeedback && <Alert color={saveFeedback.color}>{saveFeedback.text}</Alert>}
                 {
                   renderButton()
                 }               
