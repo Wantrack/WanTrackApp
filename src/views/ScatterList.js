@@ -55,6 +55,38 @@ function ScatterList() {
   const [amountMessageList, setAmountMessageList] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const [headerImageFile, setHeaderImageFile] = useState(undefined);
+  const [importResult, setImportResult] = useState(null);
+  const [sendStates, setSendStates] = useState([]);
+  const [selectedCount, setSelectedCount] = useState(0);
+  const sendRequestKey = useRef(null);
+  const sending = useRef(false);
+  const selectionRequests = useRef(0);
+  const contactLoadRequest = useRef(0);
+  const pageOffset = useRef(0);
+  const pendingSend = sendStates.some(row => ['queued', 'processing', 'accepted', 'unknown'].includes(row.status) && Number(row.count) > 0);
+
+  const apiError = (error) => typeof error?.response?.data === 'string'
+    ? error.response.data : error?.response?.data?.message || 'No se pudo completar la operación.';
+
+  useEffect(() => {
+    if (!Number(currentSL)) return;
+    let disposed = false;
+    let timer;
+    async function refresh() {
+      try {
+        const result = await axios.get(`${constants.apiurl}/api/scatterlist/${currentSL}/send-status`);
+        if (!disposed) {
+          setSendStates(result.data.states || []);
+          if (result.data.states?.length) await getScatterlistdetailbyScatterlist(pageOffset.current);
+          const active = (result.data.states || []).some(row => ['queued', 'processing', 'accepted'].includes(row.status));
+          if (active && !disposed) timer = setTimeout(refresh, 5000);
+        }
+      } catch (error) { /* User actions still report errors; polling does not spam notifications. */ }
+    }
+    refresh();
+    return () => { disposed = true; clearTimeout(timer); };
+  }, [currentSL, sendStates.some(row => ['queued', 'processing', 'accepted'].includes(row.status))]);
+
 
   const notificationAlertRef = useRef(null);
   const inputFileref = useRef();
@@ -76,20 +108,15 @@ function ScatterList() {
     setModalVisibleDocuemnt(!modalVisibleDocument);
   };
 
-  const onHandleChangeCheckbox = index => e => {
-    let newArray = [...scatterListDetails];
-    const item = newArray[index];
-    newArray[index] = { ...item, selected: item.selected === 1 ? 0 : 1 }
-    item.selected = item.selected === 1 ? 0 : 1 
-    setScatterListDetails(newArray);
-    if(newArray.some(detail => detail.selected === 1)) {
-      setValidationErrors(pre => ({
-        ...pre,
-        contacts: ''
-      }));
-    }
-
-    axios.patch(`${constants.apiurl}/api/scatterlistdetailSelected`, item);
+  const onHandleChangeCheckbox = index => async () => {
+    if (sending.current) return;
+    const item = scatterListDetails[index];
+    selectionRequests.current++;
+    try {
+      await axios.patch(`${constants.apiurl}/api/scatterlistdetailSelected`, {...item, selected: item.selected === 1 ? 0 : 1});
+      await getScatterlistdetailbyScatterlist(startMessageList);
+    } catch (error) { sendNotification(apiError(error), 'danger'); }
+    finally { selectionRequests.current--; }
   }
 
   const onHandleChangeContact = (e) => {
@@ -275,42 +302,33 @@ function ScatterList() {
     onHandleChange(e);        
   }
 
-  useEffect(() => { 
+  useEffect(() => {
     async function load() {
-        setLoaderActive(true)
-        const currentScatterListID = localStorage.getItem('currentScatterListID');
-        const token = localStorage.getItem(constants.token);
-        setToken(token);
-        setCurrentSL(currentScatterListID);
-        const _scatterList =  await axios.get(`${constants.apiurl}/api/scatterlist/${currentScatterListID}`);
-        if(_scatterList && _scatterList.data) {
-            setScatterList(_scatterList.data);
-            jsonToPObject(_scatterList.data);
+      setLoaderActive(true);
+      try {
+        const id = localStorage.getItem('currentScatterListID');
+        setToken(localStorage.getItem(constants.token));
+        setCurrentSL(id);
+        const [campaign, companyList] = await Promise.all([
+          Number(id) > 0 ? axios.get(`${constants.apiurl}/api/scatterlist/${id}`) : Promise.resolve({data: {}}),
+          axios.get(`${constants.apiurl}/api/companies`)
+        ]);
+        setScatterList(campaign.data);
+        jsonToPObject(campaign.data);
+        setCompanies([{idcompany: -1, name: 'Sin Empresa'}, ...companyList.data]);
+        const companyId = campaign.data.idcompnay || companyList.data[0]?.idcompany;
+        if (companyId) {
+          const [templates, accounts] = await Promise.all([
+            axios.get(`${constants.apiurl}/api/wstemplatebyCompany/${companyId}`),
+            axios.get(`${constants.apiurl}/api/wsaccountsbyCompany/${companyId}`)
+          ]);
+          setWsTemplates([{idwstemplate: -1, name: 'Sin Plantilla'}, ...templates.data]);
+          setWsAccounts([{idwhatsapp_accounts: -1, displayname: 'Sin Cuenta'}, ...accounts.data]);
         }
-
-        try {
-          const _count =  await axios.get(`${constants.apiurl}/api/getCountByScatterList/${currentScatterListID}`);
-        if(_count && _count.data) {
-          const length = Math.ceil(_count.data.count / 25);
-          setMaxmessaelist(length)
-          const array = Array.from({ length }, (_, index) => index + 1);
-          setAmountMessageList(array)
-        }
-        } catch (error) {}        
-
-        const _companies = await axios.get(`${constants.apiurl}/api/companies`);
-        setCompanies([{idcompany: -1, name: 'Sin Empresa'}, ..._companies.data]);
-
-        const _wstemplates = await axios.get(`${constants.apiurl}/api/wstemplatebyCompany/${_scatterList.data.idcompnay || _companies.data[0].idcompany}`);
-        setWsTemplates([{idwstemplate: -1, name: 'Sin Plantilla'}, ..._wstemplates.data]);
- 
-        const _wsaccounts = await axios.get(`${constants.apiurl}/api/wsaccountsbyCompany/${_scatterList.data.idcompnay || _companies.data[0].idcompany}`);
-        setWsAccounts([{idwhatsapp_accounts: -1, displayname: 'Sin Cuenta'}, ..._wsaccounts.data]);
-       
         await getScatterlistdetailbyScatterlist();
-        setLoaderActive(false)
+      } catch (error) { sendNotification(apiError(error), 'danger'); }
+      finally { setLoaderActive(false); }
     }
-
     load();
   }, []);
 
@@ -326,7 +344,12 @@ function ScatterList() {
       ...(currentScatterListId > 0 ? { idscatterlist: scatterList.idscatterlist || currentScatterListId } : {}),
       json: pObjectToJson()
     };
-    await axios.post(`${constants.apiurl}/api/scatterList`, scatterListPayload);
+    const saved = await axios.post(`${constants.apiurl}/api/scatterList`, scatterListPayload);
+    if (saved.data.idscatterlist) {
+      localStorage.setItem('currentScatterListID', saved.data.idscatterlist);
+      setCurrentSL(saved.data.idscatterlist);
+      setScatterList(previous => ({...previous, idscatterlist: saved.data.idscatterlist}));
+    }
     if(close) {
       navigate('/admin/lists');
     }   
@@ -337,23 +360,28 @@ function ScatterList() {
     setModalCalendarVisible(!modalCalendarVisible);
   }
 
-  function validateContact(contactInfo) {
-    const regexPhone = /^([+]\d{2})?/;
-    return (contactInfo.phone && regexPhone.test(contactInfo.phone) && contactInfo.name);
-  }
-
   async function addContact() {
-    if(validateContact(contact)) {
-      setLoaderActive(true)
+    setLoaderActive(true);
+    try {
       const currentScatterListID = localStorage.getItem('currentScatterListID');
       await axios.post(`${constants.apiurl}/api/scatterlistdetail`, { ...contact, idscatterlist: currentScatterListID });
-      await getScatterlistdetailbyScatterlist(); 
+      await getScatterlistdetailbyScatterlist(startMessageList);
       setContact({});
-      toggleModal();
-      setLoaderActive(false)
-    }else {
-      sendNotification('Ocurrio un error guardarndo el contacto verifica que el telefono y el numero sean correctos', 'danger');
-    }    
+      setModalVisible(false);
+      sendNotification('Contacto guardado.');
+    } catch (error) { sendNotification(apiError(error), 'danger'); }
+    finally { setLoaderActive(false); }
+  }
+
+  async function deleteContact(item) {
+    if (!window.confirm(`¿Eliminar a ${item.name} (${item.phone}) de esta campaña?`)) return;
+    setLoaderActive(true);
+    try {
+      await axios.delete(`${constants.apiurl}/api/scatterlist/${currentSL}/contacts/${item.idscatterlist_details}`);
+      await getScatterlistdetailbyScatterlist(startMessageList);
+      sendNotification('Contacto eliminado de la campaña.');
+    } catch (error) { sendNotification(apiError(error), 'danger'); }
+    finally { setLoaderActive(false); }
   }
 
   async function addParameterBody() {
@@ -388,9 +416,6 @@ function ScatterList() {
 
   const validateScatterList = (requireContacts = false) => {
     const errors = {};
-    const selectedContacts = Array.isArray(scatterListDetails)
-      ? scatterListDetails.filter(detail => detail.selected === 1)
-      : [];
 
     if(!scatterList.name || !scatterList.name.trim()) {
       errors.name = 'El nombre de la lista es obligatorio.';
@@ -408,7 +433,7 @@ function ScatterList() {
       errors.idwhatsapp_accounts = 'Seleccione una cuenta de WhatsApp.';
     }
 
-    if(requireContacts && selectedContacts.length === 0) {
+    if(requireContacts && selectedCount === 0) {
       errors.contacts = 'Agregue al menos un contacto seleccionado a la lista.';
     }
 
@@ -423,28 +448,60 @@ function ScatterList() {
   }
 
   async function getScatterlistdetailbyScatterlist(pstart = 0) {
-    setStartMessageList(pstart > 0 ? pstart : 0)
-    const currentScatterListID = localStorage.getItem('currentScatterListID');
-    const _scatterListDetails =  await axios.get(`${constants.apiurl}/api/scatterlistdetailbyScatterlist/${currentScatterListID}?pstart=${pstart}`);
-    if(_scatterListDetails.data) {
-      setScatterListDetails(_scatterListDetails.data);
-    }
+    const id = localStorage.getItem('currentScatterListID');
+    if (!Number(id)) return;
+    const request = ++contactLoadRequest.current;
+    pageOffset.current = pstart;
+    const count = await axios.get(`${constants.apiurl}/api/getCountByScatterList/${id}`);
+    const pages = Math.ceil(count.data.count / 25);
+    const offset = Math.min(Math.max(0, pstart), Math.max(0, (pages - 1) * 25));
+    const result = await axios.get(`${constants.apiurl}/api/scatterlistdetailbyScatterlist/${id}?pstart=${offset}`);
+    if (request !== contactLoadRequest.current) return;
+    pageOffset.current = offset;
+    setMaxmessaelist(pages);
+    const firstPage = Math.max(1, Math.min(Math.floor(offset / 25) - 1, pages - 4));
+    setAmountMessageList(Array.from({length: Math.min(5, pages)}, (_, index) => firstPage + index));
+    setSelectedCount(Number(count.data.selectedCount));
+    setStartMessageList(offset);
+    setScatterListDetails(result.data || []);
   }
 
   async function sendMessage(event) {
     event.preventDefault();
-    if(!validateScatterList(true)) {
-      return;
-    }
-    if (window.confirm('¿Estas seguro que deseas enviar la difusión con esta lista?')) {
+    if (selectionRequests.current) { sendNotification('Espera a que termine de guardarse la selección.', 'warning'); return; }
+    if (sending.current || pendingSend || !validateScatterList(true)) return;
+    if (!window.confirm('¿Enviar la difusión a los contactos seleccionados? Los contactos quedarán bloqueados para edición y eliminación.')) return;
+    sending.current = true;
+    setLoaderActive(true);
+    try {
+      // A retry after a lost HTTP response must reuse the same key, even after reload.
+      const storageKey = `scatter-send-request-${currentSL}`;
+      sendRequestKey.current = sendRequestKey.current || sessionStorage.getItem(storageKey) || crypto.randomUUID();
+      sessionStorage.setItem(storageKey, sendRequestKey.current);
+      // Save only on the first attempt; an already queued campaign cannot be edited.
+      if (!sessionStorage.getItem(storageKey + '-saved')) {
         await saveChanges(event, false);
-        await axios.post(`${constants.apiurl}/api/sendscatterlist`, {id: scatterList.idscatterlist}).then(async (result) => {
-            sendNotification('Lista enviada');
-            setLoaderActive(true);
-            await getScatterlistdetailbyScatterlist();
-            setLoaderActive(false);
-        });        
-    } 
+        sessionStorage.setItem(storageKey + '-saved', '1');
+      }
+      const result = await axios.post(`${constants.apiurl}/api/sendscatterlist`, {id: currentSL, requestKey: sendRequestKey.current});
+      sessionStorage.removeItem(storageKey);
+      sessionStorage.removeItem(storageKey + '-saved');
+      sendRequestKey.current = null;
+      setSendStates([{status: 'queued', count: result.data.queued || 1}]);
+      sendNotification(result.data.reused ? 'El envío ya estaba registrado.' : `${result.data.queued} contactos en cola de envío.`);
+      try {
+        const status = await axios.get(`${constants.apiurl}/api/scatterlist/${currentSL}/send-status`);
+        setSendStates(status.data.states || []);
+        await getScatterlistdetailbyScatterlist(startMessageList);
+      } catch (refreshError) { sendNotification('El envío quedó registrado. No se pudo actualizar su estado; recarga para consultarlo.', 'warning'); }
+    } catch (error) {
+      if (error?.response?.status >= 400 && error.response.status < 500) {
+        sessionStorage.removeItem(`scatter-send-request-${currentSL}`);
+        sessionStorage.removeItem(`scatter-send-request-${currentSL}-saved`);
+        sendRequestKey.current = null;
+      }
+      sendNotification(apiError(error), 'danger');
+    } finally { sending.current = false; setLoaderActive(false); }
   }
 
   const toggleModal = () => {
@@ -452,19 +509,15 @@ function ScatterList() {
   };
 
   async function checkAllChecks() {
-    const _checkAll = !checkAll;
-    const currentScatterListID = localStorage.getItem('currentScatterListID');
-    setCheckAll(_checkAll);
-    const _selectedInt = _checkAll ? 1 : 0;
-    const newList = scatterListDetails.map(sld =>{ return {...sld, selected: _selectedInt}});
-    if(_selectedInt === 1 && newList.length > 0) {
-      setValidationErrors(pre => ({
-        ...pre,
-        contacts: ''
-      }));
-    }
-    axios.patch(`${constants.apiurl}/api/scatterlistdetailSelectedAll`, {selected: _selectedInt, idscatterlist:currentScatterListID});
-    setScatterListDetails([...newList]);
+    if (sending.current) return;
+    const selected = checkAll ? 0 : 1;
+    selectionRequests.current++;
+    try {
+      await axios.patch(`${constants.apiurl}/api/scatterlistdetailSelectedAll`, {selected, idscatterlist: currentSL});
+      setCheckAll(!checkAll);
+      await getScatterlistdetailbyScatterlist(startMessageList);
+    } catch (error) { sendNotification(apiError(error), 'danger'); }
+    finally { selectionRequests.current--; }
   };
 
   const openFile = () => {
@@ -475,6 +528,10 @@ function ScatterList() {
 
   const OpenContactforUpdate= (event, contact) => {
     event.preventDefault();
+    if (contact.locked) {
+      sendNotification('Este contacto tiene envíos registrados o reservados y no se puede editar.', 'warning');
+      return;
+    }
     toggleModal();
     setContact(contact);
   }
@@ -609,36 +666,34 @@ function ScatterList() {
   }
 
   const addFile = async () => {
-    if(importContacts && importContacts.length > 0) {
-      const amount = importContacts.length;
-      const currentScatterListID = localStorage.getItem('currentScatterListID');
-      setLoaderActive(true);
-      for (let index = 0; index < amount; index++) {
-        const element = importContacts[index];
-        if(element && element.length > 1 && element[0] && element[1]) {
-          await axios.post(`${constants.apiurl}/api/scatterlistdetail`, { 
-            ...{ 
-              name: element[0],  
-              phone:fixNumber(element[1]),
-              extra1: element.length > 2 ? element[2]: '',
-              extra2: element.length > 3 ? element[3]: ''
-            }, 
-              idscatterlist: currentScatterListID });
-        }  
-        setLoaderText(`Importado contacto #${index+1} de ${amount}`);
-      }      
+    if (!importContacts.length) return;
+    setLoaderActive(true);
+    const summary = {inserted: 0, duplicates: 0, rejected: [], duplicateRows: []};
+    try {
+      for (let offset = 0; offset < importContacts.length; offset += 500) {
+        const contacts = importContacts.slice(offset, offset + 500).map(row => ({
+          name: row?.[0] == null ? '' : String(row[0]),
+          phone: row?.[1] == null ? '' : String(row[1]),
+          extra1: row?.[2] == null ? '' : String(row[2]),
+          extra2: row?.[3] == null ? '' : String(row[3])
+        }));
+        const {data} = await axios.post(`${constants.apiurl}/api/scatterlistdetails/import`, {idscatterlist: currentSL, contacts});
+        summary.inserted += data.inserted;
+        summary.duplicates += data.duplicates;
+        summary.rejected.push(...data.rejected.map(item => ({...item, row: item.row + offset})));
+        summary.duplicateRows.push(...data.duplicateRows.map(row => row + offset));
+        setLoaderText(`Procesados ${Math.min(offset + 500, importContacts.length)} de ${importContacts.length} contactos`);
+      }
+      setImportResult(summary);
       await getScatterlistdetailbyScatterlist();
-      setLoaderActive(false)
-    }
-    setModalVisibleDocuemnt(false);
-    setFile(undefined);
-    inputFileref.current.value = '';
-    setInputKey(Date.now());
-    setLoaderText('');
-  }
-
-  const fixNumber = (number) =>{
-    return `${number}`.replace(/[^0-9]/g, '');
+      setModalVisibleDocuemnt(false);
+      removeFile();
+      setImportContacts([]);
+      sendNotification(`Importación: ${summary.inserted} agregados, ${summary.duplicates} duplicados, ${summary.rejected.length} rechazados.`);
+    } catch (error) {
+      setImportResult(summary);
+      sendNotification(`${apiError(error)} Los lotes anteriores se conservaron; puede reintentar el archivo.`, 'danger');
+    } finally { setLoaderActive(false); setLoaderText(''); }
   }
 
   return (
@@ -714,29 +769,29 @@ function ScatterList() {
         </Modal>
         <Modal isOpen={modalVisible} toggle={toggleModal}>
           <ModalHeader>
-            <h2 style={{color: '#000', marginBottom: '0px'}}>Agregar contacto</h2>
+            <h2 style={{color: '#000', marginBottom: '0px'}}>{contact.idscatterlist_details ? 'Editar contacto' : 'Agregar contacto'}</h2>
           </ModalHeader>
           <ModalBody>
             <FormGroup>
                 <label>Telefono</label>
-                <Input placeholder="Escriba el telefono aqui" className="form-control form-control-lg color_black" type="tel" name='phone' defaultValue={contact.phone} onChange={onHandleChangeContact}/>
+                <Input placeholder="Escriba el telefono aqui" className="form-control form-control-lg color_black" type="tel" name='phone' value={contact.phone ?? ''} onChange={onHandleChangeContact}/>
             </FormGroup>
             <FormGroup>
                 <label>Nombre completo</label>
-                <Input placeholder="Escriba el nombre completo" className="form-control form-control-lg color_black" type="text" name='name' defaultValue={contact.name} onChange={onHandleChangeContact}/>
+                <Input placeholder="Escriba el nombre completo" className="form-control form-control-lg color_black" type="text" name='name' value={contact.name ?? ''} onChange={onHandleChangeContact}/>
             </FormGroup>
             <FormGroup>
                 <label>Extra 1</label>
-                <Input placeholder="Escriba el parametro extra aqui" className="form-control form-control-lg color_black" type="text" name='extra1' defaultValue={contact.extra1} onChange={onHandleChangeContact}/>
+                <Input placeholder="Escriba el parametro extra aqui" className="form-control form-control-lg color_black" type="text" name='extra1' value={contact.extra1 ?? ''} onChange={onHandleChangeContact}/>
             </FormGroup>
 
             <FormGroup>
                 <label>Extra 2</label>
-                <Input placeholder="Escriba el parametro extra aqui" className="form-control form-control-lg color_black" type="text" name='extra2' defaultValue={contact.extra2} onChange={onHandleChangeContact}/>
+                <Input placeholder="Escriba el parametro extra aqui" className="form-control form-control-lg color_black" type="text" name='extra2' value={contact.extra2 ?? ''} onChange={onHandleChangeContact}/>
             </FormGroup>
             
             <Button onClick={addContact} style={{marginTop: '20px'}} className="btn btn-primary">
-              Agregar
+              {contact.idscatterlist_details ? 'Guardar cambios' : 'Agregar'}
             </Button>
           </ModalBody>
         </Modal>
@@ -954,10 +1009,10 @@ function ScatterList() {
                   <Row>
                     <Col style={{display: 'flex', justifyContent: 'space-between'}} md="12">
                       <div>
-                        <Button title="Agregar contacto" onClick={toggleModal} className="btn btn-primary">
+                        <Button title="Agregar contacto" disabled={!Number(currentSL)} onClick={() => { setContact({}); setModalVisible(true); }} className="btn btn-primary">
                           <i className="fa fa-user-plus" />
                         </Button>
-                        <Button title="Agregar lista de contactos" onClick={toggleModalDocument} className="btn btn-primary">
+                        <Button title="Agregar lista de contactos" disabled={!Number(currentSL)} onClick={toggleModalDocument} className="btn btn-primary">
                           <i className="fa fa-upload" />
                         </Button>                        
                       </div>
@@ -967,6 +1022,12 @@ function ScatterList() {
                       </Button>
                     </Col>
                     <Col md="12">
+                        {sendStates.length > 0 && <p role="status">{sendStates.map(row => `${({queued: 'En cola', processing: 'Procesando', accepted: 'Aceptados, registrando', recorded: 'Registrados', failed: 'Rechazados', unknown: 'Por verificar'})[row.status]}: ${row.count}`).join(' · ')}</p>}
+                        {sendStates.some(row => row.status === 'unknown') && <p className="text-warning">Hay envíos cuyo resultado requiere verificación. No se reenviarán automáticamente.</p>}
+                        {importResult && <details><summary>Última importación: {importResult.inserted} agregados, {importResult.duplicates} duplicados, {importResult.rejected.length} rechazados</summary>
+                          {importResult.duplicateRows.length > 0 && <p>Filas duplicadas: {importResult.duplicateRows.join(', ')}</p>}
+                          {importResult.rejected.map(item => <p key={item.row}>Fila {item.row}: {item.reason}</p>)}
+                        </details>}
                         {validationErrors.contacts && <small className="text-danger">{validationErrors.contacts}</small>}
                         <div className="table-responsive">
                             <table className="table table-hover">
@@ -975,7 +1036,7 @@ function ScatterList() {
                                         <th>
                                             <FormGroup check>
                                               <Label check>
-                                                <Input type="checkbox" name='checkall' defaultChecked={checkAll} onChange={checkAllChecks}/>
+                                                <Input type="checkbox" name='checkall' disabled={pendingSend} checked={checkAll} onChange={checkAllChecks}/>
                                                 <span className="form-check-sign">
                                                   <span className="check" />
                                                 </span>
@@ -996,7 +1057,7 @@ function ScatterList() {
                                             <td> 
                                               <FormGroup check>
                                                 <Label check>
-                                                  <Input type="checkbox" name={`inputSelected_${index}`} checked={scatterListDetail.selected === 1 ? true : false} defaultChecked={scatterListDetail.selected === 1 ? true : false}  onChange={onHandleChangeCheckbox(index)}/>
+                                                  <Input type="checkbox" disabled={pendingSend} name={`inputSelected_${index}`} checked={scatterListDetail.selected === 1 ? true : false}   onChange={onHandleChangeCheckbox(index)}/>
                                                   <span className="form-check-sign">
                                                     <span className="check" />
                                                   </span>
@@ -1010,6 +1071,12 @@ function ScatterList() {
                                             <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.extra2}</Link></td>
                                             <td> 
                                                 {getIcon(scatterListDetail)}
+                                                <Button size="sm" type="button" disabled={!!scatterListDetail.locked}
+                                                  title={scatterListDetail.locked ? 'Tiene envíos registrados o reservados' : 'Editar contacto'}
+                                                  onClick={e => OpenContactforUpdate(e, scatterListDetail)}>Editar</Button>
+                                                <Button size="sm" type="button" color="danger" disabled={!!scatterListDetail.locked}
+                                                  title={scatterListDetail.locked ? 'Tiene envíos registrados o reservados' : 'Eliminar contacto'}
+                                                  onClick={() => deleteContact(scatterListDetail)}>Eliminar</Button>
                                             </td>
                                         </tr>
                                     )}                   
@@ -1025,27 +1092,30 @@ function ScatterList() {
                 <Pagination>
                     <PaginationItem>
                         <PaginationLink
+                        className="btn btn-sm"
                         onClick={() => {getScatterlistdetailbyScatterlist(0)}}
                         first
-                        href="javascript:void(0)"
+                        tag="button" type="button" disabled={startMessageList === 0}
                         />
                     </PaginationItem>
                     {
                         amountMessageList.map((item, index) => 
-                            <PaginationItem  key={index}>
+                            <PaginationItem key={item} active={item === Math.floor(startMessageList / 25) + 1}>
                                 <PaginationLink 
-                                href="javascript:void(0)"
-                                onClick={() => {getScatterlistdetailbyScatterlist(index * 25)}}
+                                className="btn btn-sm"
+                                tag="button" type="button"
+                                onClick={() => {getScatterlistdetailbyScatterlist((item - 1) * 25)}}
                                 >
-                                {index + 1}
+                                {item}
                                 </PaginationLink>
                         </PaginationItem> 
                         )
                     }                    
                     <PaginationItem>
                         <PaginationLink
-                        onClick={() => {getScatterlistdetailbyScatterlist(maxmessaelist)}}
-                        href="javascript:void(0)"
+                        className="btn btn-sm"
+                        onClick={() => {getScatterlistdetailbyScatterlist(Math.max(0, (maxmessaelist - 1) * 25))}}
+                        tag="button" type="button" disabled={maxmessaelist <= 1 || startMessageList >= (maxmessaelist - 1) * 25}
                         last
                         />
                     </PaginationItem>
@@ -1064,7 +1134,7 @@ function ScatterList() {
         <Link to="/" title="Enviar mensaje" href="#" className="float-2" onClick={sendMessage}>
           <i className="fa-solid fa-paper-plane my-float"></i>
         </Link>
-        <Link to="/" title="Guardar y cerrar" href="#" className="float" onClick={saveChanges}>
+        <Link to="/" title="Guardar y cerrar" href="#" className="float" onClick={event => { saveChanges(event).catch(error => sendNotification(apiError(error), 'danger')); }}>
           <i className="fa-solid fa-floppy-disk my-float"></i>
         </Link>
       </div>
@@ -1072,7 +1142,9 @@ function ScatterList() {
   );
 }
 
-const getIcon = (scatterListDetail) => { 
+const getIcon = (scatterListDetail) => {
+  const statuses = {queued: 'En cola', processing: 'Procesando', accepted: 'Registrando envío', unknown: 'Por verificar', failed: 'Rechazado por Meta'};
+  if (statuses[scatterListDetail.sendStatus]) return <span>{statuses[scatterListDetail.sendStatus]}</span>;
   if(scatterListDetail.read == 1) {
     return <i title='Leido' style={{color: '#5e72e4'}} className="fa-solid fa-check-double"></i>
   }

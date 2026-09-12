@@ -9,12 +9,14 @@ import useServerPagination from '../components/Pagination/useServerPagination';
 import {
     CardHeader,
     CardBody,
-    Card
+    Card,
+    Button
   } from "reactstrap";
 
 function ScatterLists (props) {
     const [searchValue, setSearchValue] = useState('');
     const [refreshKey, setRefreshKey] = useState(0);
+    const [actionError, setActionError] = useState('');
 
     function getCompanyQuery() {
         let idCompany = undefined;
@@ -34,8 +36,19 @@ function ScatterLists (props) {
     const pagination = useServerPagination(buildUrl, [searchValue, refreshKey]);
 
     async function copyScatterList(idscatterlist) {
-        await axios.post(`${constants.apiurl}/api/scatterlistscopy`, {idscatterlist});
-        setRefreshKey(value => value + 1);
+        try {
+            await axios.post(`${constants.apiurl}/api/scatterlistscopy`, {idscatterlist});
+            setRefreshKey(value => value + 1);
+        } catch (error) { setActionError(error?.response?.data?.message || 'No se pudo copiar la campaña.'); }
+    }
+
+    async function deleteCampaign(campaign) {
+        if (!window.confirm(`¿Eliminar la campaña "${campaign.name}" y sus contactos?`)) return;
+        try {
+            setActionError('');
+            await axios.delete(`${constants.apiurl}/api/scatterlist/${campaign.idscatterlist}`);
+            setRefreshKey(value => value + 1);
+        } catch (error) { setActionError(error?.response?.data?.message || 'No se pudo eliminar la campaña.'); }
     }
     
     return <div className="content">
@@ -45,6 +58,7 @@ function ScatterLists (props) {
                         <h5 className="title">Listas de difusión</h5>
                     </CardHeader>
                     <CardBody>
+                        {actionError && <p role="alert" className="text-danger">{actionError}</p>}
                         <div className="margin-bottom-2vh flex-left">
                             <div className="input-group flex-nowrap w-full">
                                 <span className="input-group-text z-0" id="addon-wrapping"><i className="fa fa-search"></i></span>
@@ -69,7 +83,13 @@ function ScatterLists (props) {
                                         <tr key={scatterList.idscatterlist}>
                                             <td> <Link to="/admin/list" onClick={() => goToScatterLists(scatterList.idscatterlist)}>{pagination.startIndex + index + 1}</Link></td>
                                             <td> <Link to="/admin/list" onClick={() => goToScatterLists(scatterList.idscatterlist)}>{scatterList.name}</Link></td>
-                                            <td> <Link to="javascript:void(0)" onClick={() => copyScatterList(scatterList.idscatterlist)}><i title='Copiar campaña' className="fa-solid fa-copy"></i></Link></td>
+                                            <td>
+                                                <Button size="sm" onClick={() => copyScatterList(scatterList.idscatterlist)}>Copiar</Button>
+                                                <Button size="sm" color="danger" disabled={!!scatterList.locked}
+                                                    title={scatterList.locked ? 'Esta campaña tiene envíos registrados o reservados' : 'Eliminar campaña'}
+                                                    onClick={() => deleteCampaign(scatterList)}>Eliminar</Button>
+                                                {!!scatterList.locked && <small> Tiene historial de envíos</small>}
+                                            </td>
                                         </tr>
                                     )}
                                 </tbody>          
