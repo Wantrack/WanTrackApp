@@ -133,6 +133,22 @@ function Sidebar(props) {
               </div>
             ) : null}
             <Nav>
+              <li className="sidebar-collapse-item d-none d-lg-block">
+                <button
+                  type="button"
+                  className="sidebar-collapse-button"
+                  onClick={props.toggleSidebarCollapsed}
+                  aria-label={props.sidebarCollapsed ? "Expandir menú lateral" : "Contraer menú lateral"}
+                  aria-pressed={props.sidebarCollapsed}
+                  title={props.sidebarCollapsed ? "" : ""}
+                >
+                  <i
+                    className={`tim-icons ${props.sidebarCollapsed ? "icon-minimal-right" : "icon-minimal-left"}`}
+                    aria-hidden="true"
+                  />
+                  <span></span>
+                </button>
+              </li>
               {visibleRoutes.map((prop, key) => {
                 return prop.type == 'separator' ? (<li key={`separator-${key}`}><hr className="separator"></hr></li>) :  (
                   <li

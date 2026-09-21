@@ -44,6 +44,9 @@ function Admin(props) {
   const [sidebarOpened, setsidebarOpened] = React.useState(
     document.documentElement.className.indexOf("nav-open") !== -1
   );
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(
+    () => localStorage.getItem("sidebar-collapsed") === "true"
+  );
   const pathMain = React.useMemo(getDefaultAdminPath, []);
   React.useEffect(() => {
     const token = localStorage.getItem(constants.token);
@@ -95,6 +98,13 @@ function Admin(props) {
     document.documentElement.classList.toggle("nav-open");
     setsidebarOpened(!sidebarOpened);
   };
+  const toggleSidebarCollapsed = () => {
+    setSidebarCollapsed((collapsed) => {
+      const nextCollapsed = !collapsed;
+      localStorage.setItem("sidebar-collapsed", String(nextCollapsed));
+      return nextCollapsed;
+    });
+  };
   const getRoutes = (routes) => {
     return routes.map((prop, key) => {
       if (prop.layout === "/admin") {
@@ -118,11 +128,13 @@ function Admin(props) {
     <BackgroundColorContext.Consumer>
       {({ color, changeColor }) => (
         <React.Fragment>
-          <div className="wrapper">
+          <div className={`wrapper${sidebarCollapsed ? " sidebar-mini" : ""}`}>
             <Sidebar
               routes={routes}
               //logo = undefined I comment this to hide the logo and title in the main menu
               toggleSidebar={toggleSidebar}
+              sidebarCollapsed={sidebarCollapsed}
+              toggleSidebarCollapsed={toggleSidebarCollapsed}
             />
             <div className="main-panel" ref={mainPanelRef} data={color}>
               <AdminNavbar
