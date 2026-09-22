@@ -12,27 +12,31 @@ import routes from "routes.js";
 import { BackgroundColorContext } from "contexts/BackgroundColorContext";
 import { axios } from '../../config/https';
 import constants from '../../util/constans';
-import { decode } from "util/base64";
+import { decode, encode } from "util/base64";
 
 var ps;
 
-function getDefaultAdminPath() {
+function getStoredUserInfo() {
   const encodedUserInfo = localStorage.getItem(constants.userinfo);
-  if (!encodedUserInfo) return '/admin/access-denied';
+  if (!encodedUserInfo) return null;
 
   try {
-    const userInfo = JSON.parse(decode(encodedUserInfo));
-    const modules = userInfo.modules
-      ? String(userInfo.modules).replaceAll(' ', '').split(',').filter(Boolean)
-      : [];
-
-    if (modules.length === 1 && modules[0] === '21') return '/admin/documentsCheck';
-    if (modules.includes('11')) return '/admin/dashboardconversations';
-    if (modules.includes('1')) return '/admin/dashboard';
-    if (modules.includes('15')) return '/admin/chatsws';
+    return JSON.parse(decode(encodedUserInfo));
   } catch (error) {
     console.error('Error parsing user info:', error);
+    return null;
   }
+}
+
+function getDefaultAdminPath(userInfo) {
+  const modules = userInfo?.modules
+    ? String(userInfo.modules).replaceAll(' ', '').split(',').filter(Boolean)
+    : [];
+
+  if (modules.length === 1 && modules[0] === '21') return '/admin/documentsCheck';
+  if (modules.includes('11')) return '/admin/dashboardconversations';
+  if (modules.includes('1')) return '/admin/dashboard';
+  if (modules.includes('15')) return '/admin/chatsws';
 
   return '/admin/access-denied';
 }
@@ -44,17 +48,44 @@ function Admin(props) {
   const [sidebarOpened, setsidebarOpened] = React.useState(
     document.documentElement.className.indexOf("nav-open") !== -1
   );
-  const pathMain = React.useMemo(getDefaultAdminPath, []);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(
+    () => localStorage.getItem("sidebar-collapsed") === "true"
+  );
+  const [userInfo, setUserInfo] = React.useState(getStoredUserInfo);
+  const [isLoadingUserInfo, setIsLoadingUserInfo] = React.useState(true);
+  const pathMain = React.useMemo(() => getDefaultAdminPath(userInfo), [userInfo]);
+
   React.useEffect(() => {
     const token = localStorage.getItem(constants.token);
-    if(token) {
-      axios.get(`${constants.apiurl}/api/validate/${token}`).then(() => {})
-      .catch(error => {
-        navigate('/login');
-      });
-    }else {
+    if (!token) {
       navigate('/login');
+      return;
     }
+
+    const refreshUserInfo = async () => {
+      try {
+        await axios.get(`${constants.apiurl}/api/validate/${token}`);
+
+        const storedUserInfo = getStoredUserInfo();
+        if (storedUserInfo?.email) {
+          try {
+            const response = await axios.get(
+              `${constants.apiurl}/api/users/getByEmail/${encodeURIComponent(storedUserInfo.email)}`
+            );
+            localStorage.setItem(constants.userinfo, encode(JSON.stringify(response.data)));
+            setUserInfo(response.data);
+          } catch (error) {
+            console.error('Error refreshing user info:', error);
+          }
+        }
+      } catch (error) {
+        navigate('/login');
+      } finally {
+        setIsLoadingUserInfo(false);
+      }
+    };
+
+    refreshUserInfo();
   }, [navigate]);
   React.useEffect(() => {
     if (navigator.platform.indexOf("Win") > -1) {
@@ -95,6 +126,13 @@ function Admin(props) {
     document.documentElement.classList.toggle("nav-open");
     setsidebarOpened(!sidebarOpened);
   };
+  const toggleSidebarCollapsed = () => {
+    setSidebarCollapsed((collapsed) => {
+      const nextCollapsed = !collapsed;
+      localStorage.setItem("sidebar-collapsed", String(nextCollapsed));
+      return nextCollapsed;
+    });
+  };
   const getRoutes = (routes) => {
     return routes.map((prop, key) => {
       if (prop.layout === "/admin") {
@@ -114,15 +152,20 @@ function Admin(props) {
     }
     return "Brand";
   };
+
+  if (isLoadingUserInfo) return null;
+
   return (
     <BackgroundColorContext.Consumer>
       {({ color, changeColor }) => (
         <React.Fragment>
-          <div className="wrapper">
+          <div className={`wrapper${sidebarCollapsed ? " sidebar-mini" : ""}`}>
             <Sidebar
               routes={routes}
               //logo = undefined I comment this to hide the logo and title in the main menu
               toggleSidebar={toggleSidebar}
+              sidebarCollapsed={sidebarCollapsed}
+              toggleSidebarCollapsed={toggleSidebarCollapsed}
             />
             <div className="main-panel" ref={mainPanelRef} data={color}>
               <AdminNavbar

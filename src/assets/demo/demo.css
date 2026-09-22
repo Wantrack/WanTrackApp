@@ -453,6 +453,38 @@ input[type="file"]::file-selector-button:active {
   display: none !important;
 }
 
+/* WhatsApp-inspired conversation view */
+.wa-chat-page { padding-bottom: 20px !important; }
+.wa-chat-shell { height: calc(100vh - 130px); min-height: 590px; margin: 0; overflow: hidden; border-radius: 14px; background: #111b21; box-shadow: 0 12px 36px rgba(0,0,0,.32); }
+.wa-chat-header { min-height: 74px; padding: 10px 18px; display: flex; align-items: center; gap: 12px; background: #202c33; border-bottom: 1px solid rgba(255,255,255,.06); }
+.wa-avatar { width: 46px; height: 46px; flex: 0 0 46px; display: grid; place-items: center; border-radius: 50%; color: #fff; font-weight: 600; background: linear-gradient(135deg,#0aa3bb,#2c2e76); }
+.wa-contact { min-width: 0; display: flex; flex-direction: column; }
+.wa-contact h4 { margin: 0; color: #f5f7f8; font-size: 16px; font-weight: 500; }
+.wa-contact span,.wa-contact small { color: #aebac1; font-size: 11px; }
+.wa-human-mode { margin-left: auto; padding: 8px 12px; display: inline-flex; align-items: center; gap: 9px; color: #aebac1; background: transparent; border: 0; border-radius: 20px; }
+.wa-human-mode:hover { color: #fff; background: rgba(255,255,255,.07); }
+.wa-human-mode i { font-size: 25px; }.wa-human-mode.active i { color: #00a884; }
+.wa-chat-scroll { background-color: #0b141a; background-image: radial-gradient(rgba(255,255,255,.025) 1px, transparent 1px); background-size: 18px 18px; }
+.wa-message-list { min-height: 100%; padding: 24px clamp(14px,5vw,70px); display: flex; flex-direction: column; }
+.wa-encryption-note { align-self: center; max-width: 440px; margin: 0 0 22px; padding: 7px 12px; color: #8696a0; background: #182229; border-radius: 7px; font-size: 11px; text-align: center; }
+.wa-encryption-note i { margin-right: 5px; color: #d6b86a; }
+.wa-message-row { width: 100%; margin: 2px 0; display: flex; }.wa-message-row.incoming { justify-content: flex-start; }.wa-message-row.outgoing { justify-content: flex-end; }
+.wa-message-bubble { position: relative; max-width: min(68%,620px); padding: 7px 9px 5px; color: #e9edef; background: #202c33; border-radius: 8px; box-shadow: 0 1px 1px rgba(0,0,0,.18); overflow-wrap: anywhere; }
+.wa-message-row.outgoing .wa-message-bubble { background: #005c4b; }.wa-message-bubble p { margin: 0; padding-right: 58px; white-space: pre-wrap; }
+.wa-message-meta { min-width: 55px; margin: 3px 0 0 12px; display: flex; float: right; align-items: center; justify-content: flex-end; gap: 4px; color: rgba(233,237,239,.65); font-size: 10px; }
+.wa-message-meta i { color: #53bdeb; font-size: 11px; }.wa-message-image,.wa-message-video { display: block; max-width: 330px; max-height: 330px; border-radius: 6px; object-fit: cover; }
+.wa-audio { min-width: 270px; display: flex; align-items: center; gap: 10px; }.wa-audio > i { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: #0aa3bb; }.wa-audio audio { max-width: 240px; height: 38px; }
+.wa-document { min-width: 240px; padding: 12px; display: flex; align-items: center; gap: 12px; color: #e9edef; background: rgba(0,0,0,.15); border-radius: 6px; }.wa-document:hover { color: #fff; }.wa-document i { font-size: 24px; }
+.wa-composer { position: relative; min-height: 64px; padding: 9px 12px; display: flex; align-items: flex-end; gap: 7px; background: #202c33; }
+.wa-composer textarea { min-height: 44px; max-height: 120px; flex: 1; padding: 12px 15px; resize: none; color: #e9edef; background: #2a3942; border: 0; border-radius: 22px; outline: 0; line-height: 20px; }.wa-composer textarea::placeholder { color: #8696a0; }
+.wa-icon-button,.wa-send-button,.wa-attachment-preview button { width: 42px; height: 42px; flex: 0 0 42px; display: grid; place-items: center; color: #aebac1; background: transparent; border: 0; border-radius: 50%; font-size: 19px; }.wa-icon-button:hover { color: #fff; background: rgba(255,255,255,.07); }.wa-icon-button:disabled { opacity: .35; }
+.wa-send-button { color: #fff; background: linear-gradient(135deg,#0aa3bb,#2c2e76); }.wa-send-button.recording { background: #e44b58; }
+.wa-emoji-picker { position: absolute; left: 12px; bottom: 72px; z-index: 4; width: 310px; padding: 12px; display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; background: #233138; border: 1px solid rgba(255,255,255,.08); border-radius: 12px; box-shadow: 0 10px 35px rgba(0,0,0,.35); }.wa-emoji-picker button { padding: 5px; background: transparent; border: 0; border-radius: 6px; font-size: 21px; }.wa-emoji-picker button:hover { background: rgba(255,255,255,.1); }
+.wa-hidden-input { display: none; }.wa-recording { height: 44px; flex: 1; padding: 0 16px; display: flex; align-items: center; gap: 9px; color: #e9edef; background: #2a3942; border-radius: 22px; }.wa-recording .pulse { width: 9px; height: 9px; border-radius: 50%; background: #ef5562; animation: wa-pulse 1s infinite; }
+.wa-attachment-preview { min-height: 68px; padding: 9px 14px; display: flex; align-items: center; gap: 12px; color: #e9edef; background: #18252c; border-top: 1px solid rgba(255,255,255,.06); }.wa-attachment-preview > i { width: 42px; font-size: 25px; color: #0aa3bb; text-align: center; }.wa-attachment-preview > div { min-width: 0; flex: 1; display: flex; flex-direction: column; }.wa-attachment-preview strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.wa-attachment-preview span { color: #8696a0; font-size: 11px; }.wa-attachment-preview audio { height: 36px; max-width: 280px; }.wa-attachment-preview .send { color: #fff; background: #00a884; }
+@keyframes wa-pulse { 50% { opacity: .35; transform: scale(.8); } }
+@media (max-width: 768px) { .wa-chat-page { padding-left: 5px !important; padding-right: 5px !important; }.wa-chat-shell { height: calc(100vh - 105px); min-height: 520px; border-radius: 0; }.wa-human-mode span { display: none; }.wa-message-list { padding: 18px 9px; }.wa-message-bubble { max-width: 86%; }.wa-message-image,.wa-message-video { max-width: 240px; }.wa-icon-button.ai { display: none; }.wa-emoji-picker { width: calc(100% - 24px); grid-template-columns: repeat(7,1fr); }.wa-attachment-preview audio { max-width: 150px; } }
+
 .modal-charts .modal-dialog {
   max-width: 80% !important;
   max-height: 80% !important;
