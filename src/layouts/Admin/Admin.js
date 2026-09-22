@@ -14,8 +14,6 @@ import { axios } from '../../config/https';
 import constants from '../../util/constans';
 import { decode, encode } from "util/base64";
 
-var ps;
-
 function getStoredUserInfo() {
   const encodedUserInfo = localStorage.getItem(constants.userinfo);
   if (!encodedUserInfo) return null;
@@ -88,31 +86,31 @@ function Admin(props) {
     refreshUserInfo();
   }, [navigate]);
   React.useEffect(() => {
+    const scrollbarInstances = [];
     if (navigator.platform.indexOf("Win") > -1) {
       document.documentElement.className += " perfect-scrollbar-on";
       document.documentElement.classList.remove("perfect-scrollbar-off");
-      ps = new PerfectScrollbar(mainPanelRef.current, {
-        suppressScrollX: true,
-      });
-      let tables = document.querySelectorAll(".table-responsive");
-      for (let i = 0; i < tables.length; i++) {
-        ps = new PerfectScrollbar(tables[i]);
+      if (mainPanelRef.current) {
+        scrollbarInstances.push(new PerfectScrollbar(mainPanelRef.current, {
+          suppressScrollX: true,
+        }));
       }
     }
     // Specify how to clean up after this effect:
     return function cleanup() {
       if (navigator.platform.indexOf("Win") > -1) {
-        ps.destroy();
+        scrollbarInstances.forEach((instance) => instance.destroy());
         document.documentElement.classList.add("perfect-scrollbar-off");
         document.documentElement.classList.remove("perfect-scrollbar-on");
       }
     };
   }, []);
   React.useEffect(() => {
+    const tableScrollbars = [];
     if (navigator.platform.indexOf("Win") > -1) {
       let tables = document.querySelectorAll(".table-responsive");
       for (let i = 0; i < tables.length; i++) {
-        ps = new PerfectScrollbar(tables[i]);
+        if (tables[i]) tableScrollbars.push(new PerfectScrollbar(tables[i]));
       }
     }
     document.documentElement.scrollTop = 0;
@@ -120,6 +118,7 @@ function Admin(props) {
     if (mainPanelRef.current) {
       mainPanelRef.current.scrollTop = 0;
     }
+    return () => tableScrollbars.forEach((instance) => instance.destroy());
   }, [location]);
   // this function opens and closes the sidebar on small devices
   const toggleSidebar = () => {

@@ -15,8 +15,6 @@ import {
 import constants from 'util/constans';
 import { decode } from "util/base64";
 
-var ps;
-
 function Sidebar(props) {
   const [modules, setModules] = useState([]); 
 
@@ -40,8 +38,9 @@ function Sidebar(props) {
    }, []);
 
   React.useEffect(() => {
-    if (navigator.platform.indexOf("Win") > -1) {
-      ps = new PerfectScrollbar(sidebarRef.current, {
+    let scrollbar = null;
+    if (navigator.platform.indexOf("Win") > -1 && sidebarRef.current) {
+      scrollbar = new PerfectScrollbar(sidebarRef.current, {
         suppressScrollX: true,
         suppressScrollY: false,
       });
@@ -49,9 +48,7 @@ function Sidebar(props) {
     
     // Specify how to clean up after this effect:
     return function cleanup() {
-      if (navigator.platform.indexOf("Win") > -1) {
-        ps.destroy();
-      }
+      scrollbar?.destroy();
     };
   }, []);
 
