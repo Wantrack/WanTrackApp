@@ -10,3 +10,6 @@ package-lock.json
 .env*.local
 .env
 **/.env
+
+.db-maintenance/
+.scatter-test-mysql/

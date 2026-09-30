@@ -26,6 +26,11 @@ function Company() {
   const [wsaccounts, setWsAccounts] = useState([]); 
   const [departments, setDepartments] = useState([]);
   const [newDepartment, setNewDepartment] = useState('');
+  const [apiTokens, setApiTokens] = useState([]);
+  const [newTokenName, setNewTokenName] = useState('Webhook API');
+  const [createdToken, setCreatedToken] = useState('');
+  const [tokensBusy, setTokensBusy] = useState(false);
+  const isWantrackAdmin = Number(getUserInfo()?.idroles) === 1;
   const wsAccountsPagination = useClientPagination(wsaccounts);
 
   const onHandleChange = (e) => {
@@ -56,6 +61,10 @@ function Company() {
             setWsAccounts(_wsaccounts.data);
             const _departments = await axios.get(`${constants.apiurl}/api/companies/${currentCompanyID}/departments`);
             setDepartments(_departments.data || []);
+            if(Number(getUserInfo()?.idroles) === 1 && Number(currentCompanyID) > 0) {
+                const _tokens = await axios.get(`${constants.apiurl}/api/companies/${currentCompanyID}/api-tokens`);
+                setApiTokens(_tokens.data || []);
+            }
         } 
     }
 
@@ -106,6 +115,49 @@ function Company() {
 
   function goToWhatsAppAccountOnClick(idwhatsapp_accounts) {
     localStorage.setItem('currentWhatsAppAccountID', idwhatsapp_accounts);
+  }
+
+  async function loadApiTokens(companyId) {
+    const _tokens = await axios.get(`${constants.apiurl}/api/companies/${companyId}/api-tokens`);
+    setApiTokens(_tokens.data || []);
+  }
+
+  async function createApiToken() {
+    const currentCompanyID = localStorage.getItem('currentCompanyID');
+    if(!currentCompanyID || Number(currentCompanyID) <= 0) return;
+    setTokensBusy(true);
+    try {
+      const result = await axios.post(`${constants.apiurl}/api/companies/${currentCompanyID}/api-tokens`, {
+        name: newTokenName.trim() || 'Webhook API',
+      });
+      setCreatedToken(result.data.token || '');
+      setNewTokenName('Webhook API');
+      await loadApiTokens(currentCompanyID);
+    } finally {
+      setTokensBusy(false);
+    }
+  }
+
+  async function revokeApiToken(token) {
+    if(!window.confirm(`¿Revocar el token ${token.token_prefix}? Las integraciones que lo usen dejarán de autenticar.`)) return;
+    const currentCompanyID = localStorage.getItem('currentCompanyID');
+    setTokensBusy(true);
+    try {
+      await axios.post(`${constants.apiurl}/api/companies/${currentCompanyID}/api-tokens/${token.idapi_tokens}/revoke`);
+      if(createdToken) setCreatedToken('');
+      await loadApiTokens(currentCompanyID);
+    } finally {
+      setTokensBusy(false);
+    }
+  }
+
+  async function copyCreatedToken() {
+    if(!createdToken) return;
+    try {
+      await navigator.clipboard.writeText(createdToken);
+    } catch (error) {
+      window.prompt('Copia el token:', createdToken);
+    }
   }
 
   return (
@@ -262,6 +314,68 @@ function Company() {
             </Card>
           </Col>
         </Row>
+        {isWantrackAdmin && Number(localStorage.getItem('currentCompanyID')) > 0 && (
+        <Row>
+          <Col md="12">
+            <Card>
+              <CardHeader>
+                <h5 className="title">Tokens de API</h5>
+                <p className="card-category">Para integraciones webhook. El valor completo solo se muestra al crearlo; después hay que generar uno nuevo.</p>
+              </CardHeader>
+              <CardBody>
+                {createdToken && (
+                  <div className="alert alert-warning">
+                    <strong>Guarda este token ahora.</strong> No se volverá a mostrar.
+                    <Input type="textarea" readOnly value={createdToken} rows="3" style={{ marginTop: '8px' }} />
+                    <Button size="sm" color="primary" style={{ marginTop: '8px' }} onClick={copyCreatedToken}>Copiar token</Button>
+                  </div>
+                )}
+                <Row>
+                  <Col md="8">
+                    <Input
+                      value={newTokenName}
+                      maxLength={120}
+                      placeholder="Nombre del token"
+                      onChange={(event) => setNewTokenName(event.target.value)}
+                    />
+                  </Col>
+                  <Col md="4">
+                    <Button size="sm" color="success" disabled={tokensBusy} onClick={createApiToken}>Generar token</Button>
+                  </Col>
+                </Row>
+                <div className="table-responsive" style={{ marginTop: '16px' }}>
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Prefijo</th>
+                        <th>Creado</th>
+                        <th>Estado</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {apiTokens.map((token) => (
+                        <tr key={token.idapi_tokens}>
+                          <td>{token.name}</td>
+                          <td>{token.token_prefix}</td>
+                          <td>{token.created_at ? String(token.created_at).replace('T', ' ').slice(0, 19) : ''}</td>
+                          <td>{token.revoked_at ? 'Revocado' : 'Activo'}</td>
+                          <td>
+                            {!token.revoked_at && (
+                              <Button size="sm" color="danger" disabled={tokensBusy} onClick={() => revokeApiToken(token)}>Revocar</Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        )}
         <Row>
           <Col md="12">
             <Card>
