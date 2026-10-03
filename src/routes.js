@@ -74,12 +74,12 @@ var routes = [
     name: "Chat",
     icon: "tim-icons icon-chat-33",
     component: < Chats/>,
-    layout: "/admin", 
-    idSep: '15'
+    layout: "/admin",
+    idText: '15'
   },
   {  
     type: 'separator',
-    idText: '15'
+    idSep: '15'
   },
   {
     path: "/webhooks",

@@ -32,9 +32,9 @@ function getDefaultAdminPath(userInfo) {
     : [];
 
   if (modules.length === 1 && modules[0] === '21') return '/admin/documentsCheck';
+  if (modules.includes('15')) return '/admin/chatsws';
   if (modules.includes('11')) return '/admin/dashboardconversations';
   if (modules.includes('1')) return '/admin/dashboard';
-  if (modules.includes('15')) return '/admin/chatsws';
 
   return '/admin/access-denied';
 }
@@ -161,6 +161,7 @@ function Admin(props) {
           <div className={`wrapper${sidebarCollapsed ? " sidebar-mini" : ""}`}>
             <Sidebar
               routes={routes}
+              userInfo={userInfo}
               //logo = undefined I comment this to hide the logo and title in the main menu
               toggleSidebar={toggleSidebar}
               sidebarCollapsed={sidebarCollapsed}
