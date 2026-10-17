@@ -28,14 +28,18 @@ function Sidebar(props) {
   useEffect(() => { 
     const _userinfoEncoded = localStorage.getItem(constants.userinfo);
     if(_userinfoEncoded) {
-    const _userinfo = JSON.parse(decode(_userinfoEncoded));
+    try {
+      const _userinfo = JSON.parse(decode(_userinfoEncoded));
       const _modules = _userinfo.modules
-        ? String(_userinfo.modules).replaceAll(' ', '').split(',').filter(Boolean)
+        ? String(_userinfo.modules).replace(/\s+/g, '').split(',').filter(Boolean)
         : [];
       setModules(_modules);
+    } catch (error) {
+      setModules([]);
+    }
     }
     
-   }, []);
+   }, [props.userInfo]);
 
   React.useEffect(() => {
     let scrollbar = null;

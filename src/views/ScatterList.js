@@ -27,6 +27,16 @@ import {
 import { axios } from '../config/https';
 import constants from '../util/constans';
 
+const CONTACT_LOCKED_MESSAGE = 'No se pueden editar contactos después de que se envíe un mensaje. Tampoco se pueden eliminar.';
+
+function isContactBilled(contact) {
+  return Number(contact?.billed) === 1
+    || Number(contact?.idmessageSent) > 0
+    || Number(contact?.delivered) === 1
+    || Number(contact?.read) === 1
+    || Number(contact?.failed) === 1;
+}
+
 function ScatterList() {
   const navigate = useNavigate ();
   const [inputKey, setInputKey] = useState(Date.now());
@@ -346,11 +356,16 @@ function ScatterList() {
     if(validateContact(contact)) {
       setLoaderActive(true)
       const currentScatterListID = localStorage.getItem('currentScatterListID');
-      await axios.post(`${constants.apiurl}/api/scatterlistdetail`, { ...contact, idscatterlist: currentScatterListID });
-      await getScatterlistdetailbyScatterlist(); 
-      setContact({});
-      toggleModal();
-      setLoaderActive(false)
+      try {
+        await axios.post(`${constants.apiurl}/api/scatterlistdetail`, { ...contact, idscatterlist: currentScatterListID });
+        await getScatterlistdetailbyScatterlist(); 
+        setContact({});
+        toggleModal();
+      } catch (error) {
+        sendNotification(error.response?.data?.error || CONTACT_LOCKED_MESSAGE, 'danger');
+      } finally {
+        setLoaderActive(false)
+      }
     }else {
       sendNotification('Ocurrio un error guardarndo el contacto verifica que el telefono y el numero sean correctos', 'danger');
     }    
@@ -451,6 +466,44 @@ function ScatterList() {
     setModalVisible(!modalVisible);
   };
 
+  const openNewContact = () => {
+    setContact({});
+    setModalVisible(true);
+  };
+
+  const notifyContactLocked = () => {
+    sendNotification(CONTACT_LOCKED_MESSAGE, 'danger');
+  };
+
+  const OpenContactforUpdate= (event, contactRow) => {
+    event.preventDefault();
+    if(isContactBilled(contactRow)) {
+      notifyContactLocked();
+      return;
+    }
+    setContact(contactRow);
+    setModalVisible(true);
+  }
+
+  const deleteContact = async (contactRow) => {
+    if(isContactBilled(contactRow)) {
+      notifyContactLocked();
+      return;
+    }
+    if(!window.confirm(`¿Eliminar a ${contactRow.name || contactRow.phone} de esta campaña?`)) {
+      return;
+    }
+    try {
+      setLoaderActive(true);
+      await axios.delete(`${constants.apiurl}/api/scatterlistdetail/${contactRow.idscatterlist_details}`);
+      await getScatterlistdetailbyScatterlist();
+    } catch (error) {
+      sendNotification(error.response?.data?.error || CONTACT_LOCKED_MESSAGE, 'danger');
+    } finally {
+      setLoaderActive(false);
+    }
+  };
+
   async function checkAllChecks() {
     const _checkAll = !checkAll;
     const currentScatterListID = localStorage.getItem('currentScatterListID');
@@ -472,12 +525,6 @@ function ScatterList() {
       inputFileref.current.click();
     }
   };
-
-  const OpenContactforUpdate= (event, contact) => {
-    event.preventDefault();
-    toggleModal();
-    setContact(contact);
-  }
 
   const toggleParameterModal = () => {
     const isVisible = !modalParameterVisible;
@@ -613,22 +660,32 @@ function ScatterList() {
       const amount = importContacts.length;
       const currentScatterListID = localStorage.getItem('currentScatterListID');
       setLoaderActive(true);
+      let skippedBilled = 0;
       for (let index = 0; index < amount; index++) {
         const element = importContacts[index];
         if(element && element.length > 1 && element[0] && element[1]) {
-          await axios.post(`${constants.apiurl}/api/scatterlistdetail`, { 
-            ...{ 
-              name: element[0],  
-              phone:fixNumber(element[1]),
-              extra1: element.length > 2 ? element[2]: '',
-              extra2: element.length > 3 ? element[3]: ''
-            }, 
-              idscatterlist: currentScatterListID });
+          try {
+            await axios.post(`${constants.apiurl}/api/scatterlistdetail`, { 
+              ...{ 
+                name: element[0],  
+                phone:fixNumber(element[1]),
+                extra1: element.length > 2 ? element[2]: '',
+                extra2: element.length > 3 ? element[3]: ''
+              }, 
+                idscatterlist: currentScatterListID });
+          } catch (error) {
+            if (error.response?.status === 409) {
+              skippedBilled += 1;
+            }
+          }
         }  
         setLoaderText(`Importado contacto #${index+1} de ${amount}`);
       }      
       await getScatterlistdetailbyScatterlist();
       setLoaderActive(false)
+      if (skippedBilled > 0) {
+        sendNotification(`${CONTACT_LOCKED_MESSAGE} Se omitieron ${skippedBilled} contactos ya enviados.`, 'danger');
+      }
     }
     setModalVisibleDocuemnt(false);
     setFile(undefined);
@@ -714,29 +771,29 @@ function ScatterList() {
         </Modal>
         <Modal isOpen={modalVisible} toggle={toggleModal}>
           <ModalHeader>
-            <h2 style={{color: '#000', marginBottom: '0px'}}>Agregar contacto</h2>
+            <h2 style={{color: '#000', marginBottom: '0px'}}>{contact.idscatterlist_details ? 'Editar contacto' : 'Agregar contacto'}</h2>
           </ModalHeader>
           <ModalBody>
             <FormGroup>
                 <label>Telefono</label>
-                <Input placeholder="Escriba el telefono aqui" className="form-control form-control-lg color_black" type="tel" name='phone' defaultValue={contact.phone} onChange={onHandleChangeContact}/>
+                <Input key={`${contact.idscatterlist_details || 'new'}-phone`} placeholder="Escriba el telefono aqui" className="form-control form-control-lg color_black" type="tel" name='phone' defaultValue={contact.phone} onChange={onHandleChangeContact}/>
             </FormGroup>
             <FormGroup>
                 <label>Nombre completo</label>
-                <Input placeholder="Escriba el nombre completo" className="form-control form-control-lg color_black" type="text" name='name' defaultValue={contact.name} onChange={onHandleChangeContact}/>
+                <Input key={`${contact.idscatterlist_details || 'new'}-name`} placeholder="Escriba el nombre completo" className="form-control form-control-lg color_black" type="text" name='name' defaultValue={contact.name} onChange={onHandleChangeContact}/>
             </FormGroup>
             <FormGroup>
                 <label>Extra 1</label>
-                <Input placeholder="Escriba el parametro extra aqui" className="form-control form-control-lg color_black" type="text" name='extra1' defaultValue={contact.extra1} onChange={onHandleChangeContact}/>
+                <Input key={`${contact.idscatterlist_details || 'new'}-extra1`} placeholder="Escriba el parametro extra aqui" className="form-control form-control-lg color_black" type="text" name='extra1' defaultValue={contact.extra1} onChange={onHandleChangeContact}/>
             </FormGroup>
 
             <FormGroup>
                 <label>Extra 2</label>
-                <Input placeholder="Escriba el parametro extra aqui" className="form-control form-control-lg color_black" type="text" name='extra2' defaultValue={contact.extra2} onChange={onHandleChangeContact}/>
+                <Input key={`${contact.idscatterlist_details || 'new'}-extra2`} placeholder="Escriba el parametro extra aqui" className="form-control form-control-lg color_black" type="text" name='extra2' defaultValue={contact.extra2} onChange={onHandleChangeContact}/>
             </FormGroup>
             
             <Button onClick={addContact} style={{marginTop: '20px'}} className="btn btn-primary">
-              Agregar
+              {contact.idscatterlist_details ? 'Guardar' : 'Agregar'}
             </Button>
           </ModalBody>
         </Modal>
@@ -954,7 +1011,7 @@ function ScatterList() {
                   <Row>
                     <Col style={{display: 'flex', justifyContent: 'space-between'}} md="12">
                       <div>
-                        <Button title="Agregar contacto" onClick={toggleModal} className="btn btn-primary">
+                        <Button title="Agregar contacto" onClick={openNewContact} className="btn btn-primary">
                           <i className="fa fa-user-plus" />
                         </Button>
                         <Button title="Agregar lista de contactos" onClick={toggleModalDocument} className="btn btn-primary">
@@ -988,11 +1045,12 @@ function ScatterList() {
                                         <th>Extra 1</th>
                                         <th>Extra 2</th>
                                         <th></th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {scatterListDetails?.map((scatterListDetail, index) => 
-                                        <tr key={index}>
+                                        <tr key={scatterListDetail.idscatterlist_details || index}>
                                             <td> 
                                               <FormGroup check>
                                                 <Label check>
@@ -1003,13 +1061,30 @@ function ScatterList() {
                                                 </Label>
                                               </FormGroup>
                                             </td>
-                                            <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{(index + 1) + startMessageList}</Link></td>
-                                            <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.name}</Link></td>
-                                            <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.phone}</Link></td>
-                                            <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.extra1}</Link></td>
-                                            <td> <Link to="/" onClick={(e)=>{OpenContactforUpdate(e, scatterListDetail)}}>{scatterListDetail.extra2}</Link></td>
-                                            <td> 
-                                                {getIcon(scatterListDetail)}
+                                            <td>{(index + 1) + startMessageList}</td>
+                                            <td>{scatterListDetail.name}</td>
+                                            <td>{scatterListDetail.phone}</td>
+                                            <td>{scatterListDetail.extra1}</td>
+                                            <td>{scatterListDetail.extra2}</td>
+                                            <td>{getIcon(scatterListDetail)}</td>
+                                            <td>
+                                              <Button
+                                                title={isContactBilled(scatterListDetail) ? CONTACT_LOCKED_MESSAGE : 'Editar contacto'}
+                                                className="btn btn-sm btn-primary"
+                                                type="button"
+                                                onClick={(event) => OpenContactforUpdate(event, scatterListDetail)}
+                                              >
+                                                <i className="fa-solid fa-pen" />
+                                              </Button>
+                                              {' '}
+                                              <Button
+                                                title={isContactBilled(scatterListDetail) ? CONTACT_LOCKED_MESSAGE : 'Eliminar contacto'}
+                                                className="btn btn-sm btn-danger"
+                                                type="button"
+                                                onClick={() => deleteContact(scatterListDetail)}
+                                              >
+                                                <i className="fa-solid fa-trash" />
+                                              </Button>
                                             </td>
                                         </tr>
                                     )}                   
