@@ -7,13 +7,19 @@ import constants from '../util/constans';
 import { axios } from '../config/https';
 import SocketService from "../socket";
 import Chat from './Chat';
+import { getCompanyId, getUserInfo } from '../util/localStorageInfo';
 
 const FILTERS = [
+    { id: 'all', label: 'Todos' },
     { id: 'active', label: 'Activos' },
     { id: 'unread', label: 'No leídas' },
     { id: 'human', label: 'Humanas' },
     { id: 'bot', label: 'Bot' },
 ];
+
+function isAdminUser(user) {
+    return Number(user?.idrol) === 1 || Number(user?.idroles) === 1;
+}
 
 function statusLabel(status) {
     if (status === 'human') return 'Humano';
@@ -59,13 +65,16 @@ function relativeTime(value) {
 function Chats() {
     const [searchValue, setSearchValue] = React.useState('');
     const [debouncedSearch, setDebouncedSearch] = React.useState('');
-    const [filter, setFilter] = React.useState('active');
+    const isAdmin = isAdminUser(getUserInfo());
+    const [assignmentEnabled, setAssignmentEnabled] = React.useState(false);
+    const [filter, setFilter] = React.useState('all');
     const [refreshKey, setRefreshKey] = React.useState(0);
     const [selected, setSelected] = React.useState(null);
     const [activeAssignments, setActiveAssignments] = React.useState([]);
     const [assignmentsOpen, setAssignmentsOpen] = React.useState(false);
     const [assignmentsLoading, setAssignmentsLoading] = React.useState(false);
     const notificationAlertRef = React.useRef(null);
+    const filterInitialized = React.useRef(isAdmin);
 
     const sendNotification = React.useCallback((message, type = 'success') => {
         notificationAlertRef.current?.notificationAlert({
@@ -94,6 +103,35 @@ function Chats() {
         return () => clearTimeout(timeout);
     }, [searchValue]);
 
+    React.useEffect(() => {
+        if (isAdmin) {
+            setAssignmentEnabled(false);
+            return undefined;
+        }
+        const companyId = getCompanyId();
+        if (!companyId) {
+            setAssignmentEnabled(false);
+            return undefined;
+        }
+        let cancelled = false;
+        axios.get(`${constants.apiurl}/api/company/${companyId}`).then((result) => {
+            if (cancelled) return;
+            const enabled = Number(result.data?.multiagent) === 1;
+            setAssignmentEnabled(enabled);
+            if (!filterInitialized.current) {
+                filterInitialized.current = true;
+                setFilter(enabled ? 'active' : 'all');
+            }
+        }).catch(() => {
+            if (!cancelled) {
+                setAssignmentEnabled(false);
+            }
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [isAdmin]);
+
     const buildUrl = React.useCallback(({ page, pageSize }) => {
         const params = new URLSearchParams({
             page,
@@ -101,14 +139,19 @@ function Chats() {
         });
         if (debouncedSearch) params.set('search', debouncedSearch);
         if (filter) params.set('filter', filter);
+        if (isAdmin) params.set('allCompanies', 'true');
         return `${constants.apiurl}/api/chats?${params.toString()}`;
-    }, [debouncedSearch, filter, refreshKey]);
+    }, [debouncedSearch, filter, refreshKey, isAdmin]);
 
     const pagination = useServerPagination(buildUrl, [debouncedSearch, filter, refreshKey], 40);
 
     React.useEffect(() => {
+        if (!isAdmin && !assignmentEnabled) {
+            setActiveAssignments([]);
+            return;
+        }
         loadActiveAssignments();
-    }, [loadActiveAssignments, refreshKey]);
+    }, [loadActiveAssignments, refreshKey, isAdmin, assignmentEnabled]);
 
     const upsertConversation = React.useCallback((conversation) => {
         if (!conversation?.idconversation && !conversation?.phone) return;
@@ -184,11 +227,13 @@ function Chats() {
                         <h5>Bandeja</h5>
                         <small>{unreadTotal > 0 ? `${unreadTotal} sin leer` : 'Al día'}</small>
                     </div>
-                    <button className="wa-inbox-assign" type="button" onClick={() => setAssignmentsOpen((open) => !open)}>
-                        Asignadas {activeAssignments.length}
-                    </button>
+                    {(isAdmin || assignmentEnabled) ? (
+                        <button className="wa-inbox-assign" type="button" onClick={() => setAssignmentsOpen((open) => !open)}>
+                            Asignadas {activeAssignments.length}
+                        </button>
+                    ) : null}
                 </div>
-                {assignmentsOpen && (
+                {assignmentsOpen && (isAdmin || assignmentEnabled) && (
                     <div className="wa-assign-panel">
                         <div className="wa-assign-panel-head">
                             <span>Atención humana activa</span>
@@ -242,6 +287,7 @@ function Chats() {
                                     <div className="wa-inbox-preview">{chat.last_message_preview || chatSubtitle(chat) || chat.phone}</div>
                                     <div className="wa-inbox-meta">
                                         <em className={`wa-status ${chat.status || 'bot'}`}>{statusLabel(chat.status)}</em>
+                                        {chat.companyName ? <span>{chat.companyName}</span> : null}
                                         {chat.assignedUserName ? <span>{chat.assignedUserName}</span> : null}
                                     </div>
                                 </div>
@@ -255,11 +301,15 @@ function Chats() {
                 </div>
             </aside>
             <section className="wa-inbox-thread">
-                <Chat
-                    embedded
-                    selected={selected}
-                    onBack={() => setSelected(null)}
-                />
+                {selected ? (
+                    <Chat
+                        embedded
+                        selected={selected}
+                        onBack={() => setSelected(null)}
+                    />
+                ) : (
+                    <div className="wa-inbox-empty">Selecciona una conversación para ver el historial.</div>
+                )}
             </section>
         </div>
     </div>;
