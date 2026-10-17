@@ -1,0 +1,19 @@
+name: Require develop
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  require-develop:
+    name: require-develop
+    runs-on: ubuntu-latest
+    steps:
+      - name: Only develop can target main
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [ "$HEAD_REF" != "develop" ]; then
+            echo "Los PR a main deben salir de develop. Abre este cambio contra develop y luego sube develop a main."
+            exit 1
+          fi
