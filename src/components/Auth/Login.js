@@ -30,7 +30,7 @@ const disabledLoginButton = !formData['email'] || !formData['password']
     axios.post(`${constants.apiurl}/api/login`,_user).then(async (result) => {
       if(result && result.data) {
         localStorage.setItem(constants.token, result.data);
-        const userinfo = await axios.get(`${constants.apiurl}/api/users/getByEmail/${_user.email}`);
+        const userinfo = await axios.get(`${constants.apiurl}/api/users/getByEmail/${encodeURIComponent(_user.email)}`);
         localStorage.setItem(constants.userinfo, encode(JSON.stringify(userinfo.data)));
         navigate('/admin');
       }
