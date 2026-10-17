@@ -51,8 +51,8 @@ function Chat({ embedded = false, selected = null, onBack = null }) {
   const selectedPhone = selected?.phone;
   const selectedLine = selected?.phoneNumberId;
   const loadChats = useCallback(async ({ markRead = true, includeStatus = false, showLoader = false } = {}) => {
-    const activePhone = selectedPhone || localStorage.getItem("currentPhone");
-    const activeLine = selectedLine || localStorage.getItem("currentphoneNumberID");
+    const activePhone = selectedPhone || (!embedded ? localStorage.getItem("currentPhone") : "");
+    const activeLine = selectedLine || (!embedded ? localStorage.getItem("currentphoneNumberID") : "");
     if (!activePhone || !activeLine) return;
     if (showLoader) setLoaderActive(true);
     const requests = [axios.get(`${constants.apiurl}/api/chats/${encodeURIComponent(activePhone)}/${encodeURIComponent(activeLine)}?limit=${MESSAGE_LIMIT}&markRead=${markRead}`)];
@@ -67,7 +67,7 @@ function Chat({ embedded = false, selected = null, onBack = null }) {
       if (assignmentResult) setAssignment(assignmentResult.data || null);
       toBottom();
     } finally { if (showLoader) setLoaderActive(false); }
-  }, [selectedPhone, selectedLine, toBottom]);
+  }, [embedded, selectedPhone, selectedLine, toBottom]);
 
   async function toggleChat() {
     const next = !startchat;
@@ -155,9 +155,9 @@ function Chat({ embedded = false, selected = null, onBack = null }) {
   }
 
   useEffect(() => {
-    const nextPhone = selected?.phone || localStorage.getItem("currentPhone") || "";
-    const nextLine = selected?.phoneNumberId || localStorage.getItem("currentphoneNumberID") || "";
-    const nextName = selected?.name || localStorage.getItem("currentName") || "";
+    const nextPhone = selected?.phone || (!embedded ? localStorage.getItem("currentPhone") : "") || "";
+    const nextLine = selected?.phoneNumberId || (!embedded ? localStorage.getItem("currentphoneNumberID") : "") || "";
+    const nextName = selected?.name || (!embedded ? localStorage.getItem("currentName") : "") || "";
     setPhone(nextPhone);
     setPhoneNumberId(nextLine);
     setName(nextName);
@@ -177,7 +177,7 @@ function Chat({ embedded = false, selected = null, onBack = null }) {
     socket.getSocket().on("chatrefresh", () => onRefresh({}));
     socket.getSocket().on("conversation", onRefresh);
     return () => { window.clearTimeout(refreshTimeoutRef.current); stopRecordingStream(); socket.disconnect(); };
-  }, [loadChats, selectedPhone, selectedLine]);
+  }, [embedded, loadChats, selectedPhone, selectedLine]);
 
   function formatTime(value) {
     const date = new Date(value);

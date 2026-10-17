@@ -7,13 +7,19 @@ import constants from '../util/constans';
 import { axios } from '../config/https';
 import SocketService from "../socket";
 import Chat from './Chat';
+import { getUserInfo } from '../util/localStorageInfo';
 
 const FILTERS = [
+    { id: 'all', label: 'Todos' },
     { id: 'active', label: 'Activos' },
     { id: 'unread', label: 'No leídas' },
     { id: 'human', label: 'Humanas' },
     { id: 'bot', label: 'Bot' },
 ];
+
+function isAdminUser(user) {
+    return Number(user?.idrol) === 1 || Number(user?.idroles) === 1;
+}
 
 function statusLabel(status) {
     if (status === 'human') return 'Humano';
@@ -59,7 +65,8 @@ function relativeTime(value) {
 function Chats() {
     const [searchValue, setSearchValue] = React.useState('');
     const [debouncedSearch, setDebouncedSearch] = React.useState('');
-    const [filter, setFilter] = React.useState('active');
+    const isAdmin = isAdminUser(getUserInfo());
+    const [filter, setFilter] = React.useState(isAdmin ? 'all' : 'active');
     const [refreshKey, setRefreshKey] = React.useState(0);
     const [selected, setSelected] = React.useState(null);
     const [activeAssignments, setActiveAssignments] = React.useState([]);
@@ -101,8 +108,9 @@ function Chats() {
         });
         if (debouncedSearch) params.set('search', debouncedSearch);
         if (filter) params.set('filter', filter);
+        if (isAdmin) params.set('allCompanies', 'true');
         return `${constants.apiurl}/api/chats?${params.toString()}`;
-    }, [debouncedSearch, filter, refreshKey]);
+    }, [debouncedSearch, filter, refreshKey, isAdmin]);
 
     const pagination = useServerPagination(buildUrl, [debouncedSearch, filter, refreshKey], 40);
 
@@ -242,6 +250,7 @@ function Chats() {
                                     <div className="wa-inbox-preview">{chat.last_message_preview || chatSubtitle(chat) || chat.phone}</div>
                                     <div className="wa-inbox-meta">
                                         <em className={`wa-status ${chat.status || 'bot'}`}>{statusLabel(chat.status)}</em>
+                                        {chat.companyName ? <span>{chat.companyName}</span> : null}
                                         {chat.assignedUserName ? <span>{chat.assignedUserName}</span> : null}
                                     </div>
                                 </div>
@@ -255,11 +264,15 @@ function Chats() {
                 </div>
             </aside>
             <section className="wa-inbox-thread">
-                <Chat
-                    embedded
-                    selected={selected}
-                    onBack={() => setSelected(null)}
-                />
+                {selected ? (
+                    <Chat
+                        embedded
+                        selected={selected}
+                        onBack={() => setSelected(null)}
+                    />
+                ) : (
+                    <div className="wa-inbox-empty">Selecciona una conversación para ver el historial.</div>
+                )}
             </section>
         </div>
     </div>;
