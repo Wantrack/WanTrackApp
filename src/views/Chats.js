@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from "react-router-dom";
 import NotificationAlert from "react-notification-alert";
 import Loader from '../components/Loader/Loader';
 import TablePagination from '../components/Pagination/TablePagination';
@@ -7,20 +6,64 @@ import useServerPagination from '../components/Pagination/useServerPagination';
 import constants from '../util/constans';
 import { axios } from '../config/https';
 import SocketService from "../socket";
+import Chat from './Chat';
 
-import {
-    Button,
-    CardHeader,
-    CardBody,
-    Card,
-    CardFooter,
-} from "reactstrap";
+const FILTERS = [
+    { id: 'active', label: 'Activos' },
+    { id: 'unread', label: 'No leídas' },
+    { id: 'human', label: 'Humanas' },
+    { id: 'bot', label: 'Bot' },
+];
+
+function statusLabel(status) {
+    if (status === 'human') return 'Humano';
+    if (status === 'waiting_human') return 'En espera';
+    if (status === 'closed') return 'Cerrado';
+    return 'Bot';
+}
+
+function isScopedId(value) {
+    return /\./.test(String(value || ''));
+}
+
+function chatTitle(chat) {
+    const name = String(chat?.name || '').trim();
+    const phone = String(chat?.phone || '').trim();
+    if (name && name !== phone) return name;
+    if (isScopedId(phone)) return 'Contacto WhatsApp';
+    return phone || 'Conversación';
+}
+
+function chatSubtitle(chat) {
+    const name = String(chat?.name || '').trim();
+    const phone = String(chat?.phone || '').trim();
+    if (name && name !== phone) return phone;
+    return isScopedId(phone) ? phone : '';
+}
+
+function relativeTime(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const diff = Date.now() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return 'ahora';
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} h`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days} d`;
+    return date.toLocaleDateString();
+}
 
 function Chats() {
     const [searchValue, setSearchValue] = React.useState('');
     const [debouncedSearch, setDebouncedSearch] = React.useState('');
+    const [filter, setFilter] = React.useState('active');
     const [refreshKey, setRefreshKey] = React.useState(0);
+    const [selected, setSelected] = React.useState(null);
     const [activeAssignments, setActiveAssignments] = React.useState([]);
+    const [assignmentsOpen, setAssignmentsOpen] = React.useState(false);
     const [assignmentsLoading, setAssignmentsLoading] = React.useState(false);
     const notificationAlertRef = React.useRef(null);
 
@@ -56,19 +99,26 @@ function Chats() {
             page,
             pageSize,
         });
-
-        if (debouncedSearch) {
-            params.set('search', debouncedSearch);
-        }
-
+        if (debouncedSearch) params.set('search', debouncedSearch);
+        if (filter) params.set('filter', filter);
         return `${constants.apiurl}/api/chats?${params.toString()}`;
-    }, [debouncedSearch, refreshKey]);
+    }, [debouncedSearch, filter, refreshKey]);
 
-    const pagination = useServerPagination(buildUrl, [debouncedSearch, refreshKey], 25);
+    const pagination = useServerPagination(buildUrl, [debouncedSearch, filter, refreshKey], 40);
 
     React.useEffect(() => {
         loadActiveAssignments();
     }, [loadActiveAssignments, refreshKey]);
+
+    const upsertConversation = React.useCallback((conversation) => {
+        if (!conversation?.idconversation && !conversation?.phone) return;
+        setSelected((current) => {
+            if (!current) return current;
+            const same = (conversation.idconversation && current.idconversation === conversation.idconversation)
+                || (conversation.phone === current.phone && conversation.phoneNumberId === current.phoneNumberId);
+            return same ? { ...current, ...conversation } : current;
+        });
+    }, []);
 
     const closeAssignment = async (assignment) => {
         if(!window.confirm(`¿Liberar el chat ${assignment.phone} asignado a ${assignment.userName}?`)) return;
@@ -102,111 +152,117 @@ function Chats() {
         socket.getSocket().on('notificationrefresh', () => {
             setRefreshKey(value => value + 1);
         });
-
+        socket.getSocket().on('conversation', (payload) => {
+            if (payload?.conversation) {
+                upsertConversation(payload.conversation);
+            }
+            if (payload?.type === 'message' || payload?.type === 'status') {
+                setRefreshKey(value => value + 1);
+            }
+        });
         return () => {
             socket.disconnect();
         };
-    }, []);
+    }, [upsertConversation]);
 
-    return <div className="content">
-                <NotificationAlert ref={notificationAlertRef} />
-                <Loader active={pagination.loading || assignmentsLoading} />
-                <Card>
-                    <CardHeader className="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 className="title mb-1">Asignaciones activas</h5>
-                            <small>Incluye chats sin mensajes que no aparecen en el listado general.</small>
-                        </div>
-                        <Button color="danger" size="sm" disabled={activeAssignments.length === 0 || assignmentsLoading} onClick={closeAllAssignments}>
-                            Liberar todas ({activeAssignments.length})
-                        </Button>
-                    </CardHeader>
-                    <CardBody>
-                        {activeAssignments.length === 0 ? (
-                            <p className="mb-0">No hay asignaciones activas.</p>
-                        ) : (
-                            <div className="table-responsive">
-                                <table className="table table-hover mb-0">
-                                    <thead><tr><th>Cliente</th><th>Cuenta</th><th>Departamento</th><th>Agente</th><th>Asignado</th><th></th></tr></thead>
-                                    <tbody>
-                                        {activeAssignments.map((assignment) => (
-                                            <tr key={assignment.idchatAssignments}>
-                                                <td>{assignment.phone}</td>
-                                                <td>{assignment.accountName || assignment.accountPhone || assignment.phoneNumberId}</td>
-                                                <td>{assignment.departmentName || 'General'}</td>
-                                                <td>{assignment.userName}</td>
-                                                <td>{assignment.creationDate}</td>
-                                                <td>
-                                                    <Button color="danger" size="sm" outline onClick={() => closeAssignment(assignment)}>
-                                                        Liberar
-                                                    </Button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </CardBody>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <h5 className="title">Chats</h5>
-                    </CardHeader>
-                    <CardBody>
-                        <div className="margin-bottom-2vh flex-left">
-                            <div className="input-group flex-nowrap w-full">
-                                <span className="input-group-text z-0" id="addon-wrapping"><i className="fa fa-search"></i></span>
-                                <input
-                                    type="text"
-                                    className="form-control px-2"
-                                    placeholder="Escriba el nombre o telefono del contacto"
-                                    value={searchValue}
-                                    onChange={(event) => setSearchValue(event.target.value)}
-                                />
-                            </div>
-                        </div>
+    function openConversation(chat) {
+        localStorage.setItem('currentPhone', chat.phone);
+        localStorage.setItem('currentName', chat.name || '');
+        localStorage.setItem('currentphoneNumberID', chat.phoneNumberId);
+        setSelected(chat);
+    }
 
-                        <div className="table-responsive">
-                            <table className="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Telefono</th>
-                                        <th>Nombre</th>
-                                        <th>Departamento</th>
-                                        <th>Agente asignado</th>
-                                        <th>Fecha ultimo mensaje</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {pagination.paginatedItems.map((chat, index) =>
-                                        <tr key={`${chat.phone}-${chat.phoneNumberId}`}>
-                                            <td><Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{pagination.startIndex + index + 1}</Link></td>
-                                            <td><Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.phone}</Link></td>
-                                            <td><Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.name}</Link></td>
-                                            <td>{chat.departmentName || 'General'}</td>
-                                            <td>{chat.assignedUserName || 'Sin asignar'}</td>
-                                            <td><Link to="/admin/chat" onClick={() => goToChat(chat.phone, chat.phoneNumberId, chat.name)}>{chat.last_creationdate}</Link></td>
-                                            <td>{chat.isalert ? <i title='No haz leido los mensajes' style={{ color: '#f5365c' }} className="fa-solid fa-circle-exclamation"></i> : null}</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+    const unreadTotal = pagination.paginatedItems.reduce((sum, chat) => sum + Number(chat.unread_count || 0), 0);
+
+    return <div className="content wa-inbox-page">
+        <NotificationAlert ref={notificationAlertRef} />
+        <Loader active={assignmentsLoading} />
+        <div className={`wa-inbox-shell ${selected ? 'has-thread' : ''}`}>
+            <aside className="wa-inbox-list">
+                <div className="wa-inbox-toolbar">
+                    <div>
+                        <h5>Bandeja</h5>
+                        <small>{unreadTotal > 0 ? `${unreadTotal} sin leer` : 'Al día'}</small>
+                    </div>
+                    <button className="wa-inbox-assign" type="button" onClick={() => setAssignmentsOpen((open) => !open)}>
+                        Asignadas {activeAssignments.length}
+                    </button>
+                </div>
+                {assignmentsOpen && (
+                    <div className="wa-assign-panel">
+                        <div className="wa-assign-panel-head">
+                            <span>Atención humana activa</span>
+                            <button type="button" disabled={activeAssignments.length === 0} onClick={closeAllAssignments}>Liberar todas</button>
                         </div>
-                    </CardBody>
-                    <CardFooter>
-                        <TablePagination {...pagination} />
-                    </CardFooter>
-                </Card>
+                        {activeAssignments.length === 0 ? <p>No hay asignaciones.</p> : activeAssignments.map((assignment) => (
+                            <div key={assignment.idchatAssignments} className="wa-assign-row">
+                                <div>
+                                    <strong>{assignment.phone}</strong>
+                                    <small>{assignment.userName} · {assignment.departmentName || 'General'}</small>
+                                </div>
+                                <button type="button" onClick={() => closeAssignment(assignment)}>Liberar</button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                <div className="wa-inbox-search">
+                    <i className="fa fa-search" />
+                    <input
+                        type="text"
+                        placeholder="Buscar nombre o teléfono"
+                        value={searchValue}
+                        onChange={(event) => setSearchValue(event.target.value)}
+                    />
+                </div>
+                <div className="wa-inbox-filters">
+                    {FILTERS.map((item) => (
+                        <button key={item.id || 'all'} type="button" className={filter === item.id ? 'active' : ''} onClick={() => setFilter(item.id)}>
+                            {item.label}
+                        </button>
+                    ))}
+                </div>
+                <div className="wa-inbox-items">
+                    {pagination.paginatedItems.length === 0 && !pagination.loading ? (
+                        <div className="wa-inbox-empty">No hay conversaciones en este filtro.</div>
+                    ) : pagination.paginatedItems.map((chat) => {
+                        const isSelected = selected && selected.phone === chat.phone && selected.phoneNumberId === chat.phoneNumberId;
+                        return (
+                            <button
+                                type="button"
+                                key={`${chat.phone}-${chat.phoneNumberId}`}
+                                className={`wa-inbox-item ${isSelected ? 'selected' : ''} ${Number(chat.unread_count) > 0 ? 'unread' : ''}`}
+                                onClick={() => openConversation(chat)}
+                            >
+                                <div className="wa-inbox-avatar">{String(chatTitle(chat)).slice(0, 2).toUpperCase()}</div>
+                                <div className="wa-inbox-body">
+                                    <div className="wa-inbox-top">
+                                        <strong>{chatTitle(chat)}</strong>
+                                        <span>{relativeTime(chat.last_creationdate)}</span>
+                                    </div>
+                                    <div className="wa-inbox-preview">{chat.last_message_preview || chatSubtitle(chat) || chat.phone}</div>
+                                    <div className="wa-inbox-meta">
+                                        <em className={`wa-status ${chat.status || 'bot'}`}>{statusLabel(chat.status)}</em>
+                                        {chat.assignedUserName ? <span>{chat.assignedUserName}</span> : null}
+                                    </div>
+                                </div>
+                                {Number(chat.unread_count) > 0 ? <b className="wa-unread">{chat.unread_count}</b> : null}
+                            </button>
+                        );
+                    })}
+                </div>
+                <div className="wa-inbox-pager">
+                    <TablePagination {...pagination} />
+                </div>
+            </aside>
+            <section className="wa-inbox-thread">
+                <Chat
+                    embedded
+                    selected={selected}
+                    onBack={() => setSelected(null)}
+                />
+            </section>
+        </div>
     </div>;
-}
-
-function goToChat(phone, phoneNumberId, name) {
-    localStorage.setItem('currentPhone', phone);
-    localStorage.setItem('currentName', name || '');
-    localStorage.setItem('currentphoneNumberID', phoneNumberId);
 }
 
 export default Chats;
