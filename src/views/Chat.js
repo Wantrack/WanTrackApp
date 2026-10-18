@@ -8,8 +8,33 @@ import ScrollArea from "react-scrollbar";
 import { Card } from "reactstrap";
 import SocketService from "../socket";
 
-const MESSAGE_LIMIT = 120;
+const MESSAGE_LIMIT = 50;
 const EMOJIS = ["😀", "😂", "😍", "🥰", "😊", "😉", "😎", "🤔", "😢", "😭", "😡", "👍", "👎", "👏", "🙏", "💪", "🎉", "❤️", "💙", "🔥", "✨", "✅", "📌", "📞", "📷", "🎤"];
+
+function messageKey(chat) {
+  return String(chat?.idmessage || chat?.idauditTrail || "");
+}
+
+function parseThread(data) {
+  if (Array.isArray(data)) {
+    return { messages: data, hasMore: data.length >= MESSAGE_LIMIT };
+  }
+  return {
+    messages: Array.isArray(data?.messages) ? data.messages : [],
+    hasMore: Boolean(data?.hasMore),
+  };
+}
+
+function mergeMessages(current, incoming) {
+  const byId = new Map();
+  current.forEach((item) => byId.set(messageKey(item), item));
+  incoming.forEach((item) => byId.set(messageKey(item), item));
+  return [...byId.values()].sort((left, right) => {
+    const time = new Date(left.creationdate).getTime() - new Date(right.creationdate).getTime();
+    if (time !== 0) return time;
+    return Number(messageKey(left)) - Number(messageKey(right));
+  });
+}
 
 function Chat({ embedded = false, selected = null, onBack = null }) {
   const scrollAreaRef = useRef(null);
@@ -33,6 +58,10 @@ function Chat({ embedded = false, selected = null, onBack = null }) {
   const [attachment, setAttachment] = useState(null);
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const loadingOlderRef = useRef(false);
+  const allowAutoLoadRef = useRef(false);
 
   const currentPhone = selected?.phone || phone;
   const currentPhoneNumberId = selected?.phoneNumberId || phoneNumberId;
@@ -50,7 +79,7 @@ function Chat({ embedded = false, selected = null, onBack = null }) {
 
   const selectedPhone = selected?.phone;
   const selectedLine = selected?.phoneNumberId;
-  const loadChats = useCallback(async ({ markRead = true, includeStatus = false, showLoader = false } = {}) => {
+  const loadChats = useCallback(async ({ markRead = true, includeStatus = false, showLoader = false, reset = false, scrollToBottom = false } = {}) => {
     const activePhone = selectedPhone || (!embedded ? localStorage.getItem("currentPhone") : "");
     const activeLine = selectedLine || (!embedded ? localStorage.getItem("currentphoneNumberID") : "");
     if (!activePhone || !activeLine) return;
@@ -62,12 +91,47 @@ function Chat({ embedded = false, selected = null, onBack = null }) {
     }
     try {
       const [chatResult, statusResult, assignmentResult] = await Promise.all(requests);
-      setChats(Array.isArray(chatResult.data) ? chatResult.data : []);
+      const thread = parseThread(chatResult.data);
+      setChats((current) => reset ? thread.messages : mergeMessages(current, thread.messages));
+      if (reset) setHasMore(thread.hasMore);
       if (statusResult) setStarChat(statusResult.data.isStop);
       if (assignmentResult) setAssignment(assignmentResult.data || null);
-      toBottom();
+      if (reset || scrollToBottom) toBottom();
     } finally { if (showLoader) setLoaderActive(false); }
   }, [embedded, selectedPhone, selectedLine, toBottom]);
+
+  const loadOlder = useCallback(async () => {
+    const activePhone = selectedPhone || (!embedded ? localStorage.getItem("currentPhone") : "");
+    const activeLine = selectedLine || (!embedded ? localStorage.getItem("currentphoneNumberID") : "");
+    if (!activePhone || !activeLine || loadingOlderRef.current || !hasMore) return;
+    const oldest = chats[0];
+    const before = oldest?.idmessage || oldest?.idauditTrail;
+    if (!before) {
+      setHasMore(false);
+      return;
+    }
+    loadingOlderRef.current = true;
+    setLoadingOlder(true);
+    const scrollArea = scrollAreaRef.current?.scrollArea;
+    const previousHeight = scrollArea?.content?.scrollHeight || 0;
+    try {
+      const result = await axios.get(`${constants.apiurl}/api/chats/${encodeURIComponent(activePhone)}/${encodeURIComponent(activeLine)}?limit=${MESSAGE_LIMIT}&before=${encodeURIComponent(before)}&markRead=false`);
+      const thread = parseThread(result.data);
+      setHasMore(thread.hasMore);
+      setChats((current) => mergeMessages(thread.messages, current));
+      window.setTimeout(() => {
+        const nextHeight = scrollArea?.content?.scrollHeight || 0;
+        const delta = nextHeight - previousHeight;
+        if (delta > 0 && typeof scrollArea?.scrollYTo === "function") {
+          const currentTop = Number(scrollArea?.wrapper?.scrollTop || scrollArea?.state?.top || 0);
+          scrollArea.scrollYTo(currentTop + delta);
+        }
+      }, 30);
+    } finally {
+      loadingOlderRef.current = false;
+      setLoadingOlder(false);
+    }
+  }, [chats, embedded, hasMore, selectedPhone, selectedLine]);
 
   async function toggleChat() {
     const next = !startchat;
@@ -100,7 +164,7 @@ function Chat({ embedded = false, selected = null, onBack = null }) {
     try {
       await axios.post(`${constants.apiurl}/api/chatssendmessage`, { phone: currentPhone, phoneNumberId: currentPhoneNumberId, message: text });
       setMessage(""); setEmojiOpen(false);
-      await loadChats({ markRead: false });
+      await loadChats({ markRead: false, scrollToBottom: true });
     } catch (error) { notify(error.response?.data?.error || "No fue posible enviar el mensaje.", "danger"); }
     finally { setLoaderActive(false); inputRef.current?.focus(); }
   }
@@ -115,7 +179,7 @@ function Chat({ embedded = false, selected = null, onBack = null }) {
       const upload = await axios.post(`${constants.apiurl}/api/aws/uploadtemplatemedia/${companyId}`, formData, { headers: { "Content-Type": "multipart/form-data" } });
       await axios.post(`${constants.apiurl}/api/chatssendmedia`, { phone: currentPhone, phoneNumberId: currentPhoneNumberId, url: upload.data.url, mimetype: file.type || upload.data.mimetype, fileName: file.name });
       setAttachment(null);
-      await loadChats({ markRead: false });
+      await loadChats({ markRead: false, scrollToBottom: true });
     } catch (error) { notify(error.response?.data?.error || "No fue posible enviar el archivo.", "danger"); }
     finally { setLoaderActive(false); }
   }
@@ -163,9 +227,12 @@ function Chat({ embedded = false, selected = null, onBack = null }) {
     setName(nextName);
     if (!nextPhone || !nextLine) {
       setChats([]);
+      setHasMore(false);
       return undefined;
     }
-    loadChats({ includeStatus: true, showLoader: false, markRead: true });
+    loadChats({ includeStatus: true, showLoader: false, markRead: true, reset: true, scrollToBottom: true });
+    allowAutoLoadRef.current = false;
+    const enableAutoLoad = window.setTimeout(() => { allowAutoLoadRef.current = true; }, 400);
     const socket = new SocketService();
     const onRefresh = (payload) => {
       if (payload?.type === "read") return;
@@ -176,7 +243,7 @@ function Chat({ embedded = false, selected = null, onBack = null }) {
     };
     socket.getSocket().on("chatrefresh", () => onRefresh({}));
     socket.getSocket().on("conversation", onRefresh);
-    return () => { window.clearTimeout(refreshTimeoutRef.current); stopRecordingStream(); socket.disconnect(); };
+    return () => { window.clearTimeout(refreshTimeoutRef.current); window.clearTimeout(enableAutoLoad); stopRecordingStream(); socket.disconnect(); };
   }, [embedded, loadChats, selectedPhone, selectedLine]);
 
   function formatTime(value) {
@@ -226,10 +293,22 @@ function Chat({ embedded = false, selected = null, onBack = null }) {
         <button className={`wa-human-mode ${startchat ? "active" : ""}`} type="button" onClick={toggleChat}><span>{startchat ? "Atención humana activa" : assignment ? "Activar atención humana" : "Tomar conversación"}</span><i className={startchat ? "fa-solid fa-toggle-on" : "fa-solid fa-toggle-off"} /></button>
       </header>
       {!windowOpen && <div className="wa-window-banner">La ventana de 24 horas está cerrada. El siguiente texto se enviará con plantilla de sesión.</div>}
-      <ScrollArea style={{ height: embedded ? "100%" : "calc(100vh - 310px)", minHeight: embedded ? 0 : "390px" }} speed={0.8} className="area wa-chat-scroll" contentClassName="wa-message-list" ref={scrollAreaRef} vertical>
-        <div className="wa-encryption-note"><i className="fa-solid fa-lock" /> Copia local del hilo. Las respuestas del bot en producción pueden no verse aquí.</div>
-        {chats.length === 0 ? <div className="wa-encryption-note">Aún no hay mensajes guardados en esta conversación.</div> : null}
-        {chats.map((chat) => { const outgoing = chat.type === 0; return <div key={chat.idauditTrail} className={`wa-message-row ${outgoing ? "outgoing" : "incoming"}`}><div className="wa-message-bubble">{renderMessage(chat)}<div className="wa-message-meta"><span>{formatTime(chat.creationdate)}</span>{renderTicks(chat)}</div></div></div>; })}
+      <ScrollArea
+        style={{ height: embedded ? "100%" : "calc(100vh - 310px)", minHeight: embedded ? 0 : "390px" }}
+        speed={0.8}
+        className="area wa-chat-scroll"
+        contentClassName="wa-message-list"
+        ref={scrollAreaRef}
+        vertical
+        onScroll={(value) => { if (allowAutoLoadRef.current && Number(value?.top) <= 0.02) loadOlder(); }}
+      >
+        {hasMore ? (
+          <button className="wa-load-older" type="button" onClick={loadOlder} disabled={loadingOlder}>
+            {loadingOlder ? "Cargando..." : "Cargar mensajes anteriores"}
+          </button>
+        ) : null}
+        {chats.length === 0 ? <div className="wa-encryption-note">Aún no hay mensajes en esta conversación.</div> : null}
+        {chats.map((chat) => { const outgoing = chat.type === 0; return <div key={messageKey(chat)} className={`wa-message-row ${outgoing ? "outgoing" : "incoming"}`}><div className="wa-message-bubble">{renderMessage(chat)}<div className="wa-message-meta"><span>{formatTime(chat.creationdate)}</span>{renderTicks(chat)}</div></div></div>; })}
       </ScrollArea>
       {attachment && <div className="wa-attachment-preview"><i className={attachment.type.startsWith("audio/") ? "fa-solid fa-microphone" : attachment.type.startsWith("image/") ? "fa-solid fa-image" : "fa-solid fa-file"} /><div><strong>{attachment.name}</strong><span>{Math.ceil(attachment.size / 1024)} KB</span></div>{attachment.type.startsWith("audio/") && <audio src={URL.createObjectURL(attachment)} controls />}<button type="button" onClick={() => setAttachment(null)} aria-label="Quitar archivo"><i className="fa-solid fa-xmark" /></button><button type="button" className="send" onClick={() => sendMedia(attachment)} aria-label="Enviar archivo"><i className="fa-solid fa-paper-plane" /></button></div>}
       <footer className="wa-composer">
