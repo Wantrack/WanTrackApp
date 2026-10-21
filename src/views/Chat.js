@@ -11,7 +11,7 @@ import SocketService from "../socket";
 const MESSAGE_LIMIT = 120;
 const EMOJIS = ["😀", "😂", "😍", "🥰", "😊", "😉", "😎", "🤔", "😢", "😭", "😡", "👍", "👎", "👏", "🙏", "💪", "🎉", "❤️", "💙", "🔥", "✨", "✅", "📌", "📞", "📷", "🎤"];
 
-function Chat({ embedded = false, selected = null, onBack = null }) {
+function Chat({ embedded = false, selected = null, onBack = null, lineLabel = "" }) {
   const scrollAreaRef = useRef(null);
   const notificationAlertRef = useRef(null);
   const refreshTimeoutRef = useRef(null);
@@ -221,6 +221,7 @@ function Chat({ embedded = false, selected = null, onBack = null }) {
         <div className="wa-contact">
           <h4>{headerTitle}</h4>
           <span>{currentPhone}</span>
+          {lineLabel ? <small className="wa-line-chip">{lineLabel}</small> : null}
           {assignment && <small>{assignment.departmentName || "General"} · {assignment.userName}</small>}
         </div>
         <button className={`wa-human-mode ${startchat ? "active" : ""}`} type="button" onClick={toggleChat}><span>{startchat ? "Atención humana activa" : assignment ? "Activar atención humana" : "Tomar conversación"}</span><i className={startchat ? "fa-solid fa-toggle-on" : "fa-solid fa-toggle-off"} /></button>
