@@ -11,6 +11,31 @@ import SocketService from "../socket";
 const MESSAGE_LIMIT = 50;
 const EMOJIS = ["😀", "😂", "😍", "🥰", "😊", "😉", "😎", "🤔", "😢", "😭", "😡", "👍", "👎", "👏", "🙏", "💪", "🎉", "❤️", "💙", "🔥", "✨", "✅", "📌", "📞", "📷", "🎤"];
 
+function messageKey(chat) {
+  return String(chat?.idmessage || chat?.idauditTrail || "");
+}
+
+function parseThread(data) {
+  if (Array.isArray(data)) {
+    return { messages: data, hasMore: data.length >= MESSAGE_LIMIT };
+  }
+  return {
+    messages: Array.isArray(data?.messages) ? data.messages : [],
+    hasMore: Boolean(data?.hasMore),
+  };
+}
+
+function mergeMessages(current, incoming) {
+  const byId = new Map();
+  current.forEach((item) => byId.set(messageKey(item), item));
+  incoming.forEach((item) => byId.set(messageKey(item), item));
+  return [...byId.values()].sort((left, right) => {
+    const time = new Date(left.creationdate).getTime() - new Date(right.creationdate).getTime();
+    if (time !== 0) return time;
+    return Number(messageKey(left)) - Number(messageKey(right));
+  });
+}
+
 function Chat({ embedded = false, selected = null, onBack = null, lineLabel = "" }) {
   const scrollAreaRef = useRef(null);
   const notificationAlertRef = useRef(null);
