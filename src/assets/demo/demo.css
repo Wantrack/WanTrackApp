@@ -469,6 +469,9 @@ input[type="file"]::file-selector-button:active {
 .wa-message-list { min-height: 100%; padding: 24px clamp(14px,5vw,70px); display: flex; flex-direction: column; }
 .wa-encryption-note { align-self: center; max-width: 440px; margin: 0 0 22px; padding: 7px 12px; color: #8696a0; background: #182229; border-radius: 7px; font-size: 11px; text-align: center; }
 .wa-encryption-note i { margin-right: 5px; color: #d6b86a; }
+.wa-load-older { align-self: center; margin: 0 0 16px; padding: 7px 14px; color: #aebac1; background: #182229; border: 1px solid rgba(255,255,255,.08); border-radius: 18px; font-size: 12px; }
+.wa-load-older:hover:not(:disabled) { color: #fff; background: #233138; }
+.wa-load-older:disabled { opacity: .6; }
 .wa-message-row { width: 100%; margin: 2px 0; display: flex; }.wa-message-row.incoming { justify-content: flex-start; }.wa-message-row.outgoing { justify-content: flex-end; }
 .wa-message-bubble { position: relative; max-width: min(68%,620px); padding: 7px 9px 5px; color: #e9edef; background: #202c33; border-radius: 8px; box-shadow: 0 1px 1px rgba(0,0,0,.18); overflow-wrap: anywhere; }
 .wa-message-row.outgoing .wa-message-bubble { background: #005c4b; }.wa-message-bubble p { margin: 0; padding-right: 58px; white-space: pre-wrap; }
