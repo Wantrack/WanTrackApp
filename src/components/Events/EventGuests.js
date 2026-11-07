@@ -62,11 +62,10 @@ export default function EventGuests({ eventId }) {
       <h5 className="title">Invitaciones</h5>
       <div>
         {!form && <Button color="primary" onClick={() => edit(null)}>Agregar invitación</Button>}
-        <SendInvitations eventId={eventId}
-          onSent={() => setRefresh(value => value + 1)} />
       </div>
     </CardHeader>
     <CardBody>
+      <SendInvitations eventId={eventId} onSent={() => setRefresh(value => value + 1)} />
       {message && <Alert color="success" role="status">{message}</Alert>}
       {form && <Form onSubmit={save} className="mb-4" noValidate>
         <h6>{original ? 'Editar invitación' : 'Nueva invitación'}</h6>

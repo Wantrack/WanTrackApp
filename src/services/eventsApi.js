@@ -23,6 +23,14 @@ export const eventsApi = {
     const { data } = await axios.get(`${constants.apiurl}/api/event-invitation-options`, { params: { companyId } });
     return data;
   },
+  invitationSettings: async (eventId, companyId) => {
+    const { data } = await axios.get(`${constants.apiurl}/api/events/${encodeURIComponent(eventId)}/invitation-settings`, { params: { companyId } });
+    return data;
+  },
+  saveInvitationSettings: async (eventId, settings) => {
+    const { data } = await axios.put(`${constants.apiurl}/api/events/${encodeURIComponent(eventId)}/invitation-settings`, settings);
+    return data;
+  },
   sendInvitation: async (eventId, guestId, settings) => {
     const url = `${constants.apiurl}/api/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}/send-invitation`;
     const { data } = await axios.post(url, settings, { timeout: 25000 });

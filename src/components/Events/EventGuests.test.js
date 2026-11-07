@@ -7,6 +7,7 @@ jest.mock('../../services/eventsApi', () => ({
   ...jest.requireActual('../../services/eventsApi'),
   eventsApi: { guests: jest.fn(), saveGuest: jest.fn() },
 }));
+jest.mock('./SendInvitations', () => () => null);
 jest.mock('../../config/https', () => ({ axios: { post: jest.fn() } }));
 let container, root;
 const guest = { id: '7', eventId: '42', fullName: 'Invitado de prueba', seats: 2,
