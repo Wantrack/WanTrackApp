@@ -31,6 +31,7 @@ All paths below are beneath `/admin` unless specified. A route's presence does n
 
 | View file(s) | Route(s) / use | Backend domain and behavior |
 |---|---|---|
+| `Events.js`, `Event.js` | `/events`, `/event?id=…` | GraphQL event list/create/edit and nested guest invitations; module 26. |
 | `Dashboard.js` | `/dashboard` | Message sent/received/delivered/read/failed charts and campaign report. Dynamic `buildDashboardUrl` builds report requests. |
 | `DashboardConversation.js` | `/dashboardconversations` | Company/adviser call and conversation metrics, emotions, duration, NPS and satisfaction. |
 | `Companies.js`, `Company.js` | `/companies`, `/company`; `/emailcampaing` reuses Companies | Company CRUD, departments, WhatsApp account links and API token creation/revocation. Email campaign menu is not a dedicated campaign editor. |
@@ -60,7 +61,7 @@ Form state is mostly component-local hooks, sometimes accompanied by mutable mod
 
 This means deep links, concurrent tabs and stale localStorage can select the wrong entity. Email and WhatsApp template screens reuse `currentWsTemplateID`. Profile metadata is Base64-encoded JSON, not encrypted or authoritative. `localStorageInfo.js` decodes without a parse guard; Admin's separate parser is guarded.
 
-The Admin landing path prioritizes document-only module 21, then module 11 conversation dashboard, module 1 dashboard, module 15 chat, otherwise access-denied. Menu separators and entries use `idText`/`idSep`; the chat entry has an inconsistent assignment. Repeated paths in the menu are intentional aliases or unfinished reuse, not independent screens.
+The Admin landing path prioritizes document-only module 21, then module 11 conversation dashboard, module 1 dashboard, module 15 chat, then module 26 events, otherwise access-denied. Menu separators and entries use `idText`/`idSep`; the chat entry has an inconsistent assignment. Repeated paths in the menu are intentional aliases or unfinished reuse, not independent screens.
 
 ## Data and error handling
 
@@ -73,3 +74,15 @@ Socket connections are created per `SocketService`. Chat listens for `chatrefres
 ## Maintainability observations
 
 Large files combine transport, domain mapping and rendering: `ScatterList.js`, `WsTemplate.js`, `Template.js`, `Advisor.js`, `DashboardConversation.js` and `Calls.js`. Extract a small API adapter or domain helper when changing a flow, then test its actual contract. Do not perform an architecture rewrite simply to make a documentation review look complete.
+
+## Events frontend (2026-11-07)
+
+`services/eventsApi.js` adapts `/events/graphql`, rejects GraphQL errors even with HTTP 200, and preserves `{ items, total, page, pageSize }`. `Events.js` lists server pages; `Event.js` uses a URL query ID to avoid cross-tab localStorage selection. Creating an event replaces the URL with its saved ID before enabling `EventGuests`. Forms retain values on failures and disable submissions while saving. Loads ignore stale responses.
+
+The Eventos menu entry appears last and uses `idText: '26'`, as requested by the owner. Leads Center retains module 24. Module 26 is a fallback landing page after the existing dashboard/chat choices. Menu visibility is UI state, not backend authorization; events remain intentionally public per the backend owner's documented decision.
+
+Event fields include type (selected from the existing catalog), venue, date/times, location/coordinates, dress codes, invitation link and bot metadata. Existing arbitrary `timeline` JSON is preserved by omission from updates; this screen does not edit it. Bot metadata does not activate a messaging integration. Invitations support create/edit, name search, confirmation filtering and server pagination. Each request carries the current event ID. A status is sent on edit only if changed, preserving the backend's existing confirmation timestamp otherwise. Date/time strings are passed without timezone conversion. Saving an invitation records data and does not send messages.
+
+Events and invitation selectors use native `select.form-control`, matching the existing dashboard styles. Type creation is not offered in the event editor.
+
+Guest creation/editing requires a nonblank name and a digits-only international phone including its country calling code. `libphonenumber-js/max` validates the explicitly international value without a default country; the original digit string is sent unchanged. The form displays Spanish validation errors (both required messages when both fields are empty) and keeps entered values without calling the API on failure. Existing guests without a valid phone must correct it before saving from this UI.
