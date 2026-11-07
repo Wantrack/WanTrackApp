@@ -1,13 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Alert, Button, Card, CardBody, CardHeader, Col, Form, Input, Label, Row } from 'reactstrap';
 import { eventsApi, emptyEvent, eventForm, eventInput } from '../services/eventsApi';
 import EventField from '../components/Events/EventFields';
 import EventGuests from '../components/Events/EventGuests';
+import SendInvitations from '../components/Events/SendInvitations';
 
 export default function Event() {
   const [params, setParams] = useSearchParams();
   const id = params.get('id');
+  const invitationRef = useRef(null);
+  const createdEventId = useRef(null);
+  const [sendRevision, setSendRevision] = useState(0);
   const [form, setForm] = useState({ ...emptyEvent });
   const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +22,7 @@ export default function Event() {
   const [message, setMessage] = useState('');
   useEffect(() => {
     let active = true;
+    createdEventId.current = null;
     setLoading(true);
     setLoadError('');
     setSaveError('');
@@ -38,12 +43,21 @@ export default function Event() {
     setSaving(true);
     setSaveError('');
     setMessage('');
+    let saved;
     try {
-      const saved = await eventsApi.save(id, eventInput(form));
+      const saveInvitationSettings = invitationRef.current?.prepareSave();
+      saved = await eventsApi.save(id || createdEventId.current, eventInput(form));
+      if (!id) createdEventId.current = saved.id;
       setForm(eventForm(saved));
-      setMessage('Evento guardado. Puedes agregar invitaciones a continuación.');
+      if (saveInvitationSettings) await saveInvitationSettings(saved.id);
+      setMessage(saveInvitationSettings
+        ? 'Evento y configuración de envío guardados.'
+        : 'Evento guardado. Puedes agregar invitaciones a continuación.');
       if (!id) setParams({ id: saved.id }, { replace: true });
-    } catch (error) { setSaveError(error.message); }
+    } catch (error) {
+      const detail = error.response?.data?.error || error.message;
+      setSaveError(saved ? `El evento se guardó, pero faltó guardar la configuración de envío. ${detail} Vuelve a pulsar Guardar evento para reintentar.` : detail);
+    }
     finally { setSaving(false); }
   }
   const field = (name, label, props = {}) => <EventField name={name} label={label} value={form[name]} onChange={change} {...props} />;
@@ -76,13 +90,14 @@ export default function Event() {
                 <Col md="12"><Label check className="ml-4 mb-3"><Input type="checkbox" checked={form.hasBot} onChange={event => change('hasBot', event.target.checked)} /> Evento con bot</Label></Col>
                 <Col md="12">{field('botTrainingInfo', 'Información para el bot', { type: 'textarea', rows: 4 })}</Col>
               </Row>
+              <SendInvitations ref={invitationRef} eventId={id} onSent={() => setSendRevision(value => value + 1)} />
               <Button color="primary" type="submit">{saving ? 'Guardando…' : 'Guardar evento'}</Button>
             </fieldset>
           </Form>
         </>}
       </CardBody>
     </Card>
-    {!loading && !loadError && (id ? <EventGuests key={id} eventId={id} /> :
+    {!loading && !loadError && (id ? <EventGuests key={id} eventId={id} sendRevision={sendRevision} /> :
       <Card><CardBody><h5>Invitaciones</h5><p>Guarda el evento para comenzar a agregar invitaciones.</p></CardBody></Card>)}
   </div>;
 }

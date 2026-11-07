@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Alert, Button, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import { eventsApi, guestPhoneError } from '../../services/eventsApi';
 import EventField from './EventFields';
@@ -13,14 +13,13 @@ async function loadPending(eventId) {
   return [...pending.values()];
 }
 
-export default function SendInvitations({ eventId, onSent }) {
+export default function SendInvitations({ eventId, onSent, ref }) {
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState(null);
   const [saved, setSaved] = useState(null);
   const [configLoading, setConfigLoading] = useState(true);
-  const [configSaving, setConfigSaving] = useState(false);
   const [configError, setConfigError] = useState('');
-  const [configMessage, setConfigMessage] = useState('');
+  const [selectionEdited, setSelectionEdited] = useState(false);
   const [pending, setPending] = useState([]);
   const [accountId, setAccountId] = useState('');
   const [templateId, setTemplateId] = useState('');
@@ -44,10 +43,10 @@ export default function SendInvitations({ eventId, onSent }) {
     const isCurrent = () => mounted.current && request === configLoadId.current;
     setConfigLoading(true);
     setConfigError('');
-    setConfigMessage('');
+    setSelectionEdited(false);
     setSaved(null);
     try {
-      const settings = await eventsApi.invitationSettings(eventId, companyId);
+      const settings = eventId ? await eventsApi.invitationSettings(eventId, companyId) : null;
       const choices = await eventsApi.invitationOptions(companyId ?? settings?.companyId);
       if (!isCurrent()) return;
       const validAccount = choices.accounts.some(item => String(item.idwhatsapp_accounts) === String(settings?.accountId));
@@ -62,22 +61,6 @@ export default function SendInvitations({ eventId, onSent }) {
     } catch (error) {
       if (isCurrent()) setConfigError(error.response?.data?.error || 'No se pudo cargar la configuración de invitaciones.');
     } finally { if (isCurrent()) setConfigLoading(false); }
-  }
-
-  async function saveSettings() {
-    if (configSaving || !options?.companyId || !accountId || !templateId) return;
-    setConfigSaving(true);
-    setConfigError('');
-    setConfigMessage('');
-    try {
-      const settings = await eventsApi.saveInvitationSettings(eventId, { companyId: options.companyId, accountId, templateId });
-      if (mounted.current) {
-        setSaved(settings);
-        setConfigMessage('Plantilla guardada para este evento.');
-      }
-    } catch (error) {
-      if (mounted.current) setConfigError(error.response?.data?.error || 'No se pudo guardar la configuración de invitaciones.');
-    } finally { if (mounted.current) setConfigSaving(false); }
   }
 
   async function loadPendingGuests() {
@@ -147,27 +130,43 @@ export default function SendInvitations({ eventId, onSent }) {
     setOpen(false);
   };
   const templates = options?.templates.filter(item => String(item.idwsaccount) === accountId) || [];
-  const ready = saved && String(saved.accountId) === accountId && String(saved.templateId) === templateId
-    && String(saved.companyId) === String(options?.companyId) && !configLoading && !configSaving;
+  const ready = eventId && saved && String(saved.accountId) === accountId && String(saved.templateId) === templateId
+    && String(saved.companyId) === String(options?.companyId) && !configLoading;
+  useImperativeHandle(ref, () => ({
+    prepareSave() {
+      if (!selectionEdited || ready) return null;
+      if (!options?.companyId || !accountId || !templates.some(item =>
+        String(item.idwstemplate) === templateId && item.compatible !== false)) {
+        throw new Error('Selecciona una cuenta de WhatsApp y una plantilla compatible para guardar la configuración de envío.');
+      }
+      const selection = { companyId: options.companyId, accountId, templateId };
+      return async savedEventId => {
+        const settings = await eventsApi.saveInvitationSettings(savedEventId, selection);
+        if (mounted.current) {
+          setSaved(settings);
+          setSelectionEdited(false);
+        }
+      };
+    },
+  }));
   return <div className="mb-4">
     <h6>Configuración de invitaciones por WhatsApp</h6>
     {configLoading && <p role="status">Cargando configuración…</p>}
-    {configError && <Alert color="danger">{configError}{!options && <Button size="sm" onClick={() => loadSettings()}>Reintentar</Button>}</Alert>}
-    {configMessage && <Alert color="success" role="status">{configMessage}</Alert>}
+    {configError && <Alert color="danger">{configError}{!options && <Button type="button" size="sm" onClick={() => loadSettings()}>Reintentar</Button>}</Alert>}
     {options && <>
-      <fieldset disabled={configLoading || configSaving || busy || open}>
+      <fieldset disabled={configLoading || busy || open}>
         <EventField name="invitationCompany" label="Empresa" type="select" value={options.companyId || ''}
           onChange={(_, value) => loadSettings(value)}>
           {!options.companyId && <option value="">Sin empresa disponible</option>}
           {options.companies.map(company => <option key={company.idcompany} value={company.idcompany}>{company.name}</option>)}
         </EventField>
         <EventField name="invitationAccount" label="Cuenta de WhatsApp" type="select" value={accountId}
-          onChange={(_, value) => { setAccountId(value); setTemplateId(''); setConfigMessage(''); }}>
+          onChange={(_, value) => { setAccountId(value); setTemplateId(''); setSelectionEdited(true); }}>
           <option value="">Selecciona una cuenta</option>
           {options.accounts.map(account => <option key={account.idwhatsapp_accounts} value={account.idwhatsapp_accounts}>{account.displayname}</option>)}
         </EventField>
         <EventField name="invitationTemplate" label="Plantilla" type="select" value={templateId} disabled={!accountId}
-          onChange={(_, value) => { setTemplateId(value); setConfigMessage(''); }}>
+          onChange={(_, value) => { setTemplateId(value); setSelectionEdited(true); }}>
           <option value="">Selecciona una plantilla</option>
           {templates.map(item => <option key={item.idwstemplate} value={item.idwstemplate} disabled={item.compatible === false}>
             {item.name} ({item.language || 'es_MX'}){item.reason ? ' · ' + item.reason : ''}
@@ -176,12 +175,9 @@ export default function SendInvitations({ eventId, onSent }) {
         {!!templates.length && templates.every(item => item.compatible === false) && <p>Ninguna plantilla de esta cuenta está lista para invitaciones. El selector indica el motivo.</p>}
         {accountId && !templates.length && <p>No hay plantillas vinculadas a esta cuenta. Revisa la cuenta asignada en Plantillas de WhatsApp.</p>}
       </fieldset>
-      <Button color="primary" type="button" onClick={saveSettings}
-        disabled={configLoading || configSaving || open || !accountId || !templateId || !!ready}>
-        {configSaving ? 'Guardando…' : 'Guardar plantilla'}
-      </Button>
+      <p className="text-muted">La selección se guarda con el evento.</p>
     </>}
-    <Button color="primary" type="button" onClick={show} disabled={!ready || open}>Enviar invitaciones</Button>
+    {eventId && <Button color="primary" type="button" onClick={show} disabled={!ready || open}>Enviar invitaciones</Button>}
     {open && <Modal isOpen toggle={toggle} backdrop={busy ? 'static' : true} keyboard={!busy}>
       <ModalHeader toggle={busy ? undefined : toggle}>Enviar invitaciones por WhatsApp</ModalHeader>
       <ModalBody>

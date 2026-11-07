@@ -3,9 +3,8 @@ import { Alert, Button, Card, CardBody, CardHeader, Col, Form, Row } from 'react
 import { eventsApi, emptyGuest, guestInput, confirmationLabels } from '../../services/eventsApi';
 import EventField from './EventFields';
 import PageControls from './PageControls';
-import SendInvitations from './SendInvitations';
 
-export default function EventGuests({ eventId }) {
+export default function EventGuests({ eventId, sendRevision }) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -30,7 +29,7 @@ export default function EventGuests({ eventId }) {
         .finally(() => { if (active) setLoading(false); });
     }, 250);
     return () => { active = false; clearTimeout(timer); };
-  }, [eventId, page, search, status, refresh]);
+  }, [eventId, page, search, status, refresh, sendRevision]);
   function edit(guest) {
     setOriginal(guest);
     setForm(guest ? { ...emptyGuest, ...guest, phone: guest.phone || '', tableLabel: guest.tableLabel || '',
@@ -65,7 +64,6 @@ export default function EventGuests({ eventId }) {
       </div>
     </CardHeader>
     <CardBody>
-      <SendInvitations eventId={eventId} onSent={() => setRefresh(value => value + 1)} />
       {message && <Alert color="success" role="status">{message}</Alert>}
       {form && <Form onSubmit={save} className="mb-4" noValidate>
         <h6>{original ? 'Editar invitación' : 'Nueva invitación'}</h6>

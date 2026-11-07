@@ -1,4 +1,4 @@
-import React, { act } from 'react';
+import React, { act, createRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import SendInvitations from './SendInvitations';
 import { eventsApi } from '../../services/eventsApi';
@@ -15,6 +15,7 @@ it('requires confirmation and processes pending recipients from every page', asy
   document.body.appendChild(container);
   const root = createRoot(container);
   const onSent = jest.fn();
+  const ref = createRef();
   const click = label => [...document.querySelectorAll('button')].find(button => button.textContent === label).click();
   const select = (name, value) => {
     const input = document.querySelector('#events-' + name);
@@ -39,14 +40,14 @@ it('requires confirmation and processes pending recipients from every page', asy
   ] }).mockResolvedValueOnce({ items: [{ id: '3', fullName: 'Invitado Dos', phone: '12025550123' }] });
   eventsApi.sendInvitation.mockResolvedValueOnce({ status: 'sent' }).mockResolvedValueOnce({ status: 'uncertain' });
   try {
-    await act(async () => root.render(<SendInvitations eventId="42" onSent={onSent} />));
+    await act(async () => root.render(<SendInvitations ref={ref} eventId="42" onSent={onSent} />));
     await act(async () => select('invitationAccount', '9'));
     expect(document.querySelector('#events-invitationTemplate option[value="7"]').disabled).toBe(true);
     expect(document.querySelector('#events-invitationTemplate option[value="7"]').textContent).toContain('Estado en Meta: PENDING');
     expect(document.querySelector('#events-invitationTemplate option[value="8"]')).toBeNull();
     await act(async () => select('invitationTemplate', '6'));
     expect([...document.querySelectorAll('button')].find(button => button.textContent === 'Enviar invitaciones').disabled).toBe(true);
-    await act(async () => click('Guardar plantilla'));
+    await act(async () => ref.current.prepareSave()('42'));
     expect(eventsApi.saveInvitationSettings).toHaveBeenCalledWith('42', { companyId: 3, accountId: '9', templateId: '6' });
     await act(async () => root.render(<SendInvitations key="reopen" eventId="42" onSent={onSent} />));
     expect(document.querySelector('#events-invitationTemplate').value).toBe('6');
