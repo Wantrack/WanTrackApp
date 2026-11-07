@@ -20,7 +20,9 @@ Evidence: [loginController.ts](../../../WanTrackApi/src/modules/users/loginContr
 
 This exposes password material through authenticated user reads and database access. Migrate to a password hashing/verification design, remove password fields from read responses, and separate password updates from profile edits. Include migration/reset handling rather than changing only the login comparison. Validate that no API, localStorage or log response contains password material.
 
-## F04 — P1: events GraphQL and several administrative REST operations lack auth
+## F04 — P1: several administrative REST operations lack auth
+
+**Scope clarification (2026-11-07):** The backend owner explicitly confirmed events/guests and external-user/mission/profile APIs are intentionally public (`../WanTrackApi/AGENTS.md`). Their public access is not a defect to fix. The new Eventos menu uses module 26 only for browser visibility; it does not add API authorization. The unresolved findings for other administrative operations below remain.
 
 Evidence: [events/index.ts](../../../WanTrackApi/src/events/index.ts) mounts Yoga directly; [events/schema.ts](../../../WanTrackApi/src/events/schema.ts) resolvers invoke the repository without user authorization. [reviewExternalRoutes.ts](../../../WanTrackApi/src/routes/review/reviewExternalRoutes.ts) exposes external users, missions, color profiles and summaries without auth. [documentRoutes.ts](../../../WanTrackApi/src/routes/app/documentRoutes.ts) exposes rule reads/writes without auth; [integrationRoutes.ts](../../../WanTrackApi/src/routes/app/integrationRoutes.ts) exposes Meta registration/subscription and executeFlow without auth.
 

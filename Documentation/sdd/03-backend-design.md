@@ -21,7 +21,7 @@ All paths in this document are relative to the sibling `WanTrackApi` repository.
 | `src/routes/app/` | Main browser-facing REST registration | Current direct contract |
 | `src/routes/review/` | Registered external/catalog/operations/report/automation/document/job/webhook routes | Live despite “review” name |
 | `src/routes/` standalone routers | Earlier router factories alongside system routes/types | Do not assume factories are mounted |
-| `src/events/` | GraphQL schema, repository, sorting, pagination and confirmation conversion | No identified WanTrackApp UI consumer |
+| `src/events/` | GraphQL schema, repository, sorting, pagination and confirmation conversion | Events/Event screens via the eventsApi GraphQL adapter |
 | `src/bot/` | Large bot executor: conversation actions, message sending, variables, integrations and handoff | Operates definitions created by UI; invoked by inbound messaging |
 | `src/communication/` | WhatsApp Graph calls/identity, email delivery and Instagram support | Provider effects happen here; some modules have legacy/hardcoded settings |
 | `src/clients/`, `src/providers/` | Meta HTTP client and AWS SES sender | Provider boundary |

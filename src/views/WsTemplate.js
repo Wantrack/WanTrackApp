@@ -263,7 +263,7 @@ function WsTemplate() {
         setWsTemplate(normalizeTemplate({
           ..._wstemplate.data,
           idcompany: currentCompanyID || -1,
-          idwhatsapp_accounts: _wstemplate.data.idwhatsapp_accounts || -1,
+          idwhatsapp_accounts: _wstemplate.data.idwsaccount || _wstemplate.data.idwhatsapp_accounts || -1,
         }));
       } else {
         const currentCompanyID = localStorage.getItem('currentCompanyID');

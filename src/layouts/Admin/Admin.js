@@ -36,6 +36,8 @@ function getDefaultAdminPath(userInfo) {
   if (modules.includes('11')) return '/admin/dashboardconversations';
   if (modules.includes('1')) return '/admin/dashboard';
 
+  if (modules.includes('26')) return '/admin/events';
+
   return '/admin/access-denied';
 }
 
