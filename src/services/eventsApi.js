@@ -19,6 +19,15 @@ export const eventsApi = {
     events(page: $page) { items { ${eventFields} } total page pageSize }
   }`, { page: { page, pageSize: 10 } }, 'events'),
   get: id => request(`query($id: ID!) { event(id: $id) { ${eventFields} } }`, { id }, 'event'),
+  invitationOptions: async companyId => {
+    const { data } = await axios.get(`${constants.apiurl}/api/event-invitation-options`, { params: { companyId } });
+    return data;
+  },
+  sendInvitation: async (eventId, guestId, settings) => {
+    const url = `${constants.apiurl}/api/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}/send-invitation`;
+    const { data } = await axios.post(url, settings, { timeout: 25000 });
+    return data;
+  },
   types: () => request('query { eventTypes { id name } }', {}, 'eventTypes'),
   save: (id, input) => id
     ? request(`mutation($id: ID!, $input: EventUpdateInput!) { updateEvent(id: $id, input: $input) { ${eventFields} } }`, { id, input }, 'updateEvent')
@@ -64,22 +73,23 @@ export function eventInput(form) {
 export const emptyGuest = { fullName: '', seats: 1, phone: '', tableLabel: '', comments: '', confirmationStatus: 'PENDING', invitationSentAt: '' };
 export const confirmationLabels = { PENDING: 'Pendiente', CONFIRMED: 'Confirmada', DECLINED: 'Rechazada' };
 
+export function guestPhoneError(phone) {
+  if (!phone.trim()) return 'El teléfono del invitado es obligatorio.';
+  if (!/^[0-9]+$/.test(phone)) return 'El teléfono debe contener solo números, sin espacios, signos ni letras.';
+  const parsed = parsePhoneNumberFromString(`+${phone}`);
+  if (!parsed || !parsed.isValid() || parsed.number !== `+${phone}` || phone.length > 15) {
+    return 'Ingresa un teléfono válido con código de país. Ejemplo para Colombia: 573001234567.';
+  }
+  return '';
+}
+
 export function guestInput(form, eventId, original) {
   const seats = Number(form.seats);
   const errors = [];
   if (!form.fullName.trim()) errors.push('El nombre del invitado es obligatorio.');
   const phone = form.phone;
-  if (!phone.trim()) {
-    errors.push('El teléfono del invitado es obligatorio.');
-  } else if (!/^[0-9]+$/.test(phone)) {
-    errors.push('El teléfono debe contener solo números, sin espacios, signos ni letras.');
-  } else {
-    // No default country: the user must provide the international calling code.
-    const parsed = parsePhoneNumberFromString(`+${phone}`);
-    if (!parsed || !parsed.isValid() || parsed.number !== `+${phone}` || phone.length > 15) {
-      errors.push('Ingresa un teléfono válido con código de país. Ejemplo para Colombia: 573001234567.');
-    }
-  }
+  const phoneError = guestPhoneError(phone);
+  if (phoneError) errors.push(phoneError);
   if (errors.length) throw new Error(errors.join(' '));
   if (String(form.seats).trim() === '' || !Number.isInteger(seats) || seats < 0 || seats > 2147483647) {
     throw new Error('Los cupos deben ser un número entero mayor o igual a cero.');

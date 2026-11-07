@@ -3,6 +3,7 @@ import { Alert, Button, Card, CardBody, CardHeader, Col, Form, Row } from 'react
 import { eventsApi, emptyGuest, guestInput, confirmationLabels } from '../../services/eventsApi';
 import EventField from './EventFields';
 import PageControls from './PageControls';
+import SendInvitations from './SendInvitations';
 
 export default function EventGuests({ eventId }) {
   const [page, setPage] = useState(1);
@@ -59,7 +60,11 @@ export default function EventGuests({ eventId }) {
   return <Card>
     <CardHeader className="d-flex justify-content-between align-items-center flex-wrap">
       <h5 className="title">Invitaciones</h5>
-      {!form && <Button color="primary" onClick={() => edit(null)}>Agregar invitación</Button>}
+      <div>
+        {!form && <Button color="primary" onClick={() => edit(null)}>Agregar invitación</Button>}
+        <SendInvitations eventId={eventId}
+          onSent={() => setRefresh(value => value + 1)} />
+      </div>
     </CardHeader>
     <CardBody>
       {message && <Alert color="success" role="status">{message}</Alert>}
@@ -79,7 +84,7 @@ export default function EventGuests({ eventId }) {
             <Col md="12"><EventField name="comments" label="Comentarios" type="textarea" value={form.comments} onChange={change} /></Col>
           </Row>
           <p id="guest-phone-help" className="text-muted">Teléfono obligatorio con código de país, solo números. Ejemplo para Colombia: 573001234567 (57 + número de celular).</p>
-          <p className="text-muted">Registra aquí al invitado y el estado de su invitación. El envío se realiza por separado.</p>
+          <p className="text-muted">Guarda al invitado antes de enviar su invitación por WhatsApp.</p>
           <Button color="primary" type="submit">{saving ? 'Guardando…' : 'Guardar invitación'}</Button>
           <Button type="button" onClick={() => setForm(null)}>Cancelar</Button>
         </fieldset>
