@@ -32,6 +32,9 @@ import EmailTemplate from "views/EmailTemplate";
 import DocumentsCheck from "views/DocumentsCheck";
 import DocumentCheck from "views/DocumentCheck";
 
+import Events from "views/Events";
+import Event from "views/Event";
+
 var routes = [
   {
     path: "/dashboard",
@@ -309,6 +312,22 @@ var routes = [
     type: 'separator',
     idSep: '21'
   },   
+  {
+    path: "/events",
+    name: "Eventos",
+    icon: "tim-icons icon-calendar-60",
+    component: <Events />,
+    layout: "/admin",
+    idText: '26'
+  },
+  { type: 'separator', idSep: '26' },
+  {
+    path: "/event",
+    name: "Evento",
+    component: <Event />,
+    layout: "/admin",
+    invisible: true
+  },
   {
     path: "/user",
     name: "User",

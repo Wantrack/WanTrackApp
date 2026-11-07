@@ -83,13 +83,13 @@ The backend downloads the URL, extracts PDF text or performs Spanish OCR, builds
 
 The editor's Save action posts the loaded verificator-shaped object to `/api/document`, which is an alias for a checked-document insertion handler, then navigates to `/admin/lists`. This does not constitute a working verificator update contract. Also, the upload path's `:companyId` segment receives `document.idverificator`; check storage ownership semantics before modifying this flow.
 
-## Calls, email and backend-only events
+## Calls, email and events
 
 Calls upload audio to storage or transcript files to the feelings-summary endpoint, then backend AI/transcription logic records analysis for adviser/company dashboards. Feelings is a separate test bench. External AI output, language selection and processing failure need explicit integration tests.
 
 Email templates persist text/HTML and request AI improvement; a preview renders HTML in an unsandboxed srcDoc iframe. Email delivery has both legacy communication code and a RabbitMQ → separate worker → SES path. API startup does not start the email consumer. Preserve delivery/acknowledgement semantics when modifying either path.
 
-`/events/graphql` exposes event types, events, guests, create/update mutations and confirmation status. It uses `evt_event_types`, `evt_events`, `evt_guests`; no frontend screen/request for it was found. It is mounted without bearer middleware or resolver authorization in the reviewed source. Do not describe it as protected by the normal REST session layer.
+`/events/graphql` exposes event types, events, guests, create/update mutations and confirmation status. It uses `evt_event_types`, `evt_events`, `evt_guests`; `Events.js`, `Event.js` and `EventGuests.js` consume it through `services/eventsApi.js`. It is mounted without bearer middleware or resolver authorization in the reviewed source. Do not describe it as protected by the normal REST session layer.
 
 ## Manually resolved static-analysis ambiguities
 
@@ -99,3 +99,18 @@ Email templates persist text/HTML and request AI improvement; a preview renders 
 - HistoryTrans builds `messagesUrl`/`countUrl` from `/api/messagesent` and `/api/messagesentCount` plus filters.
 - MetaFlow's local `url` variables address subscribe, phone-numbers and register endpoints.
 - Static URL matches do not catch the chat envelope, document-save semantics or authorization failures. These require source-level contract review.
+
+### Events and invitations browser flow (2026-11-07)
+
+Menu module 26 → `/admin/events` → POST `/events/graphql`, query `events(page: {page, pageSize: 10})` → `EventsRepository.listEvents` → `{items,total,page,pageSize}`. Edit links use `/admin/event?id=ID`; create uses `/admin/event`. The editor loads `eventTypes` and, when editing, `event(id)`. `createEvent`/`updateEvent` receive allowlisted EventInput/EventUpdateInput fields. The editor selects existing event types; it does not expose `createEventType`. After successful creation, the returned ID replaces the URL query and enables invitations.
+
+Invitations use `guests(filter: {eventId, search, confirmationStatus}, page)`; search matches **full name only** in the current repository. `createGuest` receives eventId, fullName, integer seats, status, required international phone and optional table/comments/sent date. `updateGuest` omits an unchanged confirmationStatus and always omits confirmedAt so unrelated edits do not reset it. Changed status delegates timestamp handling to the backend (PENDING clears it; other statuses use database NOW). Optional text/date fields can be cleared. The browser requires name and phone on create/edit, validates digits-only international phone numbers using libphonenumber-js/max, and sends the phone string unchanged. The public backend contract still permits nullable phone for other consumers; this change only validates the Eventos form.
+
+GraphQL errors, network failures and missing-event results are surfaced separately from empty lists. GraphQL event and guest operations remain intentionally public. The invitation send workflow below is a separate authenticated REST operation. Existing timeline JSON is not sent by the editor and remains intact on updates. Regression tests use synthetic fixtures only; no live API, database or provider is exercised.
+
+
+### WhatsApp invitations
+
+The event editor lists company, account and template choices via `GET /api/event-invitation-options`. It displays incompatible templates for the selected account as disabled options with the API reason. The API recognizes legacy templates linked by phoneNumberId when no account ID is set. Authenticated `GET/PUT /api/events/:eventId/invitation-settings` loads and saves the selected IDs per event and company. Guardar evento writes the event first, then writes any changed complete selection using the resulting ID. If the settings write fails, the editor reports partial success and retains the ID and selection for retry. **Enviar invitaciones** confirms with the saved selection, which the API revalidates on every send. After confirmation the browser processes guests across all pages with an empty sent timestamp, one request at a time to `POST /api/events/:eventId/guests/:guestId/send-invitation`. The API checks an active user session, module 26, company and the template's account, plus the guest/event relationship. It reads `evt_guests.full_name` for each recipient. The approved template has one numbered body variable and one dynamic URL button ending in `{{1}}`. The body takes the guest name and the URL suffix takes standard UTF-8 Base64 of that same guest name.
+
+The API reuses the ScatterList WhatsApp transport and records billing and the send timestamp upon provider acceptance. The database claim prevents resending after acceptance or an uncertain outcome. The UI reports accepted, skipped, rejected and uncertain recipients. Apply the backend migration before deploying this frontend and API together.
