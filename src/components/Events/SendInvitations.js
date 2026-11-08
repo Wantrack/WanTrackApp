@@ -51,8 +51,7 @@ export default function SendInvitations({ eventId, onSent, ref }) {
       if (!isCurrent()) return;
       const validAccount = choices.accounts.some(item => String(item.idwhatsapp_accounts) === String(settings?.accountId));
       const validTemplate = choices.templates.some(item =>
-        String(item.idwstemplate) === String(settings?.templateId) && String(item.idwsaccount) === String(settings?.accountId)
-          && item.compatible !== false);
+        String(item.idwstemplate) === String(settings?.templateId) && String(item.idwsaccount) === String(settings?.accountId));
       setOptions(choices);
       setAccountId(validAccount ? String(settings.accountId) : '');
       setTemplateId(validAccount && validTemplate ? String(settings.templateId) : '');
@@ -136,8 +135,8 @@ export default function SendInvitations({ eventId, onSent, ref }) {
     prepareSave() {
       if (!selectionEdited || ready) return null;
       if (!options?.companyId || !accountId || !templates.some(item =>
-        String(item.idwstemplate) === templateId && item.compatible !== false)) {
-        throw new Error('Selecciona una cuenta de WhatsApp y una plantilla compatible para guardar la configuración de envío.');
+        String(item.idwstemplate) === templateId)) {
+        throw new Error('Selecciona una cuenta de WhatsApp y una plantilla para guardar la configuración de envío.');
       }
       const selection = { companyId: options.companyId, accountId, templateId };
       return async savedEventId => {
@@ -168,11 +167,10 @@ export default function SendInvitations({ eventId, onSent, ref }) {
         <EventField name="invitationTemplate" label="Plantilla" type="select" value={templateId} disabled={!accountId}
           onChange={(_, value) => { setTemplateId(value); setSelectionEdited(true); }}>
           <option value="">Selecciona una plantilla</option>
-          {templates.map(item => <option key={item.idwstemplate} value={item.idwstemplate} disabled={item.compatible === false}>
-            {item.name} ({item.language || 'es_MX'}){item.reason ? ' · ' + item.reason : ''}
+          {templates.map(item => <option key={item.idwstemplate} value={item.idwstemplate}>
+            {item.name} ({item.language || 'es_MX'})
           </option>)}
         </EventField>
-        {!!templates.length && templates.every(item => item.compatible === false) && <p>Ninguna plantilla de esta cuenta está lista para invitaciones. El selector indica el motivo.</p>}
         {accountId && !templates.length && <p>No hay plantillas vinculadas a esta cuenta. Revisa la cuenta asignada en Plantillas de WhatsApp.</p>}
       </fieldset>
       <p className="text-muted">La selección se guarda con el evento.</p>

@@ -123,5 +123,5 @@ it('reports an incomplete invitation configuration before saving the event', asy
   await act(async () => change('invitationAccount', '9'));
   await submitEvent();
   expect(eventsApi.save).not.toHaveBeenCalled();
-  expect(container.textContent).toContain('Selecciona una cuenta de WhatsApp y una plantilla compatible');
+  expect(container.textContent).toContain('Selecciona una cuenta de WhatsApp y una plantilla para guardar');
 });
