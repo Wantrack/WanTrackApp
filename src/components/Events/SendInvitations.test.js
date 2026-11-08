@@ -22,7 +22,7 @@ it('requires confirmation and processes pending recipients from every page', asy
     input.value = value;
     input.dispatchEvent(new Event('change', { bubbles: true }));
   };
-  const saved = { companyId: 3, accountId: 9, templateId: 6 };
+  const saved = { companyId: 3, accountId: 9, templateId: 7 };
   eventsApi.invitationSettings.mockResolvedValueOnce(null).mockResolvedValue(saved);
   eventsApi.saveInvitationSettings.mockResolvedValue(saved);
   eventsApi.invitationOptions.mockResolvedValue({
@@ -42,15 +42,15 @@ it('requires confirmation and processes pending recipients from every page', asy
   try {
     await act(async () => root.render(<SendInvitations ref={ref} eventId="42" onSent={onSent} />));
     await act(async () => select('invitationAccount', '9'));
-    expect(document.querySelector('#events-invitationTemplate option[value="7"]').disabled).toBe(true);
-    expect(document.querySelector('#events-invitationTemplate option[value="7"]').textContent).toContain('Estado en Meta: PENDING');
+    expect(document.querySelector('#events-invitationTemplate option[value="7"]').disabled).toBe(false);
+    expect(document.querySelector('#events-invitationTemplate option[value="7"]').textContent).toContain('pendiente');
     expect(document.querySelector('#events-invitationTemplate option[value="8"]')).toBeNull();
-    await act(async () => select('invitationTemplate', '6'));
+    await act(async () => select('invitationTemplate', '7'));
     expect([...document.querySelectorAll('button')].find(button => button.textContent === 'Enviar invitaciones').disabled).toBe(true);
     await act(async () => ref.current.prepareSave()('42'));
-    expect(eventsApi.saveInvitationSettings).toHaveBeenCalledWith('42', { companyId: 3, accountId: '9', templateId: '6' });
+    expect(eventsApi.saveInvitationSettings).toHaveBeenCalledWith('42', { companyId: 3, accountId: '9', templateId: '7' });
     await act(async () => root.render(<SendInvitations key="reopen" eventId="42" onSent={onSent} />));
-    expect(document.querySelector('#events-invitationTemplate').value).toBe('6');
+    expect(document.querySelector('#events-invitationTemplate').value).toBe('7');
     await act(async () => click('Enviar invitaciones'));
     expect(eventsApi.guests.mock.calls).toEqual([['42', 1], ['42', 2]]);
     expect(eventsApi.sendInvitation).not.toHaveBeenCalled();
